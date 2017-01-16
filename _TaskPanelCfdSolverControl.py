@@ -196,17 +196,23 @@ class _TaskPanelCfdSolverControl:
     
     
     def runSolverProcess(self):
+        #Re-starting a simulation from the last time step has currently been de-actived
+        #by using an AllRun script. Therefore just re-setting the residuals here for plotting
+        self.UxResiduals = [1]
+        self.UyResiduals = [1]
+        self.UzResiduals = [1]
+        self.pResiduals = [1]
+        self.niter = 0
+
         self.Start = time.time()
         #self.femConsoleMessage("Run {} at {} with command:".format(self.solver_object.SolverName, self.solver_object.WorkingDir))
         cmd = self.solver_runner.get_solver_cmd()
 
-        splitCmd = cmd.split()
-        
         solverDirectory = os.path.join(self.solver_object.WorkingDir, self.solver_object.InputCaseName)
-        #NOTE TODO currently splitCmd[0] is the solver name. Should handle retrieving solver name more elegantly
-        self.femConsoleMessage(splitCmd[0])
-        FreeCAD.Console.PrintMessage(solverDirectory +"\n")
-        self.solver_run_process.start(splitCmd[0],['-case',solverDirectory])
+        self.femConsoleMessage(cmd)
+        FreeCAD.Console.PrintMessage(solverDirectory + "\n")
+        self.solver_run_process.setWorkingDirectory(solverDirectory)
+        self.solver_run_process.start(cmd)
 
         #NOTE: setting solve button to inactive to ensure that two instances of the same simulation aren's started simulataneously
         self.form.pb_run_solver.setEnabled(False)

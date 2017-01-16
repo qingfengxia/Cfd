@@ -225,7 +225,7 @@ class BasicBuilder(object):
                         boundarySettings = [],
                         internalFields = {},
                         transientSettings = {"startTime":0, "endTime":1000, "timeStep":1, "writeInterval":100}, # simpleFoam
-                        paralleSettings = {'method':"simple", "numberOfSubdomains":multiprocessing.cpu_count()},
+                        paralleSettings = {'method':"simple", "numberOfSubdomains":multiprocessing.cpu_count()}, # NOTE: check typo should be paralle'l'Settings NOTE: Should we not use scotch for default
                 ):
         if casePath[0] == "~": casePath = os.path.expanduser(casePath)
         self._casePath = os.path.abspath(casePath)
@@ -254,6 +254,7 @@ class BasicBuilder(object):
         else:
             createCaseFromScratch(self._casePath, self._solverName)
         self._createInitVarables()
+        createRunScript(self._casePath, self._solverSettings['potentialInit'], self._solverSettings['parallel'], self._solverName, self._paralleSettings['numberOfSubdomains']) # Specify init_potential (defaults to true)
 
     def build(self):
         #if not rebuilding:
@@ -277,9 +278,13 @@ class BasicBuilder(object):
             self.setupDynamicMeshingProperties()
         self.setupSolverControl() # residual, relaxfactor refValue, refCell etc
 
+        # Move mesh files, after being edited, to polyMesh.org  
+        movePolyMesh(self._casePath)
+
     def setupMesh(self, updated_mesh_path, scale):
         if os.path.exists(updated_mesh_path):
             convertMesh(self._casePath, updated_mesh_path, scale)
+
 
     def updateMesh(self, updated_mesh_path, scale):
         #runFoamCommand('foamCleanPolyMesh -case {}'.format(self._casePath)) #foamCleanPolyMesh v4.0+?
