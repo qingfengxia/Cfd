@@ -58,11 +58,11 @@ class CfdCaseWriterFoam:
             self.builder = fcb.BasicBuilder(self.case_folder, CfdTools.getSolverSettings(self.solver_obj))
         else:
             self.builder = fcb.BasicBuilder(self.case_folder, CfdTools.getSolverSettings(self.solver_obj))
-        self.builder.createCase()
 
     def write_case(self, updating=False):
         """ Write_case() will collect case setings, and finally build a runnable case
         """
+        self.builder.createCase()  # move from init() to here, to avoid case folder overwriting after result Obtained
         FreeCAD.Console.PrintMessage("Start to write case to folder {}\n".format(self.solver_obj.WorkingDir))
         _cwd = os.curdir
         os.chdir(self.solver_obj.WorkingDir)  # pyFoam can not write to cwd if FreeCAD is started NOT from terminal
