@@ -47,12 +47,13 @@ class CfdSolver(object):
         if "SolverName" not in obj.PropertiesList:
             obj.addProperty("App::PropertyString", "SolverName", "Solver",
                             "unique solver name to identify the solver")
+            obj.SolverName = "OpenFOAM"
             obj.addProperty("App::PropertyEnumeration", "PhysicalDomain", "Solver",
                             "unique solver name to identify the solver")
             obj.PhysicalDomain = supported_physical_domains
             obj.PhysicalDomain = 'Fluidic'
-            obj.addProperty("App::PropertyString", "Module", "Solver",
-                            "python module for case writer")
+            #obj.addProperty("App::PropertyString", "Module", "Solver",
+            #                "python module for case writer")
             obj.addProperty("App::PropertyPath", "WorkingDir", "Solver",
                             "Solver process is run in this directory")
             obj.addProperty("App::PropertyString", "InputCaseName", "Solver",
