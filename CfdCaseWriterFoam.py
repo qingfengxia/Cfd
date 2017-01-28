@@ -104,30 +104,30 @@ class CfdCaseWriterFoam:
         #FreeCAD.Console.PrintMessage('mesh file {} converted and scaled with ratio {}\n'.format(unvMeshFile, scale))
 
     def write_material(self, material=None):
-        """ Air, Water, CustomedFluid, first step, default to Water, but here increase viscosity for quick convergence
+        """ currently only simple newtonian fluid is supported, incompressible, single material for single body
         """
-        #self.builder.fluidProperties = {'name': 'oneLiquid', 'kinematicViscosity': 1e-3}
-        #self.builder.fluidProperties = self.material_obj.FluidicProperties
-        
-        #try:
-            #Code for new material definitons. might have to consider how builder sees fluid properties in future
-        #kinVisc = FreeCAD.Units.Quantity(self.material_obj.Material['KinematicViscosity'])
-        #kinVisc = kinVisc.getValueAs('m^2/s')
-        
-        
-        Viscosity = FreeCAD.Units.Quantity(self.material_obj.Material['DynamicViscosity'])
-        Viscosity = Viscosity.getValueAs('Pa*s')
-        Density = FreeCAD.Units.Quantity(self.material_obj.Material['Density'])
-        Density = Density.getValueAs('kg/m^3')
-        
-        kinVisc = Viscosity/Density
-        #kinVisc = kinVisc.getValueAs('m^2/s')
-        
-        
-        self.builder.fluidProperties = {'name': 'oneLiquid', 'kinematicViscosity': float(kinVisc)}
-        #except:
-            #self.builder.fluidProperties = {'name': 'oneLiquid', 'kinematicViscosity': 1e-3}
-
+        fluidName = 'water'
+        kinVisc = 1e-3   # default to water
+        if self.material_obj:
+            if 'Name' in self.material_obj.Material:
+                fluidName = self.material_obj.Material['Name']  # CfdFluidMaterial's dict has no 'Name'
+            else:
+                fluidName = str(self.material_obj.Label)  # Label is unicode
+            # viscosity could be specified in two ways
+            if 'KinematicViscosity' in self.material_obj.Material:  # Fem workbench general FemMaterial category = Fluid
+                kinVisc = FreeCAD.Units.Quantity(self.material_obj.Material['KinematicViscosity'])
+            elif 'DynamicViscosity' in self.material_obj.Material:  # CFD workbench CfdFluidMaterail
+                Viscosity = FreeCAD.Units.Quantity(self.material_obj.Material['DynamicViscosity'])
+                Viscosity = Viscosity.getValueAs('Pa*s')
+                Density = FreeCAD.Units.Quantity(self.material_obj.Material['Density'])
+                Density = Density.getValueAs('kg/m^3')
+                if Density:
+                    kinVisc = Viscosity/float(Density)  # Density must not be zero. while null material has zero density
+            else:
+                FreeCAD.Console.Warning("No viscosity property is found in the material object, using default {}". format(kinVisc))
+        else:
+            FreeCAD.Console.Warning("No material object is found in analysis, using default kinematic viscosity {}". format(kinVisc))
+        self.builder.fluidProperties = {'name': 'oneLiquid', 'kinematicViscosity': kinVisc}
 
     def write_boundary_condition(self):
         """ Switch case to deal diff fluid boundary condition, thermal and turbulent is not yet fully tested
