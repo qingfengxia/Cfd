@@ -124,9 +124,9 @@ class CfdCaseWriterFoam:
                 if Density:
                     kinVisc = Viscosity/float(Density)  # Density must not be zero. while null material has zero density
             else:
-                FreeCAD.Console.Warning("No viscosity property is found in the material object, using default {}". format(kinVisc))
+                FreeCAD.Console.PrintWarning("No viscosity property is found in the material object, using default {}". format(kinVisc))
         else:
-            FreeCAD.Console.Warning("No material object is found in analysis, using default kinematic viscosity {}". format(kinVisc))
+            FreeCAD.Console.PrintWarning("No material object is found in analysis, using default kinematic viscosity {}". format(kinVisc))
         self.builder.fluidProperties = {'name': 'oneLiquid', 'kinematicViscosity': kinVisc}
 
     def write_boundary_condition(self):
