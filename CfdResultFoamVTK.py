@@ -71,7 +71,7 @@ def importCfdResult(filename, analysis=None, result_name_prefix=None):
     if not result_name_prefix: result_name_prefix = "CfdResult"
     result_obj = makeCfdResult(result_name_prefix)
     import Fem
-    Fem.readCfdResult(filename, result_obj.Name) #always create a new femmesh
+    Fem.readResult(filename, result_obj.Name) #always create a new femmesh
 
     ts = filename.split('_')[-1]
     try:
