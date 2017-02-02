@@ -20,6 +20,8 @@
 #*                                                                         *
 #***************************************************************************
 
+#this file will be deprecated once TestCfd unittest is completed
+
 App.newDocument("Unnamed")
 App.setActiveDocument("Unnamed")
 App.ActiveDocument=App.getDocument("Unnamed")
@@ -40,8 +42,8 @@ Gui.activeDocument().setEdit(App.ActiveDocument.ActiveObject.Name)
 Gui.activeDocument().resetEdit()
 #
 import FemGui
-import CaeAnalysis
-analysis_obj = CaeAnalysis._CreateCaeAnalysis('OpenFOAM', 'OpenFOAMAnalysis')
+import CfdAnalysis
+analysis_obj = CfdAnalysis.makeCfdAnalysis('OpenFOAMAnalysis')
 analysis_obj.Member = analysis_obj.Member  + [mesh_obj]
 Gui.getDocument("Unnamed").getObject("Cylinder_Mesh").Visibility=False
 Gui.getDocument("Unnamed").getObject("Cylinder").Visibility=True

@@ -51,11 +51,11 @@ class _ViewProviderCfdAnalysis:
         return
 
     def doubleClicked(self, vobj):
+        # bug: still not working, always bring up FemWorkbench
+        if FreeCADGui.activeWorkbench().name() != 'CfdWorkbench':
+            FreeCADGui.activateWorkbench("CfdWorkbench")
         if not FemGui.getActiveAnalysis() == self.Object:
-            if FreeCADGui.activeWorkbench().name() != 'CfdWorkbench':
-                FreeCADGui.activateWorkbench("CfdWorkbench")
             FemGui.setActiveAnalysis(self.Object)
-            return True
         return True
 
     def __getstate__(self):
