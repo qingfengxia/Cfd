@@ -1,10 +1,17 @@
 # A computional fluid dynamics (CFD) module for FreeCAD
 
 by Qingfeng Xia, 2015 <http://www.iesensor.com/HTML5pptCV>
-Team from CSIR South Africa, 2016
+
+the team from CSIR South Africa, 2016
 + Oliver Oxtoby <http://www.linkedin.com/in/oliver-oxtoby-05616835>
 + Alfred Bogears <http://www.csir.co.za/dr-alfred-bogaers>
 + Johan Heyns  <http://www.linkedin.com/in/johan-heyns-54b75511>
+
+Note: CSIR team has forked this repo into <https://github.com/jaheyns/Cfd>, focusing on usability for new users. 
+
+Meanwhile, this repo still targets at preparing real-world case files from FreeCAD goemetry for advanced users, which also means user needs to tweak the case files in production environment.
+
+Features from CSIR fork will be picked up regularly in the future. Before the release of FreeCAD 0.18, the author will focus on implementing infrastructure for CFDworkbench , PR to FemWorkbench of FreeCAD directly.
 
 ## LGPL license as FreeCAD
 
