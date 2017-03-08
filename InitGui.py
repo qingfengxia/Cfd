@@ -43,22 +43,25 @@ class CfdWorkbench(Workbench):
         import _CommandCfdAnalysis
         import _CommandCfdSolverFoam
         import _CommandCfdSolverControl
-        #import _CommandCfdResult  # error in import vtk6 in python, this function is implemented in File->Open Instead
+        #import _CommandCfdResult  # this function is implemented in File->Open Instead, or solver control task panel push button
 
-        # classes developed in FemWorkbench
-        import _CommandMeshGmshFromShape
-        import _CommandMeshNetgenFromShape
-        import _CommandMeshRegion
-        import _CommandPrintMeshInfo
-        import _CommandClearMesh
-        import _CommandCfdFluidMaterial
+        #import _CommandCfdFluidMaterial
+        # python classes developed in FemWorkbench, filename and commands changed March 2017
+        import PyGui._CommandFemMaterialFluid
+        import PyGui._CommandFemMeshGmshFromShape
+        import PyGui._CommandFemMeshNetgenFromShape
+        import PyGui._CommandFemMeshRegion
+        import PyGui._CommandFemMeshPrintInfo
+        import PyGui._CommandFemMeshClear
+        # vtk pipeline commands defiend and import in cpp needs not import here but directly use them
 
         # Post Processing commands are located in FemWorkbench, implemented and imported in C++
-        cmdlst = ['Cfd_Analysis', 'Fem_MeshNetgenFromShape', 'Fem_MeshGmshFromShape',
-                        'Fem_MeshRegion', 'Fem_PrintMeshInfo', 'Fem_ClearMesh',
-                        'Fem_ConstraintFluidBoundary', 'Cfd_SolverControl', 'Cfd_FluidMaterial', "Separator",
-                        "Fem_PostPipelineFromResult", "Fem_PostCreateClipFilter", 
-                        "Fem_PostCreateScalarClipFilter", "Fem_PostCreateCutFilter"]
+        cmdlst = ['Cfd_Analysis', 'Separator', 'FEM_MeshNetgenFromShape', 'FEM_MeshGmshFromShape',
+                        'FEM_MeshRegion', 'FEM_MeshPrintInfo', 'FEM_MeshClear', "Separator",
+                        'FEM_MaterialFluid', #'Cfd_FluidMaterial', 
+                        'FEM_ConstraintFluidBoundary', 'Cfd_SolverControl']
+                        #"Separator", "FEM_PostPipelineFromResult", "FEM_PostCreateClipFilter", 
+                        #"FEM_PostCreateScalarClipFilter", "FEM_PostCreateCutFilter"]
         self.appendToolbar(str(QtCore.QT_TRANSLATE_NOOP("Cfd", "CFD")), cmdlst)
         self.appendMenu(str(QtCore.QT_TRANSLATE_NOOP("Cfd", "CFD")), cmdlst)
 
