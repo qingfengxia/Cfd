@@ -61,7 +61,7 @@ class _TaskPanelCfdSolverControl:
 
         self.SolverProcess = QtCore.QProcess()
         self.Timer = QtCore.QTimer()
-        self.Timer.start(3000)
+        self.Timer.start(3000)  # may not enough for CFD
 
         # update UI
         self.fem_console_message = ''
@@ -73,30 +73,31 @@ class _TaskPanelCfdSolverControl:
         #======================================================================================================
         self.solver_run_process = QtCore.QProcess()
 
-        #self.solver_run_process.readyReadStandardOutput.connect(self.stdoutReady)
-        QtCore.QObject.connect(self.solver_run_process, QtCore.SIGNAL("readyReadStandardOutput()"), self.plotResiduals)
         QtCore.QObject.connect(self.solver_run_process, QtCore.SIGNAL("started()"), self.solverProcessStarted)
-        QtCore.QObject.connect(self.solver_run_process, QtCore.SIGNAL("stateChanged(QProcess::ProcessState)"), self.solverProcessStateChanged)
+        #QtCore.QObject.connect(self.solver_run_process, QtCore.SIGNAL("stateChanged(QProcess::ProcessState)"), self.solverProcessStateChanged)
         QtCore.QObject.connect(self.solver_run_process, QtCore.SIGNAL("finished(int)"), self.solverProcessFinished)
         QtCore.QObject.connect(self.solver_run_process, QtCore.SIGNAL("error(QProcess::ProcessError)"), self.solverProcessError)
+        #self.solver_run_process.readyReadStandardOutput.connect(self.stdoutReady)
+        QtCore.QObject.connect(self.solver_run_process, QtCore.SIGNAL("readyReadStandardOutput()"), self.plotResiduals)
         #======================================================================================================
 
         # Connect Signals and Slots
-        QtCore.QObject.connect(self.form.tb_choose_working_dir, QtCore.SIGNAL("clicked()"), self.choose_working_dir)
-        QtCore.QObject.connect(self.form.pb_write_inp, QtCore.SIGNAL("clicked()"), self.write_input_file_handler)
-        QtCore.QObject.connect(self.form.pb_edit_inp, QtCore.SIGNAL("clicked()"), self.editSolverInputFile)
+        QtCore.QObject.connect(self.form.tb_choose_working_dir, QtCore.SIGNAL("clicked()"), self.chooseWorkingDir)
+        QtCore.QObject.connect(self.form.pb_write_inp, QtCore.SIGNAL("clicked()"), self.writeSolverInput)
+        QtCore.QObject.connect(self.form.pb_edit_inp, QtCore.SIGNAL("clicked()"), self.editSolverInput)
         QtCore.QObject.connect(self.form.pb_run_solver, QtCore.SIGNAL("clicked()"), self.runSolverProcess)
         QtCore.QObject.connect(self.form.pb_terminate_solver, QtCore.SIGNAL("clicked()"), self.killSolverProcess)
-        self.form.pb_terminate_solver.setEnabled(False)
         QtCore.QObject.connect(self.form.pb_show_result, QtCore.SIGNAL("clicked()"), self.showResult)
         QtCore.QObject.connect(self.form.pb_view_externally, QtCore.SIGNAL("clicked()"), self.viewResultExternally)
-
-        #QtCore.QObject.connect(self.SolverProcess, QtCore.SIGNAL("finished(int)"), self.solverProcessFinished)
+        self.form.pb_terminate_solver.setEnabled(False)
+        self.form.pb_show_result.setEnabled(False)
+        self.form.pb_view_externally.setEnabled(False)
 
         QtCore.QObject.connect(self.Timer, QtCore.SIGNAL("timeout()"), self.updateText)
         self.form.pb_show_result.setEnabled(True)  # delete this once finished signal is correctly managed
         if self.solver_object.ResultObtained:
             self.form.pb_show_result.setEnabled(True)
+            self.form.pb_view_externally.setEnabled(True)
         self.Start = time.time() #debug tobe removed, it is not used in this taskpanel
         self.update()  # update UI from FemSolverObject, like WorkingDir
 
@@ -131,7 +132,7 @@ class _TaskPanelCfdSolverControl:
         #FreeCADGui.Control.closeDialog()
         FreeCADGui.ActiveDocument.resetEdit()
 
-    def choose_working_dir(self):
+    def chooseWorkingDir(self):
         current_wd = self.solver_object.WorkingDir
         wd = QtGui.QFileDialog.getExistingDirectory(None,
                                                     'Choose Solver working directory',
@@ -143,9 +144,9 @@ class _TaskPanelCfdSolverControl:
             info_obj.WorkingDir = current_wd
         self.form.le_working_dir.setText(info_obj.WorkingDir)
 
-    def write_input_file_handler(self):
+    def writeSolverInput(self):
         QApplication.restoreOverrideCursor()
-        if self.check_prerequisites_helper():
+        if self.validateSolverInput():
             # self.solver_object.SolverName == "OpenFOAM":
             self.femConsoleMessage("{} case writer is called".format(self.solver_object.SolverName))
             """
@@ -167,7 +168,7 @@ class _TaskPanelCfdSolverControl:
         else:
             self.femConsoleMessage("Case check failed!", "#FF0000")
 
-    def check_prerequisites_helper(self):
+    def validateSolverInput(self):
         self.Start = time.time()
         self.femConsoleMessage("Check dependencies...")
         self.form.l_time.setText('Time: {0:4.1f}: '.format(time.time() - self.Start))
@@ -185,7 +186,7 @@ class _TaskPanelCfdSolverControl:
             self.ext_editor_process.start(ext_editor_path, [filename])
     """
 
-    def editSolverInputFile(self):
+    def editSolverInput(self):
         self.femConsoleMessage("Edit case input file in FreeCAD is not implemented!")
         self.solver_runner.edit_case()
 
@@ -225,28 +226,9 @@ class _TaskPanelCfdSolverControl:
         self.form.pb_terminate_solver.setEnabled(False)
         #FreeCAD.Console.PrintMessage("Killing OF solver instance")
 
-    def solverProcessFinished(self, exitCode):
-        if not exitCode:
-            self.femConsoleMessage("External solver process is done!", "#00AA00")
-            self.printSolverProcessStdout()
-            self.solver_object.ResultObtained = True
-            self.form.pb_show_result.setEnabled(True)
-        else:
-            self.femConsoleMessage("Solver Process Finished with error code: {}".format(exitCode))
-        # Restore previous cwd
-        QtCore.QDir.setCurrent(self.cwd)
-        self.Timer.stop()
-        self.form.pb_run_solver.setText("Re-run Solver")
-        self.form.pb_run_solver.setEnabled(True)
-        self.form.pb_terminate_solver.setEnabled(False)
-
-    def plotResiduals(self):
-        text = str(self.solver_run_process.readAllStandardOutput())
-        self.solver_runner.process_output(text)
-
-        #NOTE: can print the output from the solver to the console via the following command
-        FreeCAD.Console.PrintMessage(text)
-
+    def solverProcessStarted(self):
+        self.femConsoleMessage("External solver process has started!", "#00AA00")
+    
     def solverProcessStateChanged(self, newState):
         if (newState == QtCore.QProcess.ProcessState.Starting):
             self.femConsoleMessage("Starting Solver...")
@@ -258,6 +240,26 @@ class _TaskPanelCfdSolverControl:
     def solverProcessError(self, error):
         self.femConsoleMessage("Solver execute error: {}".format(error), "#FF0000")
 
+    def solverProcessFinished(self, exitCode):
+        if not exitCode:
+            self.femConsoleMessage("External solver process is done!", "#00AA00")
+            self.printSolverProcessStdout()
+            self.solver_object.ResultObtained = True
+            self.form.pb_show_result.setEnabled(True)
+        else:
+            self.femConsoleMessage("Solver Process Finished with error code: {}".format(exitCode))
+        # Restore previous cwd not necessary, since cwd is set to QProcess instead of FreeCAD
+        self.Timer.stop()
+        self.form.pb_run_solver.setText("Re-run Solver")
+        self.form.pb_run_solver.setEnabled(True)
+        self.form.pb_terminate_solver.setEnabled(False)
+
+    def plotResiduals(self):
+        text = str(self.solver_run_process.readAllStandardOutput())
+        self.solver_runner.process_output(text)
+
+        #NOTE: can print the output from the solver to the console via the following command
+        FreeCAD.Console.PrintMessage(text)
 
     def printSolverProcessStdout(self):
         out = self.SolverProcess.readAllStandardOutput()
