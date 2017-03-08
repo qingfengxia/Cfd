@@ -46,14 +46,10 @@ class CfdSolver(object):
         # some properties previously defined in FemSolver C++ object are moved here
         if "SolverName" not in obj.PropertiesList:
             obj.addProperty("App::PropertyString", "SolverName", "Solver",
-                            "unique solver name to identify the solver")
-            obj.SolverName = "OpenFOAM"
+                            "unique solver name to identify the solver", True)
             obj.addProperty("App::PropertyEnumeration", "PhysicalDomain", "Solver",
                             "unique solver name to identify the solver")
             obj.PhysicalDomain = supported_physical_domains
-            obj.PhysicalDomain = 'Fluidic'
-            #obj.addProperty("App::PropertyString", "Module", "Solver",
-            #                "python module for case writer")
             obj.addProperty("App::PropertyPath", "WorkingDir", "Solver",
                             "Solver process is run in this directory")
             obj.addProperty("App::PropertyString", "InputCaseName", "Solver",
@@ -61,15 +57,10 @@ class CfdSolver(object):
             obj.addProperty("App::PropertyBool", "Parallel", "Solver",
                             "solver is run with muliticore or on cluster")
             obj.addProperty("App::PropertyBool", "ResultObtained", "Solver",
-                            "result of analysis has been obtained, i.e. case setup is fine")
+                            "result of analysis has been obtained, i.e. case setup is fine", True)
 
-            import tempfile
-            if os.path.exists('/tmp/'):
-                obj.WorkingDir = '/tmp/'  # must exist for POSIX system
-            elif tempfile.tempdir:
-                obj.WorkingDir = tempfile.tempdir
-            else:
-                obj.WorkingDir = './'
+            obj.PhysicalDomain = 'Fluidic'
+            obj.WorkingDir = CfdTools.getTempWorkingDir()
             obj.InputCaseName = 'TestCase'
 
         # API: addProperty(self,type,name='',group='',doc='',attr=0,readonly=False,hidden=False)

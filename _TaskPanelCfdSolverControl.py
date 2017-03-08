@@ -74,10 +74,11 @@ class _TaskPanelCfdSolverControl:
         self.solver_run_process = QtCore.QProcess()
 
         #self.solver_run_process.readyReadStandardOutput.connect(self.stdoutReady)
-        QtCore.QObject.connect(self.solver_run_process, QtCore.SIGNAL("finished(int)"), self.solverFinished)
         QtCore.QObject.connect(self.solver_run_process, QtCore.SIGNAL("readyReadStandardOutput()"), self.plotResiduals)
-        QtCore.QObject.connect(self.form.terminateSolver, QtCore.SIGNAL("clicked()"), self.killSolverProcess)
-        self.form.terminateSolver.setEnabled(False)
+        QtCore.QObject.connect(self.solver_run_process, QtCore.SIGNAL("started()"), self.solverProcessStarted)
+        QtCore.QObject.connect(self.solver_run_process, QtCore.SIGNAL("stateChanged(QProcess::ProcessState)"), self.solverProcessStateChanged)
+        QtCore.QObject.connect(self.solver_run_process, QtCore.SIGNAL("finished(int)"), self.solverProcessFinished)
+        QtCore.QObject.connect(self.solver_run_process, QtCore.SIGNAL("error(QProcess::ProcessError)"), self.solverProcessError)
         #======================================================================================================
 
         # Connect Signals and Slots
@@ -85,14 +86,12 @@ class _TaskPanelCfdSolverControl:
         QtCore.QObject.connect(self.form.pb_write_inp, QtCore.SIGNAL("clicked()"), self.write_input_file_handler)
         QtCore.QObject.connect(self.form.pb_edit_inp, QtCore.SIGNAL("clicked()"), self.editSolverInputFile)
         QtCore.QObject.connect(self.form.pb_run_solver, QtCore.SIGNAL("clicked()"), self.runSolverProcess)
+        QtCore.QObject.connect(self.form.pb_terminate_solver, QtCore.SIGNAL("clicked()"), self.killSolverProcess)
+        self.form.pb_terminate_solver.setEnabled(False)
         QtCore.QObject.connect(self.form.pb_show_result, QtCore.SIGNAL("clicked()"), self.showResult)
         QtCore.QObject.connect(self.form.pb_view_externally, QtCore.SIGNAL("clicked()"), self.viewResultExternally)
 
-        #
-        QtCore.QObject.connect(self.SolverProcess, QtCore.SIGNAL("started()"), self.solverProcessStarted)
-        QtCore.QObject.connect(self.SolverProcess, QtCore.SIGNAL("stateChanged(QProcess::ProcessState)"), self.solverProcessStateChanged)
-        QtCore.QObject.connect(self.SolverProcess, QtCore.SIGNAL("error(QProcess::ProcessError)"), self.solverProcessError)
-        QtCore.QObject.connect(self.SolverProcess, QtCore.SIGNAL("finished(int)"), self.solverProcessFinished)
+        #QtCore.QObject.connect(self.SolverProcess, QtCore.SIGNAL("finished(int)"), self.solverProcessFinished)
 
         QtCore.QObject.connect(self.Timer, QtCore.SIGNAL("timeout()"), self.updateText)
         self.form.pb_show_result.setEnabled(True)  # delete this once finished signal is correctly managed
@@ -212,7 +211,7 @@ class _TaskPanelCfdSolverControl:
 
         #NOTE: setting solve button to inactive to ensure that two instances of the same simulation aren's started simulataneously
         self.form.pb_run_solver.setEnabled(False)
-        self.form.terminateSolver.setEnabled(True)
+        self.form.pb_terminate_solver.setEnabled(True)
         self.femConsoleMessage("Solver started")
 
         QApplication.restoreOverrideCursor()
@@ -223,26 +222,30 @@ class _TaskPanelCfdSolverControl:
         self.solver_run_process.terminate()
         #NOTE: reactivating solver button
         self.form.pb_run_solver.setEnabled(True)
-        self.form.terminateSolver.setEnabled(False)
+        self.form.pb_terminate_solver.setEnabled(False)
         #FreeCAD.Console.PrintMessage("Killing OF solver instance")
 
-    def solverFinished(self):
-        #self.femConsoleMessage(self.solver_run_process.exitCode())
-        self.femConsoleMessage("Simulation finished!")
+    def solverProcessFinished(self, exitCode):
+        if not exitCode:
+            self.femConsoleMessage("External solver process is done!", "#00AA00")
+            self.printSolverProcessStdout()
+            self.solver_object.ResultObtained = True
+            self.form.pb_show_result.setEnabled(True)
+        else:
+            self.femConsoleMessage("Solver Process Finished with error code: {}".format(exitCode))
+        # Restore previous cwd
+        QtCore.QDir.setCurrent(self.cwd)
+        self.Timer.stop()
+        self.form.pb_run_solver.setText("Re-run Solver")
         self.form.pb_run_solver.setEnabled(True)
-        self.form.terminateSolver.setEnabled(False)
-    
+        self.form.pb_terminate_solver.setEnabled(False)
+
     def plotResiduals(self):
         text = str(self.solver_run_process.readAllStandardOutput())
         self.solver_runner.process_output(text)
 
         #NOTE: can print the output from the solver to the console via the following command
         FreeCAD.Console.PrintMessage(text)
-    
-    def solverProcessStarted(self):
-        #print("solver Started()")
-        #print(self.SolverProcess.state())
-        self.form.pb_run_solver.setText("Break Solver process")
 
     def solverProcessStateChanged(self, newState):
         if (newState == QtCore.QProcess.ProcessState.Starting):
@@ -254,19 +257,6 @@ class _TaskPanelCfdSolverControl:
 
     def solverProcessError(self, error):
         self.femConsoleMessage("Solver execute error: {}".format(error), "#FF0000")
-
-    def solverProcessFinished(self, exitCode):
-        if not exitCode:
-            self.femConsoleMessage("External solver process is done!", "#00AA00")
-            self.printSolverProcessStdout()
-            self.form.pb_run_solver.setText("Re-run Solver")
-            self.solver_object.ResultObtained = True
-            self.form.pb_show_result.setEnabled(True)
-        else:
-            self.femConsoleMessage("Solver Process Finished with error code: {}".format(exitCode))
-        # Restore previous cwd
-        QtCore.QDir.setCurrent(self.cwd)
-        self.Timer.stop()
 
 
     def printSolverProcessStdout(self):
