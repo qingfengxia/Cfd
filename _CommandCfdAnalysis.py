@@ -25,14 +25,14 @@ __author__ = "Juergen Riegel"
 __url__ = "http://www.freecadweb.org"
 
 import FreeCAD
-from FemCommands import FemCommands
+from _CfdCommand import CfdCommand
 
 if FreeCAD.GuiUp:
     import FreeCADGui
     from PySide import QtCore
 
 
-class _CommandCfdAnalysis(FemCommands):
+class _CommandCfdAnalysis(CfdCommand):
     "the Cfd_Analysis command definition"
     def __init__(self):
         super(_CommandCfdAnalysis, self).__init__()
@@ -50,12 +50,14 @@ class _CommandCfdAnalysis(FemCommands):
         FreeCADGui.doCommand("FemGui.setActiveAnalysis(App.activeDocument().ActiveObject)")
         FreeCADGui.addModule("CfdSolverFoam")
         FreeCADGui.doCommand("FemGui.getActiveAnalysis().Member = FemGui.getActiveAnalysis().Member + [CfdSolverFoam.makeCfdSolverFoam()]")
+        FreeCADGui.addModule("CfdFluidMaterial")
+        FreeCADGui.doCommand("FemGui.getActiveAnalysis().Member = FemGui.getActiveAnalysis().Member + [CfdFluidMaterial.makeCfdFluidMaterial('FluidMaterial')]")
         sel = FreeCADGui.Selection.getSelection()
         if (len(sel) == 1):
             if(sel[0].isDerivedFrom("Fem::FemMeshObject")):
                 FreeCADGui.doCommand("FemGui.getActiveAnalysis().Member = FemGui.getActiveAnalysis().Member + [App.activeDocument()." + sel[0].Name + "]")
             if(sel[0].isDerivedFrom("Part::Feature")):
-                FreeCADGui.doCommand("App.activeDocument().addObject('Fem::FemMeshShapeNetgenObject', '" + sel[0].Name + "_Mesh')")
+                FreeCADGui.doCommand("App.activeDocument().addObject('Fem::FemMeshShapeGmshObject', '" + sel[0].Name + "_Mesh')")  # default to GMSH
                 FreeCADGui.doCommand("App.activeDocument().ActiveObject.Shape = App.activeDocument()." + sel[0].Name)
                 FreeCADGui.doCommand("FemGui.getActiveAnalysis().Member = FemGui.getActiveAnalysis().Member + [App.activeDocument().ActiveObject]")
                 FreeCADGui.doCommand("Gui.activeDocument().setEdit(App.ActiveDocument.ActiveObject.Name)")

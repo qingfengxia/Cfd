@@ -25,7 +25,7 @@ __author__ = "Juergen Riegel"
 __url__ = "http://www.freecadweb.org"
 
 import FreeCAD
-from FemCommands import FemCommands
+from _CfdCommand import CfdCommand
 import CfdTools
 
 if FreeCAD.GuiUp:
@@ -33,7 +33,7 @@ if FreeCAD.GuiUp:
     from PySide import QtCore, QtGui
 
 
-class _CommandCfdResult(FemCommands):
+class _CommandCfdResult(CfdCommand):
     "the Fem show reslult command definition"
     def __init__(self):
         super(_CommandCfdResult, self).__init__()

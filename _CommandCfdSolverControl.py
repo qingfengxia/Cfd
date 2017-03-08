@@ -25,14 +25,14 @@ __author__ = "Juergen Riegel"
 __url__ = "http://www.freecadweb.org"
 
 import FreeCAD
-from FemCommands import FemCommands
+from _CfdCommand import CfdCommand
 
 if FreeCAD.GuiUp:
     import FreeCADGui
     from PySide import QtCore
 
 
-class _CommandCfdSolverControl(FemCommands):
+class _CommandCfdSolverControl(CfdCommand):
     "the Cfd_SolverControl command definition"
     def __init__(self):
         super(_CommandCfdSolverControl, self).__init__()
