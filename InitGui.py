@@ -45,10 +45,11 @@ class CfdWorkbench(Workbench):
         import _CommandCfdSolverControl
         #import _CommandCfdResult  # this function is implemented in File->Open Instead, or solver control task panel push button
 
+        import _CommandCfdMeshGmshFromShape
         #import _CommandCfdFluidMaterial
         # python classes developed in FemWorkbench, filename and commands changed March 2017
+        #import PyGui._CommandFemMeshGmshFromShape
         import PyGui._CommandFemMaterialFluid
-        import PyGui._CommandFemMeshGmshFromShape
         import PyGui._CommandFemMeshNetgenFromShape
         import PyGui._CommandFemMeshRegion
         import PyGui._CommandFemMeshPrintInfo
@@ -56,7 +57,8 @@ class CfdWorkbench(Workbench):
         # vtk pipeline commands defiend and import in cpp needs not import here but directly use them
 
         # Post Processing commands are located in FemWorkbench, implemented and imported in C++
-        cmdlst = ['Cfd_Analysis', 'Separator', 'FEM_MeshNetgenFromShape', 'FEM_MeshGmshFromShape',
+        cmdlst = ['Cfd_Analysis', 'Separator', 'FEM_MeshNetgenFromShape', 
+                        'Cfd_MeshGmshFromShape', #'FEM_MeshGmshFromShape',
                         'FEM_MeshRegion', 'FEM_MeshPrintInfo', 'FEM_MeshClear', "Separator",
                         'FEM_MaterialFluid', #'Cfd_FluidMaterial', 
                         'FEM_ConstraintFluidBoundary', 'Cfd_SolverControl']
