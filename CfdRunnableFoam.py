@@ -71,7 +71,7 @@ class CfdRunnable(object):
             raise Exception('FEM: No active analysis found!')
 
     def check_prerequisites(self):
-        return ""
+        return CfdTools.check_prerequisites()
 
     def edit_case(self):
         case_path = self.solver.WorkingDir + os.path.sep + self.solver.InputCaseName

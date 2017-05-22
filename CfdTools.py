@@ -40,6 +40,61 @@ if FreeCAD.GuiUp:
     import FemGui
 
 
+def check_CFD_prerequisites():
+    import Units
+    import FemGui
+    import subprocess
+    message = ""
+    # Check for gnplot python module
+    try:
+        import Gnuplot
+    except:
+        message += "Gnuplot python module not installed\n"
+    #Check for Pyfoam module
+    try:
+        import PyFoam
+    except:
+        message += "PyFoam python module not installed\n"
+    #Check Openfoam
+    # Check that path to OpenFOAM is set
+    #ofpath = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/CFD/OpenFOAM") #NB Check this - probably not quite right!
+
+    ofpath=FreeCAD.ParamGet(self.param_path).GetString("InstallationPath", "")
+    if((ofpath == None) or (ofpath=="")):
+        message += "OpenFOAM installation path not set\n"
+
+    # TODO: Check that OpenFOAM version is at least 3.0.1
+
+    # Check that gmsh version 2.13 or greater is installed
+    gmshversion=subprocess.check_output(["gmsh" "-version"])
+    if("command not found" in gmshversion):
+        message+="Gmsh is not installed\n"
+    else:
+        versionlist=gmshversion.split(".")
+        if(float(versionlist[0]+"."+versionlist[1])<2.13):
+            message+="Gmesh version is older than minimum required (2.13)\n"
+    # analysis
+    analysis = FemGui.getActiveAnalysis()
+    if not analysis:
+        message += "No active Analysis\n"
+    # solver
+    solver = getSolver(analysis)
+    if not solver:
+        message += "No solver object defined in the analysis\n"
+    #if not working_dir:
+    workingdir = solver.WorkingDir
+    if(len(workingdir)<1):
+        message += "Working directory not set\n"
+    if not checkWorkingDir(workingdir):
+            message += "Working directory \'{}\' doesn't exist.".format(workingdir)
+    # mesh
+    mesh = None #NB! TODO: FIGURE OUT HOW TO FIND MESH!
+    if not mesh:
+        message += "No mesh object defined in the analysis\n"
+    else:
+        if mesh.FemMesh.VolumeCount == 0 and mesh.FemMesh.FaceCount == 0 and mesh.FemMesh.EdgeCount == 0:
+            message += "CFD mesh has neither volume nor shell or edge elements. Provide a CFD mesh with elements!\n"
+
 # Working directory
 
 def checkWorkingDir(wd):
