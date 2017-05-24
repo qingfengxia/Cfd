@@ -44,6 +44,7 @@ def check_CFD_prerequisites():
     import Units
     import FemGui
     import subprocess
+    #import FoamCaseBuilder/utility #doesn't work
     message = ""
     # Check for gnplot python module
     try:
@@ -56,14 +57,36 @@ def check_CFD_prerequisites():
     except:
         message += "PyFoam python module not installed\n"
     #Check Openfoam
-    # Check that path to OpenFOAM is set
-    #ofpath = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/CFD/OpenFOAM") #NB Check this - probably not quite right!
 
-    ofpath=FreeCAD.ParamGet(self.param_path).GetString("InstallationPath", "")
-    if((ofpath == None) or (ofpath=="")):
-        message += "OpenFOAM installation path not set\n"
+#    ofpath=FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/Cfd/OpenFOAM").GetString("InstallationPath", "")
+    if platform.system() == 'Windows':
+        foam_dir = None
+        foam_ver = None
+    else:
+        cmdline = ['bash', '-l', '-c', 'echo $WM_PROJECT_DIR']
+        foam_dir = subprocess.check_output(cmdline, stderr=subprocess.PIPE)
+        cmdline = ['bash', '-l', '-c', 'echo $WM_PROJECT_VERSION']
+        foam_ver = subprocess.check_output(cmdline, stderr=subprocess.PIPE)
+    # Python 3 compatible, check_output() return type byte
+    foam_dir = str(foam_dir)
+    if len(foam_dir)<3:                 # If env var is not defined, python 3 returns `b'\n'` and python 2`\n`
+        message+="OpenFOAM environment not pre-loaded before running FreeCAD. Defaulting to OpenFOAM path in Workbench preferences...\n"
 
-    # TODO: Check that OpenFOAM version is at least 3.0.1
+        # Check that path to OpenFOAM is set
+        ofpath=FreeCAD.ParamGet(self.param_path).GetString("InstallationPath", "")
+        if((ofpath == None) or (ofpath=="")):
+            message += "OpenFOAM installation path not set\n"
+
+
+    else:
+        foam_ver = str(foam_ver)
+        if len(foam_ver)>1:
+            if foam_ver[:2] == "b'":
+                foam_ver = foam_ver[2:-3]    # Python3: Strip 'b' from front and EOL char
+            else:
+                foam_ver = foam_ver.strip()  # Python2: Strip EOL char
+        if(foam_ver.split('.')[0]<3):
+            message+="OpenFOAM version "+foam_ver+"pre-loaded is outdated: the CFD workbench requires at least OpenFOAM 3.0.1\n"
 
     # Check that gmsh version 2.13 or greater is installed
     gmshversion=subprocess.check_output(["gmsh" "-version"])
