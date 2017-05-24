@@ -58,7 +58,6 @@ def check_CFD_prerequisites():
         message += "PyFoam python module not installed\n"
     #Check Openfoam
 
-#    ofpath=FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/Cfd/OpenFOAM").GetString("InstallationPath", "")
     if platform.system() == 'Windows':
         foam_dir = None
         foam_ver = None
@@ -73,11 +72,9 @@ def check_CFD_prerequisites():
         message+="OpenFOAM environment not pre-loaded before running FreeCAD. Defaulting to OpenFOAM path in Workbench preferences...\n"
 
         # Check that path to OpenFOAM is set
-        ofpath=FreeCAD.ParamGet(self.param_path).GetString("InstallationPath", "")
+        ofpath=FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/Cfd/OpenFOAM").GetString("InstallationPath", "")
         if((ofpath == None) or (ofpath=="")):
             message += "OpenFOAM installation path not set\n"
-
-
     else:
         foam_ver = str(foam_ver)
         if len(foam_ver)>1:
