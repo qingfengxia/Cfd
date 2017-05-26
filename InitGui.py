@@ -29,6 +29,8 @@ __url__ = "http://www.freecadweb.org"
 
 def checkCfdDependencies():
     import subprocess  # should this move
+    import platform
+    
     message = ""
     
 
