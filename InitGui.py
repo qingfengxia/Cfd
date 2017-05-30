@@ -30,7 +30,7 @@ __url__ = "http://www.freecadweb.org"
 
 def checkCfdDependencies(term_print=True):
     import os
-    import subprocess  # should this move
+    import subprocess  # should this move?
     import platform
     
     message = "checking cfd workbench dependencies:\n"
@@ -51,7 +51,7 @@ def checkCfdDependencies(term_print=True):
             os.system("echo gnuplot python module not installed")
 
 
-    #check for pyfoam module
+    # check for pyfoam module
     message += "checking for pyfoam:\n"
     if(term_print):
         os.system("echo checking for pyfoam:")
@@ -63,18 +63,20 @@ def checkCfdDependencies(term_print=True):
             os.system("echo pyfoamm python module not installed")
 
 
-    #check openfoam
+    # check openfoam
     message += "checking for openfoam:\n"
     if(term_print):
         os.system("echo checking for openfoam:")
     if platform.system() == 'windows':
-        foam_dir = none
-        foam_ver = none
+        foam_dir = None
+        foam_ver = None
     else:
         cmdline = ['bash', '-l', '-c', 'echo $wm_project_dir']
-        foam_dir = subprocess.check_output(cmdline, stderr=subprocess.pipe)
+        #foam_dir = subprocess.check_output(cmdline, stderr=subprocess.pipe)
+        foam_dir = subprocess.check_output(cmdline)
         cmdline = ['bash', '-l', '-c', 'echo $wm_project_version']
-        foam_ver = subprocess.check_output(cmdline, stderr=subprocess.pipe)
+        #foam_ver = subprocess.check_output(cmdline, stderr=subprocess.pipe)
+        foam_ver = subprocess.check_output(cmdline)
     # python 3 compatible, check_output() return type byte
     foam_dir = str(foam_dir)
     if len(foam_dir)<3:
@@ -83,11 +85,12 @@ def checkCfdDependencies(term_print=True):
             + " defaulting to openfoam path in workbench preferences...\n"
 
         if(term_print):
-            os.system("echo 'openfoam environment not pre-loaded before running freecad. Defaulting to openfoam path in workbench preferences...'")
+            os.system("echo 'openfoam environment not pre-loaded before running freecad.\
+                    Defaulting to openfoam path in workbench preferences...'")
 
         # check that path to openfoam is set
-        ofpath=freecad.paramget("user parameter:baseapp/preferences/mod/cfd/openfoam").getstring("installationpath", "")
-        if((ofpath == none) or (ofpath=="")):
+        ofpath=FreeCAD.ParamGet("User parameter:Baseapp/Preferences/Mod/Cfd/Openfoam").GetString("InstallationPath", "")
+        if((ofpath == None) or (ofpath=="")):
             message += "openfoam installation path not set\n"
             if(term_print):
                 os.system("echo 'openfoam installation path not set'")
@@ -103,12 +106,14 @@ def checkCfdDependencies(term_print=True):
                 + "the cfd workbench requires at least openfoam 3.0.1\n"
 
             if(term_print):
-                os.system("echo 'openfoam version "+foam_ver+"pre-loaded is outdated: the cfd workbench requires at least openfoam 3.0.1'")
+                os.system("echo 'openfoam version "+foam_ver
+                        + "pre-loaded is outdated: the cfd workbench requires at least openfoam 3.0.1'")
 
 
     message += "checking for gmsh:\n"
     if(term_print):
         os.system("echo checking for gmsh:")
+
     # check that gmsh version 2.13 or greater is installed
     gmshversion=""
     try:
@@ -182,5 +187,6 @@ class CfdFoamWorkbench(Workbench):
     def GetClassName(self):
         return "Gui::PythonWorkbench"
 
+#print(checkCfdDependencies())
 checkCfdDependencies()
 FreeCADGui.addWorkbench(CfdFoamWorkbench())
