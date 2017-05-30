@@ -182,5 +182,5 @@ class CfdFoamWorkbench(Workbench):
     def GetClassName(self):
         return "Gui::PythonWorkbench"
 
-#checkCfdDependencies()
+checkCfdDependencies()
 FreeCADGui.addWorkbench(CfdFoamWorkbench())
