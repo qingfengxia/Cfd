@@ -1,102 +1,142 @@
 # **************************************************************************
-# *  (c) Bernd Hahnebach (bernd@bimstatik.org) 2014                        *
-# *  (c) Qingfeng Xia @ iesensor.com 2016                                  *
+# *  (c) bernd hahnebach (bernd@bimstatik.org) 2014                        *
+# *  (c) qingfeng xia @ iesensor.com 2016                                  *
 # *                                                                        *
-# *  This file is part of the FreeCAD CAx development system.              *
+# *  this file is part of the freecad cax development system.              *
 # *                                                                        *
-# *  This program is free software; you can redistribute it and/or modify  *
-# *  it under the terms of the GNU Lesser General Public License (LGPL)    *
-# *  as published by the Free Software Foundation; either version 2 of     *
-# *  the License, or (at your option) any later version.                   *
-# *  for detail see the LICENCE text file.                                 *
+# *  this program is free software; you can redistribute it and/or modify  *
+# *  it under the terms of the gnu lesser general public license (lgpl)    *
+# *  as published by the free software foundation; either version 2 of     *
+# *  the license, or (at your option) any later version.                   *
+# *  for detail see the licence text file.                                 *
 # *                                                                        *
-# *  FreeCAD is distributed in the hope that it will be useful,            *
-# *  but WITHOUT ANY WARRANTY; without even the implied warranty of        *
-# *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
-# *  GNU Lesser General Public License for more details.                   *
+# *  freecad is distributed in the hope that it will be useful,            *
+# *  but without any warranty; without even the implied warranty of        *
+# *  merchantability or fitness for a particular purpose.  see the         *
+# *  gnu lesser general public license for more details.                   *
 # *                                                                        *
-# *  You should have received a copy of the GNU Library General Public     *
-# *  License along with FreeCAD; if not, write to the Free Software        *
-# *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  *
-# *  USA                                                                   *
+# *  you should have received a copy of the gnu library general public     *
+# *  license along with freecad; if not, write to the free software        *
+# *  foundation, inc., 59 temple place, suite 330, boston, ma  02111-1307  *
+# *  usa                                                                   *
 # *                                                                        *
 # **************************************************************************/
 
-__title__ = "Cfd Analysis workbench"
-__author__ = "Qingfeng Xia"
+import os
+
+__title__ = "cfd analysis workbench"
+__author__ = "qingfeng xia"
 __url__ = "http://www.freecadweb.org"
 
 
-def checkCfdDependencies():
+def checkcfddependencies(term_print=True):
     import subprocess  # should this move
     import platform
     
-    message = ""
+    message = "checking cfd workbench dependencies:\n"
+    if(term_print):
+        pass
+        os.system("echo 'checking cfd workbench dependencies:'")
     
 
-    # Check for gnplot python module
+    # check for gnplot python module
+    message += "checking for gnuplot:\n"
+    if(term_print):
+        os.system("echo checking for gnuplot:")
     try:
-        import Gnuplot
+        import gnuplot
     except:
-        message += "Gnuplot python module not installed\n"
+        message += "gnuplot python module not installed\n"
+        if(term_print):
+            os.system("echo gnuplot python module not installed")
 
 
-    #Check for Pyfoam module
+    #check for pyfoam module
+    message += "checking for pyfoam:\n"
+    if(term_print):
+        os.system("echo checking for pyfoam:")
     try:
-        import PyFoam
+        import pyfoam
     except:
-        message += "PyFoam python module not installed\n"
+        message += "pyfoam python module not installed\n"
+        if(term_print):
+            os.system("echo pyfoamm python module not installed")
 
 
-    #Check Openfoam
-    if platform.system() == 'Windows':
-        foam_dir = None
-        foam_ver = None
+    #check openfoam
+    message += "checking for openfoam:\n"
+    if(term_print):
+        os.system("echo checking for openfoam:")
+    if platform.system() == 'windows':
+        foam_dir = none
+        foam_ver = none
     else:
-        cmdline = ['bash', '-l', '-c', 'echo $WM_PROJECT_DIR']
-        foam_dir = subprocess.check_output(cmdline, stderr=subprocess.PIPE)
-        cmdline = ['bash', '-l', '-c', 'echo $WM_PROJECT_VERSION']
-        foam_ver = subprocess.check_output(cmdline, stderr=subprocess.PIPE)
-    # Python 3 compatible, check_output() return type byte
+        cmdline = ['bash', '-l', '-c', 'echo $wm_project_dir']
+        foam_dir = subprocess.check_output(cmdline, stderr=subprocess.pipe)
+        cmdline = ['bash', '-l', '-c', 'echo $wm_project_version']
+        foam_ver = subprocess.check_output(cmdline, stderr=subprocess.pipe)
+    # python 3 compatible, check_output() return type byte
     foam_dir = str(foam_dir)
     if len(foam_dir)<3:
-        # If env var is not defined, python 3 returns `b'\n'` and python 2`\n`
-        message+="OpenFOAM environment not pre-loaded before running FreeCAD." \
-            + " Defaulting to OpenFOAM path in Workbench preferences...\n"
+        # if env var is not defined, python 3 returns `b'\n'` and python 2`\n`
+        message+="openfoam environment not pre-loaded before running freecad." \
+            + " defaulting to openfoam path in workbench preferences...\n"
 
-        # Check that path to OpenFOAM is set
-        ofpath=FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/Cfd/OpenFOAM") \
-            .GetString("InstallationPath", "")
-        if((ofpath == None) or (ofpath=="")):
-            message += "OpenFOAM installation path not set\n"
+        if(term_print):
+            os.system("echo 'openfoam environment not pre-loaded before running freecad. Defaulting to openfoam path in workbench preferences...'")
+
+        # check that path to openfoam is set
+        ofpath=freecad.paramget("user parameter:baseapp/preferences/mod/cfd/openfoam").getstring("installationpath", "")
+        if((ofpath == none) or (ofpath=="")):
+            message += "openfoam installation path not set\n"
+            if(term_print):
+                os.system("echo 'openfoam installation path not set'")
     else:
         foam_ver = str(foam_ver)
         if len(foam_ver)>1:
             if foam_ver[:2] == "b'":
-                foam_ver = foam_ver[2:-3]  # Python3: Strip 'b' from front and EOL char
+                foam_ver = foam_ver[2:-3]  # python3: strip 'b' from front and eol char
             else:
-                foam_ver = foam_ver.strip()  # Python2: Strip EOL char
+                foam_ver = foam_ver.strip()  # python2: strip eol char
         if(foam_ver.split('.')[0]<3):
-            message+="OpenFOAM version "+foam_ver+"pre-loaded is outdated: " \
-                + "the CFD workbench requires at least OpenFOAM 3.0.1\n"
+            message+="openfoam version "+foam_ver+"pre-loaded is outdated: " \
+                + "the cfd workbench requires at least openfoam 3.0.1\n"
 
-    # Check that gmsh version 2.13 or greater is installed
-    gmshversion=subprocess.check_output(["gmsh" "-version"])
-    if("command not found" in gmshversion):
-        message+="Gmsh is not installed\n"
-    else:
+            if(term_print):
+                os.system("echo 'openfoam version "+foam_ver+"pre-loaded is outdated: the cfd workbench requires at least openfoam 3.0.1'")
+
+
+    message += "checking for gmsh:\n"
+    if(term_print):
+        os.system("echo checking for gmsh:")
+    # check that gmsh version 2.13 or greater is installed
+    gmshversion=""
+    try:
+        gmshversion=subprocess.check_output(["gmsh" "-version"])
+    except :
+        message+="gmsh is not installed\n"
+        if(term_print):
+            os.system("echo gmsh is not installed")
+    if(len(gmshversion)>1):
         versionlist=gmshversion.split(".")
         if(float(versionlist[0]+"."+versionlist[1])<2.13):
-            message+="Gmesh version is older than minimum required (2.13)\n"
+            message+="gmesh version is older than minimum required (2.13)\n"
+        if(term_print):
+            os.system("echo 'gmsh version is older than minimum required (2.13)'")
+
+
+    message += "completed cfd dependency check\n"
+    if(term_print):
+        os.system("echo completed cfd dependency check")
     return message
 
 
-class CfdFoamWorkbench(Workbench):
-    """ CFDFoam workbench object """
+class cfdfoamworkbench(workbench):
+    """ cfdfoam workbench object """
     def __init__(self):
         import os
-        import CfdTools
-        icon_path = os.path.join(CfdTools.get_module_path(), "Gui", "Resources",
+        import cfdtools
+        icon_path = os.path.join(cfdtools.get_module_path(), "gui", "resources",
             "icons", "cfd.png")
         self.__class__.Icon = icon_path
         self.__class__.MenuText = "CFDFoam"
@@ -143,5 +183,5 @@ class CfdFoamWorkbench(Workbench):
     def GetClassName(self):
         return "Gui::PythonWorkbench"
 
-print(checkCfdDependencies())
+checkCfdDependencies()
 FreeCADGui.addWorkbench(CfdFoamWorkbench())
