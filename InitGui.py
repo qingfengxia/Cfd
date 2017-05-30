@@ -22,14 +22,14 @@
 # *                                                                        *
 # **************************************************************************/
 
-import os
 
 __title__ = "cfd analysis workbench"
 __author__ = "qingfeng xia"
 __url__ = "http://www.freecadweb.org"
 
 
-def checkcfddependencies(term_print=True):
+def checkCfdDependencies(term_print=True):
+    import os
     import subprocess  # should this move
     import platform
     
@@ -130,13 +130,12 @@ def checkcfddependencies(term_print=True):
         os.system("echo completed cfd dependency check")
     return message
 
-
-class cfdfoamworkbench(workbench):
+class CfdFoamWorkbench(Workbench):
     """ cfdfoam workbench object """
     def __init__(self):
         import os
-        import cfdtools
-        icon_path = os.path.join(cfdtools.get_module_path(), "gui", "resources",
+        import CfdTools
+        icon_path = os.path.join(CfdTools.get_module_path(), "Gui", "Resources",
             "icons", "cfd.png")
         self.__class__.Icon = icon_path
         self.__class__.MenuText = "CFDFoam"
@@ -183,5 +182,5 @@ class cfdfoamworkbench(workbench):
     def GetClassName(self):
         return "Gui::PythonWorkbench"
 
-checkCfdDependencies()
+#checkCfdDependencies()
 FreeCADGui.addWorkbench(CfdFoamWorkbench())
