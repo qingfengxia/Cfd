@@ -35,7 +35,6 @@ def checkCfdDependencies(term_print=True):
     
     message = "checking cfd workbench dependencies:\n"
     if(term_print):
-        pass
         print("checking cfd workbench dependencies:")
     
 
