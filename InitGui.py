@@ -36,37 +36,37 @@ def checkCfdDependencies(term_print=True):
     message = "checking cfd workbench dependencies:\n"
     if(term_print):
         pass
-        os.system("echo 'checking cfd workbench dependencies:'")
+        print("checking cfd workbench dependencies:")
     
 
     # check for gnplot python module
     message += "checking for gnuplot:\n"
     if(term_print):
-        os.system("echo checking for gnuplot:")
+        print(" checking for gnuplot:")
     try:
         import gnuplot
     except:
         message += "gnuplot python module not installed\n"
         if(term_print):
-            os.system("echo gnuplot python module not installed")
+            print("gnuplot python module not installed")
 
 
     # check for pyfoam module
     message += "checking for pyfoam:\n"
     if(term_print):
-        os.system("echo checking for pyfoam:")
+        print("checking for pyfoam:")
     try:
         import pyfoam
     except:
         message += "pyfoam python module not installed\n"
         if(term_print):
-            os.system("echo pyfoamm python module not installed")
+            print("pyfoamm python module not installed")
 
 
     # check openfoam
     message += "checking for openfoam:\n"
     if(term_print):
-        os.system("echo checking for openfoam:")
+        print("checking for openfoam:")
     if platform.system() == 'windows':
         foam_dir = None
         foam_ver = None
@@ -85,15 +85,15 @@ def checkCfdDependencies(term_print=True):
             + " defaulting to openfoam path in workbench preferences...\n"
 
         if(term_print):
-            os.system("echo 'openfoam environment not pre-loaded before running freecad.\
-                    Defaulting to openfoam path in workbench preferences...'")
+            print("openfoam environment not pre-loaded before running freecad.\
+                    Defaulting to openfoam path in workbench preferences...")
 
         # check that path to openfoam is set
         ofpath=FreeCAD.ParamGet("User parameter:Baseapp/Preferences/Mod/Cfd/Openfoam").GetString("InstallationPath", "")
         if((ofpath == None) or (ofpath=="")):
             message += "openfoam installation path not set\n"
             if(term_print):
-                os.system("echo 'openfoam installation path not set'")
+                print("openfoam installation path not set")
     else:
         foam_ver = str(foam_ver)
         if len(foam_ver)>1:
@@ -106,13 +106,13 @@ def checkCfdDependencies(term_print=True):
                 + "the cfd workbench requires at least openfoam 3.0.1\n"
 
             if(term_print):
-                os.system("echo 'openfoam version "+foam_ver
+                print("openfoam version "+foam_ver
                         + "pre-loaded is outdated: the cfd workbench requires at least openfoam 3.0.1'")
 
 
     message += "checking for gmsh:\n"
     if(term_print):
-        os.system("echo checking for gmsh:")
+        print(" checking for gmsh:")
 
     # check that gmsh version 2.13 or greater is installed
     gmshversion=""
@@ -121,18 +121,18 @@ def checkCfdDependencies(term_print=True):
     except :
         message+="gmsh is not installed\n"
         if(term_print):
-            os.system("echo gmsh is not installed")
+            print(" gmsh is not installed")
     if(len(gmshversion)>1):
         versionlist=gmshversion.split(".")
         if(float(versionlist[0]+"."+versionlist[1])<2.13):
             message+="gmesh version is older than minimum required (2.13)\n"
         if(term_print):
-            os.system("echo 'gmsh version is older than minimum required (2.13)'")
+            print("gmsh version is older than minimum required (2.13)")
 
 
     message += "completed cfd dependency check\n"
     if(term_print):
-        os.system("echo completed cfd dependency check")
+        print(" completed cfd dependency check")
     return message
 
 class CfdFoamWorkbench(Workbench):
@@ -187,6 +187,5 @@ class CfdFoamWorkbench(Workbench):
     def GetClassName(self):
         return "Gui::PythonWorkbench"
 
-#print(checkCfdDependencies())
 checkCfdDependencies()
 FreeCADGui.addWorkbench(CfdFoamWorkbench())
