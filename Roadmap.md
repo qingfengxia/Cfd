@@ -50,7 +50,7 @@ branch: foambuilder_pre2
 ### Phase IV: a new module "Cfd" workbench (2016-10-16)
 
 - branch `foambuilder1` is moved into a new module "Cfd" (Oct 2016)
-	`git clone https://github.com/qingfengxia/Cfd.git`
+    `git clone https://github.com/qingfengxia/Cfd.git`
 - VTK mesh import and export for both Fem and Cfd modules (Oct 2016)
 
 - CfdResult import and render pressure on FemMesh, not tested (Oct 2016)
@@ -64,53 +64,77 @@ branch: foambuilder_pre2
   + bugfix: boundary mesh is not appended to unv volume mesh in CfdTools.py, due to recent femmesh code refactoring from Oct 2016 to Dec 2016. Bugfix from <https://github.com/jaheyns/FreeCAD/blob/master/src/Mod/Cfd/CfdTools.py> works! And it is merged
   + bugfix can not run runFoamCommand() immediately after another runFoamCommand, which makes freecad-daily stopped/abort, 
 
-- todo:
-  + bugfix: after changing turbulence model from laminar to any turbulence model,existent boundary constraints' turbulence spec combobox is empty. Similar to heat transfter setting
-  + CFD workbench icon, not yet finished, 
-  + runFoamCommand() refactoring to unicode path support, bash for windows 10 support
-
 ### Phase V (2017): welcome the team from South Africa  and toward official workbench
 
-#### team from South Africa
+### contribution from team fromSouth Africa 
 
-- FluidMaterial and stdmat material
-  This should be  a general materail object serve all kinds of CAE Analysis
-
-- run and view result in solver control task panel
+- run and view progress in gnuplot in solver control task panel
   currently, CfdResult load button will freeze GUI, since result is not existent, 
 
-- Set up and run solver via run script 'Allrun' 
+- Set up and run solver via run script 'Allrun' abd okit 
 
 - initalize internal field by potentialFoam
 
-- code style 
+- code style update
 
 - cmake file for adding Cfd into official
 
-#### todo
+They have forked this CFD workbench into CfdFoam, focusing on OpenFOAM.
+see more at <https://github.com/jaheyns/CfdFoam>
 
-- testing CfdResult loaded into vtk pipeline built in FemWorkbench
+- pure python class of BoundaryCondition, instead of C++ FemConstraintFluidBoundary
+
+- paraview 
+
+- porous model 
+
+- cfmesh for mesh refining
+
+#### my progress in Phase V (2017)
+
+ + FluidMaterial and stdmat material:  a general FemMaterail object serve all kinds of CAE Analysis, commit to FemWorkbench as FemMaterial
+ + boundary layer setup based on Gmsh: commit to FemWorkbench
+ + restruct Cfd_SolverCommand to fit new Cfd solver , like Fenics
+ + CFD workbench icon is designed and located in Cfd module path 
+ + runFoamCommand() refactoring to unicode path support is done
+
+#### todo in July 2017
+
+- 2 freecad std test files with CFD case setup, put into Cfd/Example/ or std path of freecad
+- turbulence model further testing, in parallel with South Africa team
+- 2D meshing support: unv currently only deal with 3D, but possible to support 2D
+- general initalizer class, added into solver object
+- import FemWeight as a general body force constraint
+
+
+======================================
+### todo
+
+#### new platform support
 
 - installation guide and tutorial on MacOSX and Win10
-
+- check if case path with space and utf8 char works in FoamCaseBuilder
 - make runBashCommand() work in Bash on windows 10 (WSL)
   Currently, case path mapping has been done for win10 Linux subsystem
+- but bash for windows 10 support is yet, can not retrieve result from Popen
 
-- update CfdExample.py for testing Cfd module demo and testing
+#### fenics FEM solvers
+- solver is under dev by myself
+- mesh export is done, but boundary export is yet done
 
-- 2 freecad std files with CFD case setup, put into Cfd/Example/ or std path of freecad
+#### turbulence and heat transfering
+- bugfix: after changing turbulence model from laminar to any turbulence model,existent boundary constraints' turbulence spec combobox is empty. Similar to heat transfter setting
 
-- testing thermal builder for fluid heat transfer
-
-- check if case path with space and utf8 char works in FoamCaseBuilder
-
+### misc
 - improve FreeCAD meshing quality for CFD, boundary layer inflation and mesh importing
     CFD mesh with viscous layer and hex meshcell supported,
     The best way to do that will be meshing externally like Salome, and importing back to FreeCAD
     Currently, the bad mesh quality make turbulence case hard to converge
 
+- testing CfdResult loaded into vtk pipeline built in FemWorkbench (given up, please use paraview)
+- update CfdExample.py for testing Cfd module demo (low priority)
 - in source doxygen, style check, clean (last step before merge to official)
-   
+
 #### Feature request from Fem
    NamedSelection (Collection of mesh face) for boundary:
           for identifying mesh boundary imported from mesh file
@@ -119,19 +143,20 @@ branch: foambuilder_pre2
           for example, there a pipe section, how to extract void space in pipe for CFD,
           it is done in Part Next
 
-### long term  FSI (year 2017?)
+============================================
+### long term  FSI (beyond year 2017?)
 
-#### todo:
 - More CFD Analysis Type supported, transient, heat transfer and LES model setup
 
-- potential new Cfd solver like fenics
-
-- multiphase case setup
+- potential new Cfd solver like fenics, elmer, both solvers has been discussed in Fem forum
 
 - AnalysisCoupler.py
 
-not to do: 
-2D mesh, GGI and dynamic mesh will not be supported for the complex GUI building work
+### not to do, limited by my time
+
+- GGI and dynamic mesh will not be supported for the complex GUI building work
+
+- multiphase case setup: too much work
 
 list of FemAnalysis instances,  add_analysis()  add_time()
 timeStep, currentTime,  adaptiveTimeStep=False

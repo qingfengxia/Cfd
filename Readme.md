@@ -7,11 +7,13 @@ the team from CSIR South Africa, 2016
 + Alfred Bogears <http://www.csir.co.za/dr-alfred-bogaers>
 + Johan Heyns  <http://www.linkedin.com/in/johan-heyns-54b75511>
 
-Note: CSIR team has forked this repo into <https://github.com/jaheyns/Cfd>, focusing on usability for new users. 
+Note: CSIR team has forked this repo into <https://github.com/jaheyns/Cfd>, focusing on usability for new users and OpenFOAM. 
 
 Meanwhile, this repo still targets at preparing real-world case files from FreeCAD goemetry for advanced users, which also means user needs to tweak the case files in production environment.
 
-Features from CSIR fork will be picked up regularly in the future. Before the release of FreeCAD 0.18, the author will focus on implementing infrastructure for CFDworkbench , PR to FemWorkbench of FreeCAD directly.
+Features from CSIR fork will be picked up regularly in the future. Before the release of FreeCAD 0.18, the author will focus on implementing infrastructure for CFDworkbench (FoamCaseBuilder), commit to FemWorkbench of FreeCAD directly.
+
+changelog and roadmap at [Roadmap.md](./Roadmap.md)
 
 ## LGPL license as FreeCAD
 
@@ -30,18 +32,19 @@ This module aims to accelerate CFD case build up. Limited by the long solving ti
 1. Python code to run a basic laminar flow simulation is added into CfdWorkbench
 2. An independent python module, FoamCaseBuilder (LGPL), can work with and without FreeCAD to build up case for OpenFOAM
 3. A general FemSolverControlTaskPanel is proposed for any FemSolver.
+4. VTK mesh and result IO, commit to FemWorkbench
+5. result can only be viewed in paraview. but possible to export result to VTK format then load back to FreeCAD. (it is implemented in Oct 2016)
 
 ### Limitation:
 
-1. only laminar flow with dedicate solver and boundary setup can converge, and I suspect the the current meshing tool, netgen is not ideal for CFD, which needs very thin layer near wall. Please download my 2 test file to evaluate for this stage.
-2. result can only be viewed in paraview. but possible to export result to VTK format then load back to FreeCAD. (it is implemented in Oct 2016)
-
+1. only laminar flow with dedicate solver and boundary setup can converge, turbulence model is not fully tested limited by meshing quality
+2. thermal sovler is under development
 
 ### Platform support status
 - install on Linux:
         Ubuntu 16.04 as a baseline implementation
 
-- install on Windows 10 with Bash on Windows support:
+- install on Windows 10 with Bash on Windows support (yet done):
         Official OpenFOAM  (Ubuntu deb) can be installed and run on windows via Bash on Windows,
         but it is tricky to run windows python script to call the command with python via subprocess module
 
