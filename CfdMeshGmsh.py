@@ -25,16 +25,13 @@ __author__ = "Bernd Hahnebach"
 __url__ = "http://www.freecadweb.org"
 
 import FreeCAD
-from PyObjects import _FemMeshGmsh
-
+from ObjectsFem import makeMeshGmsh
 
 def makeCfdMeshGmsh(name="CFDMeshGMSH"):
     '''makeCfdMeshGmsh(name): makes a GMSH CFD mesh object'''
-    obj = FreeCAD.ActiveDocument.addObject("Fem::FemMeshObjectPython", name)
-    _FemMeshGmsh._FemMeshGmsh(obj)
+    obj = makeMeshGmsh(name)
     obj.ElementOrder = '1st'
     obj.OptimizeStd = False
-    if FreeCAD.GuiUp:
-        import _ViewProviderCfdMeshGmsh
-        _ViewProviderCfdMeshGmsh._ViewProviderCfdMeshGmsh(obj.ViewObject)
+    #may also set meshing algorithm
+
     return obj
