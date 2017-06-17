@@ -90,7 +90,11 @@ class CfdCaseWriterFoam:
         caseFolder = self.solver_obj.WorkingDir + os.path.sep + self.solver_obj.InputCaseName
         unvMeshFile = caseFolder + os.path.sep + self.solver_obj.InputCaseName + u".unv"
 
-        self.mesh_generated = CfdTools.write_unv_mesh(self.mesh_obj, self.bc_group, unvMeshFile)
+        if self.mesh_obj.Proxy.Type == "FemMeshGmsh": # Gmsh has already write boundary mesh for FemConstraint derived class
+            self.mesh_generated = CfdTools.write_unv_mesh(self.mesh_obj, self.bc_group, unvMeshFile, is_gmsh = True)
+            # however, the generated boundary patch name for OpenFOAM has suffix: '_Faces' for 3D.
+        else:
+            self.mesh_generated = CfdTools.write_unv_mesh(self.mesh_obj, self.bc_group, unvMeshFile)
 
         # FreecAD (internal standard length) mm by default; while in CFD, it is metre, so mesh needs scaling
         # unit_shema == 1, may mean Metre-kg-second

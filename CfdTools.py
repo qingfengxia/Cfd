@@ -190,14 +190,38 @@ def get_module_path():
 
 #################### UNV mesh writer #########################################
 
-def write_unv_mesh(mesh_obj, bc_group, mesh_file_name):
+def write_unv_mesh(mesh_obj, bc_group, mesh_file_name, is_gmsh = False):
+    # if bc_group is specified as empty or None, it means UNV boundary mesh has been write by Fem.export(), no need to write twice
     __objs__ = []
     __objs__.append(mesh_obj)
     FreeCAD.Console.PrintMessage("Export FemMesh to UNV format file: {}\n".format(mesh_file_name))
     Fem.export(__objs__, mesh_file_name)
     del __objs__
     # repen this unv file and write the boundary faces
-    _write_unv_bc_mesh(mesh_obj, bc_group, mesh_file_name)
+    if not is_gmsh:
+        _write_unv_bc_mesh(mesh_obj, bc_group, mesh_file_name)
+    else:  # adjust exported boundary name in UNV file to match those names of FemConstraint derived class
+        _update_unv_boundary_names(bc_group, mesh_file_name)
+
+
+def _update_unv_boundary_names(bc_group, mesh_file_name):
+    '''
+    import fileinput
+    with fileinput.FileInput(fileToSearch, inplace=True, backup='.bak') as file:
+        for line in file:
+            line.replace('_Faces', '')
+            line.replace('_Edges', '')
+    '''
+    import shutil
+    backup_file = mesh_file_name+u'.bak'
+    shutil.copyfile(mesh_file_name, backup_file)
+    f1 = open(backup_file, 'r')
+    f2 = open(mesh_file_name, 'w')
+    for line in f1:
+        f2.write(line.replace('_Faces', ''))  # how about 2D?
+    f1.close()
+    f2.close()
+    os.remove(backup_file)
 
 
 def _write_unv_bc_mesh(mesh_obj, bc_group, unv_mesh_file):
