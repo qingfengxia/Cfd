@@ -49,7 +49,8 @@ class CfdWorkbench(Workbench):
         #import _CommandCfdFluidMaterial  # import FemMaterialFluid
 
         # python classes developed in FemWorkbench, filename and commands changed March 2017
-        #import PyGui._CommandFemMeshGmshFromShape
+        import PyGui._CommandFemConstraintSelfWeight
+        import PyGui._CommandFemMeshBoundaryLayer
         import PyGui._CommandFemMaterialFluid
         import PyGui._CommandFemMeshNetgenFromShape
         import PyGui._CommandFemMeshRegion
@@ -60,8 +61,8 @@ class CfdWorkbench(Workbench):
 
         # Post Processing commands are located in FemWorkbench, implemented and imported in C++
         cmdlst = ['Cfd_Analysis', 'Cfd_Solver', 'FEM_MaterialFluid', 'Separator', # superseded 'Cfd_FluidMaterial',
-                        'FEM_ConstraintFluidBoundary', 'Separator', 
-                        #'FEM_MeshNetgenFromShape',
+                        'FEM_ConstraintFluidBoundary', 'FEM_ConstraintSelfWeight', 'Separator', 
+                        'FEM_MeshNetgenFromShape',
                         'Cfd_MeshGmshFromShape', # add parameter adjustment for 'FEM_MeshGmshFromShape',
                         'FEM_MeshBoundaryLayer', 'FEM_MeshRegion', 'FEM_MeshPrintInfo', 'FEM_MeshClear', "Separator",
                         'Cfd_SolverControl']
