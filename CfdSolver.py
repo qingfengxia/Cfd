@@ -60,6 +60,7 @@ class CfdSolver(object):
                             "result of analysis has been obtained, i.e. case setup is fine", True)
 
             obj.PhysicalDomain = 'Fluidic'
+            import CfdTools
             obj.WorkingDir = CfdTools.getTempWorkingDir()
             obj.InputCaseName = 'TestCase'
 

@@ -67,16 +67,19 @@ def setupWorkingDir(solver_object):
             solver_object.WorkingDir = wd
     return wd
 
+def getModulePath():
+    return os.path.dirname(__file__)
+
 ################################################
 
 if FreeCAD.GuiUp:
+    import FreeCADGui
+    import FemGui
     def getResultObject():
-        import FreeCADGui
         sel = FreeCADGui.Selection.getSelection()
         if (len(sel) == 1):
             if sel[0].isDerivedFrom("Fem::FemResultObject"):
                 return sel[0]
-        import FemGui
         for i in FemGui.getActiveAnalysis().Member:
             if(i.isDerivedFrom("Fem::FemResultObject")):
                 return i
@@ -89,6 +92,22 @@ if FreeCAD.GuiUp:
             if fem_object in analysis_obj.Member:
                 return analysis_obj
 
+    def createSolver():
+        # Dialog to choose different solver, commandSolver
+        FreeCAD.ActiveDocument.openTransaction("Create OpenFOAM Solver")
+        FreeCADGui.addModule("CfdSolverFoam")
+        FreeCADGui.doCommand("FemGui.getActiveAnalysis().Member = FemGui.getActiveAnalysis().Member + [CfdSolverFoam.makeCfdSolverFoam()]")
+
+    def createMesh(sel):
+        FreeCAD.ActiveDocument.openTransaction("Create CFD mesh by GMSH")
+        mesh_obj_name = sel[0].Name + "_Mesh"
+        FreeCADGui.addModule("CfdMeshGmsh")  # FemGmsh has been adjusted for CFD like only first order element
+        FreeCADGui.doCommand("CfdMeshGmsh.makeCfdMeshGmsh('" + mesh_obj_name + "')")
+        FreeCADGui.doCommand("App.ActiveDocument.ActiveObject.Part = App.ActiveDocument." + sel[0].Name)
+        FreeCADGui.addModule("FemGui")
+        if FemGui.getActiveAnalysis():
+            FreeCADGui.doCommand("FemGui.getActiveAnalysis().Member = FemGui.getActiveAnalysis().Member + [App.ActiveDocument.ActiveObject]")
+        FreeCADGui.doCommand("Gui.ActiveDocument.setEdit(App.ActiveDocument.ActiveObject.Name)")
 
 def getMaterial(analysis_object):
     for i in analysis_object.Member:

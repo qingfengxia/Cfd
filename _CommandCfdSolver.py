@@ -31,20 +31,19 @@ if FreeCAD.GuiUp:
     import FreeCADGui
     from PySide import QtCore, QtGui
 
-class _CommandSolverFoam(CfdCommand):
+class _CommandCfdSolver(CfdCommand):
     "Command to create OpenFOAM solver for CFD anlysis"
     def __init__(self):
-        super(_CommandSolverFoam, self).__init__()
+        super(_CommandCfdSolver, self).__init__()
         self.resources = {'Pixmap': 'fem-solver',  # FIXME: change icon
-                          'MenuText': QtCore.QT_TRANSLATE_NOOP("Cfd_SolverFoam", "Create OpenFOAM solver"),
-                          'Accel': "S, C",
-                          'ToolTip': QtCore.QT_TRANSLATE_NOOP("Cfd_SolverFoam", "Create OpenFOAM solver for CFD anlysis")}
+                          'MenuText': QtCore.QT_TRANSLATE_NOOP("Cfd_Solver", "Create CFD solver"),
+                          'Accel': "C, S",
+                          'ToolTip': QtCore.QT_TRANSLATE_NOOP("Cfd_Solver", "Create a solver object for CFD anlysis")}
         self.is_active = 'with_analysis'
 
     def Activated(self):
-        FreeCAD.ActiveDocument.openTransaction("Create OpenFOAM Solver")
-        FreeCADGui.addModule("CfdSolverFoam")
-        FreeCADGui.doCommand("FemGui.getActiveAnalysis().Member = FemGui.getActiveAnalysis().Member + [CfdSolverFoam.makeCfdSolverFoam()]")
+        import CfdTools
+        CfdTools.createSolver()
 
 if FreeCAD.GuiUp:
-    FreeCADGui.addCommand('Cfd_SolverFoam', _CommandSolverFoam())
+    FreeCADGui.addCommand('Cfd_Solver', _CommandCfdSolver())

@@ -48,20 +48,20 @@ class _CommandCfdAnalysis(CfdCommand):
         FreeCADGui.addModule("CfdAnalysis")
         FreeCADGui.doCommand("CfdAnalysis.makeCfdAnalysis('CfdAnalysis')")
         FreeCADGui.doCommand("FemGui.setActiveAnalysis(App.activeDocument().ActiveObject)")
-        FreeCADGui.addModule("CfdSolverFoam")
-        FreeCADGui.doCommand("FemGui.getActiveAnalysis().Member = FemGui.getActiveAnalysis().Member + [CfdSolverFoam.makeCfdSolverFoam()]")
-        FreeCADGui.addModule("CfdFluidMaterial")
-        FreeCADGui.doCommand("FemGui.getActiveAnalysis().Member = FemGui.getActiveAnalysis().Member + [CfdFluidMaterial.makeCfdFluidMaterial('FluidMaterial')]")
+
+        import CfdTools
+        CfdTools.createSolver()  # using FreeCADGui.doCommand style
+        #FreeCADGui.addModule("CfdFluidMaterial")
+        #FreeCADGui.doCommand("FemGui.getActiveAnalysis().Member = FemGui.getActiveAnalysis().Member + [CfdFluidMaterial.makeCfdFluidMaterial('FluidMaterial')]")
+
         sel = FreeCADGui.Selection.getSelection()
         if (len(sel) == 1):
             if(sel[0].isDerivedFrom("Fem::FemMeshObject")):
                 FreeCADGui.doCommand("FemGui.getActiveAnalysis().Member = FemGui.getActiveAnalysis().Member + [App.activeDocument()." + sel[0].Name + "]")
             if(sel[0].isDerivedFrom("Part::Feature")):
-                FreeCADGui.doCommand("App.activeDocument().addObject('Fem::FemMeshShapeGmshObject', '" + sel[0].Name + "_Mesh')")  # default to GMSH
-                FreeCADGui.doCommand("App.activeDocument().ActiveObject.Shape = App.activeDocument()." + sel[0].Name)
-                FreeCADGui.doCommand("FemGui.getActiveAnalysis().Member = FemGui.getActiveAnalysis().Member + [App.activeDocument().ActiveObject]")
-                FreeCADGui.doCommand("Gui.activeDocument().setEdit(App.ActiveDocument.ActiveObject.Name)")
+                CfdTools.createMesh(sel)  #code shared with mesh command
         FreeCADGui.Selection.clearSelection()
+
 
 if FreeCAD.GuiUp:
     FreeCADGui.addCommand('Cfd_Analysis', _CommandCfdAnalysis())

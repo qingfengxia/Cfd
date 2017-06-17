@@ -30,8 +30,8 @@ __url__ = "http://www.freecadweb.org"
 class CfdWorkbench(Workbench):
     "CFD workbench object"
     def __init__(self):
-        #self.__class__.Icon = FreeCAD.getResourceDir() + "Mod/Cfd/Resources/icons/CfdWorkbench.svg"
-        self.__class__.Icon = FreeCAD.getResourceDir() + "Mod/Fem/Resources/icons/FemWorkbench.svg"
+        import CfdTools
+        self.__class__.Icon = CfdTools.getModulePath() + "/Resources/icons/CfdWorkbench.svg"
         self.__class__.MenuText = "CFD"
         self.__class__.ToolTip = "CFD workbench"
 
@@ -41,27 +41,30 @@ class CfdWorkbench(Workbench):
         import FemGui
 
         import _CommandCfdAnalysis
-        import _CommandCfdSolverFoam
+        import _CommandCfdSolver
         import _CommandCfdSolverControl
         #import _CommandCfdResult  # this function is implemented in File->Open Instead, or solver control task panel push button
 
         import _CommandCfdMeshGmshFromShape
-        #import _CommandCfdFluidMaterial
+        #import _CommandCfdFluidMaterial  # import FemMaterialFluid
+
         # python classes developed in FemWorkbench, filename and commands changed March 2017
         #import PyGui._CommandFemMeshGmshFromShape
         import PyGui._CommandFemMaterialFluid
         import PyGui._CommandFemMeshNetgenFromShape
         import PyGui._CommandFemMeshRegion
+        #import PyGui._CommandFemMeshGroup  # not necessary for the time being
         import PyGui._CommandFemMeshPrintInfo
         import PyGui._CommandFemMeshClear
-        # vtk pipeline commands defiend and import in cpp needs not import here but directly use them
+        # vtk pipeline commands defiend and import in cpp needs not imported but can be imported
 
         # Post Processing commands are located in FemWorkbench, implemented and imported in C++
-        cmdlst = ['Cfd_Analysis', 'Separator', 'FEM_MeshNetgenFromShape', 
-                        'Cfd_MeshGmshFromShape', #'FEM_MeshGmshFromShape',
-                        'FEM_MeshRegion', 'FEM_MeshPrintInfo', 'FEM_MeshClear', "Separator",
-                        'FEM_MaterialFluid', #'Cfd_FluidMaterial', 
-                        'FEM_ConstraintFluidBoundary', 'Cfd_SolverControl']
+        cmdlst = ['Cfd_Analysis', 'Cfd_Solver', 'FEM_MaterialFluid', 'Separator', # superseded 'Cfd_FluidMaterial',
+                        'FEM_ConstraintFluidBoundary', 'Separator', 
+                        #'FEM_MeshNetgenFromShape',
+                        'Cfd_MeshGmshFromShape', # add parameter adjustment for 'FEM_MeshGmshFromShape',
+                        'FEM_MeshBoundaryLayer', 'FEM_MeshRegion', 'FEM_MeshPrintInfo', 'FEM_MeshClear', "Separator",
+                        'Cfd_SolverControl']
                         #"Separator", "FEM_PostPipelineFromResult", "FEM_PostCreateClipFilter", 
                         #"FEM_PostCreateScalarClipFilter", "FEM_PostCreateCutFilter"]
         self.appendToolbar(str(QtCore.QT_TRANSLATE_NOOP("Cfd", "CFD")), cmdlst)
