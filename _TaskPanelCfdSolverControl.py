@@ -91,7 +91,7 @@ class _TaskPanelCfdSolverControl:
         QtCore.QObject.connect(self.form.pb_view_externally, QtCore.SIGNAL("clicked()"), self.viewResultExternally)
         self.form.pb_terminate_solver.setEnabled(False)
         self.form.pb_show_result.setEnabled(False)
-        self.form.pb_view_externally.setEnabled(False)
+        self.form.pb_view_externally.setEnabled(True)  # can be used to view init field
 
         QtCore.QObject.connect(self.Timer, QtCore.SIGNAL("timeout()"), self.updateText)
         self.form.pb_show_result.setEnabled(True)  # delete this once finished signal is correctly managed
@@ -192,13 +192,8 @@ class _TaskPanelCfdSolverControl:
 
 
     def runSolverProcess(self):
-        #Re-starting a simulation from the last time step has currently been de-actived
-        #by using an AllRun script. Therefore just re-setting the residuals here for plotting
-        self.UxResiduals = [1]
-        self.UyResiduals = [1]
-        self.UzResiduals = [1]
-        self.pResiduals = [1]
-        self.niter = 0
+        # Re-starting a simulation from the last time step has currently been de-actived by using an AllRun script. 
+        # re-setting the residuals is NOT needed for plotting
 
         self.Start = time.time()
         #self.femConsoleMessage("Run {} at {} with command:".format(self.solver_object.SolverName, self.solver_object.WorkingDir))
@@ -246,6 +241,7 @@ class _TaskPanelCfdSolverControl:
             self.printSolverProcessStdout()
             self.solver_object.ResultObtained = True
             self.form.pb_show_result.setEnabled(True)
+            self.form.pb_view_externally.setEnabled(True)
         else:
             self.femConsoleMessage("Solver Process Finished with error code: {}".format(exitCode))
         # Restore previous cwd not necessary, since cwd is set to QProcess instead of FreeCAD
@@ -262,9 +258,10 @@ class _TaskPanelCfdSolverControl:
         FreeCAD.Console.PrintMessage(text)
 
     def printSolverProcessStdout(self):
+        # this method should be deprecated, since plot will process the data
         out = self.SolverProcess.readAllStandardOutput()
-        if out.isEmpty():
-            self.femConsoleMessage("Solver stdout is empty", "#FF0000")
+        if out.isEmpty():  # since output has been extract to plot, it can be empty
+            self.femConsoleMessage("Solver stdout is empty", "#0000FF")
         else:
             try:
                 out = str(out)  # python3 has no unicode type, utf-8 is the default encoding, this is a portable way to deal with bytes

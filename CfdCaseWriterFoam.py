@@ -112,12 +112,13 @@ class CfdCaseWriterFoam:
         """
         fluidName = 'water'
         kinVisc = 1e-3   # default to water
+
         if self.material_obj:
             if 'Name' in self.material_obj.Material:
                 fluidName = self.material_obj.Material['Name']  # CfdFluidMaterial's dict has no 'Name'
             else:
                 fluidName = str(self.material_obj.Label)  # Label is unicode
-            # viscosity could be specified in two ways
+            # viscosity could be specified in two ways, to be compatible with CfdFoam workbench
             if 'KinematicViscosity' in self.material_obj.Material:  # Fem workbench general FemMaterial category = Fluid
                 kinVisc = FreeCAD.Units.Quantity(self.material_obj.Material['KinematicViscosity'])
             elif 'DynamicViscosity' in self.material_obj.Material:  # CFD workbench CfdFluidMaterail
@@ -131,7 +132,12 @@ class CfdCaseWriterFoam:
                 FreeCAD.Console.PrintWarning("No viscosity property is found in the material object, using default {}". format(kinVisc))
         else:
             FreeCAD.Console.PrintWarning("No material object is found in analysis, using default kinematic viscosity {}". format(kinVisc))
-        self.builder.fluidProperties = {'name': 'oneLiquid', 'kinematicViscosity': kinVisc}
+
+        # currently, thermal property setup is not yet implemented
+        if self.solver_obj.HeatTransfering:
+            raise NotImplementedError('Error: thermal properties are not implemented in builder yet')
+        else:
+            self.builder.fluidProperties = {'name': fluidName, 'kinematicViscosity': kinVisc}
 
     def write_boundary_condition(self):
         """ Switch case to deal diff fluid boundary condition, thermal and turbulent is not yet fully tested
@@ -160,6 +166,7 @@ class CfdCaseWriterFoam:
                                                 }
 
             bc_settings.append(bc_dict)
+        # FIXME: init should be done in bulder, or by initializer class
         self.builder.internalFields = {'p': 0.0, 'U': (0, 0, 0.001)}  # must set a nonzero for velocity field to srart withour regarded converged
         self.builder.boundaryConditions = bc_settings
 

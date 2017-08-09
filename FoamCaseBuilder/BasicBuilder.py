@@ -134,7 +134,7 @@ def _getSolverName(settings):
     if settings['turbulenceModel'] == "invisid":
         return 'potentialFoam'
     #
-    if settings['heatTransfering']:
+    if 'heatTransfering' in settings and settings['heatTransfering']:
         if settings['dynamicMeshing'] or settings['porous'] or settings['nonNewtonian']:
             print("Error: no matched solver for heat transfering, please develop such a solver")
             raise NotImplementedError()
@@ -156,7 +156,8 @@ def _getSolverName(settings):
     if 'multiphaseModel' in settings and settings['multiphaseModel'] != "singlePhase":
         print("Error: multiphase model case builder is not implemented yet")
         raise NotImplementedError()
-    if settings['compressible']:
+
+    if 'compressible' in settings and settings['compressible']:
         if "transonic" in settings and settings["transonic"]:
             print("Error: transonic/supersonic flow case builder is not implemented yet")
             raise NotImplementedError()

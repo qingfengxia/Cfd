@@ -96,6 +96,7 @@ if FreeCAD.GuiUp:
         # Dialog to choose different solver, commandSolver
         FreeCAD.ActiveDocument.openTransaction("Create OpenFOAM Solver")
         FreeCADGui.addModule("CfdSolverFoam")
+        FreeCADGui.addModule("FemGui")
         FreeCADGui.doCommand("FemGui.getActiveAnalysis().Member = FemGui.getActiveAnalysis().Member + [CfdSolverFoam.makeCfdSolverFoam()]")
 
     def createMesh(sel):
