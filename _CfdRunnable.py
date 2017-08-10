@@ -28,46 +28,47 @@ import os.path
 
 import FreeCAD
 
-import CfdCaseWriterFoam
 import CfdTools
-from _CfdRunnable import _CfdRunnable
 
 
-#  Concrete Class for CfdRunnable for OpenFOAM
-#  implemented write_case() and solver_case(), not yet for load_result()
-class CfdRunnableFoam(_CfdRunnable):
+class _CfdRunnable(object):
+    ##  run the solver and read the result, corresponding to FemTools class, working with FreeCADCmd without GUI
+    #  @param analysis - analysis object to be used as the core object.
+    #  "__init__" tries to use current active analysis in analysis is left empty.
+    #  Rises exception if analysis is not set and there is no active analysis
+    #  The constructur of FemTools is for use of analysis without solver object
     def __init__(self, analysis=None, solver=None):
-        super(CfdRunnableFoam, self).__init__(analysis, solver)
-        self.writer = CfdCaseWriterFoam.CfdCaseWriterFoam(self.analysis)
+        if analysis and analysis.isDerivedFrom("Fem::FemAnalysisPython"):
+            ## @var analysis
+            #  FEM analysis - the core object. Has to be present.
+            #  It's set to analysis passed in "__init__" or set to current active analysis by default if nothing has been passed to "__init__"
+            self.analysis = analysis
+        else:
+            if FreeCAD.GuiUp:
+                import FemGui
+                self.analysis = FemGui.getActiveAnalysis()
 
-        from FoamCaseBuilder import FoamResidualPloter
-        self.ploter = FoamResidualPloter.FoamResidualPloter()
+        self.solver = None
+        if solver and solver.isDerivedFrom("Fem::FemSolverObjectPython"):
+            ## @var solver
+            #  solver of the analysis. Used to store the active solver and analysis parameters
+            self.solver = solver
+        else:
+            if analysis:
+                self.solver = CfdTools.getSolver(self.analysis)
+            if self.solver == None:
+                FreeCAD.Console.printMessage("FemSolver object is missing from Analysis Object")
+
+        if self.analysis:
+            self.results_present = False
+            self.result_object = None
+        else:
+            raise Exception('FEM: No active analysis found!')
 
     def check_prerequisites(self):
         return ""
 
-    def write_case(self):
-        return self.writer.write_case()
-
-    def get_solver_cmd(self):  # deprecate this by a bash script file to start foam solver
-        import FoamCaseBuilder.utility
-        cmd = "bash -c \"source {}/etc/bashrc && ./Allrun\"".format(FoamCaseBuilder.utility.getFoamDir())
-        FreeCAD.Console.PrintMessage("Solver run command: " + cmd + "\n")
-        return cmd
-        
-    def solve(self):
-        pass  # start external process, TODO:  move code from TaskPanel to here
-
-    def view_result_externally(self):
-        self.writer.builder.viewResult()  # paraview
-
-    def view_result(self):
-        #  foamToVTK will write result into VTK data files
-        result = self.writer.builder.exportResult()
-        #result = "/home/qingfeng/Documents/TestCase/VTK/TestCase_345.vtk"  # test passed
-        from importCfdResultFoamVTK import importCfdResult
-        importCfdResult(result, self.analysis)
-
-    def process_output(self, text):
-        self.ploter.process_text(text)
-        self.ploter.plot()
+    def edit_case(self):
+        case_path = self.solver.WorkingDir + os.path.sep + self.solver.InputCaseName
+        FreeCAD.Console.PrintMessage("Please edit the case input files externally at: {}".format(case_path))
+        self.writer.builder.editCase()

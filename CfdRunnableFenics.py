@@ -20,7 +20,7 @@
 #*                                                                         *
 #***************************************************************************
 
-__title__ = "Classes for New CFD solver"
+__title__ = "Classes for Fenics CFD solver"
 __author__ = "Qingfeng Xia"
 __url__ = "http://www.freecadweb.org"
 
@@ -28,20 +28,17 @@ import os.path
 
 import FreeCAD
 
-import CfdCaseWriterFoam
+import FemCaseWriterFenics
 import CfdTools
 from _CfdRunnable import _CfdRunnable
 
 
-#  Concrete Class for CfdRunnable for OpenFOAM
-#  implemented write_case() and solver_case(), not yet for load_result()
-class CfdRunnableFoam(_CfdRunnable):
+#  Concrete Class for CfdRunnable for FenicsSolver
+#  todo: test write_case() and implement solve()
+class CfdRunnableFenics(_CfdRunnable):
     def __init__(self, analysis=None, solver=None):
         super(CfdRunnableFoam, self).__init__(analysis, solver)
-        self.writer = CfdCaseWriterFoam.CfdCaseWriterFoam(self.analysis)
-
-        from FoamCaseBuilder import FoamResidualPloter
-        self.ploter = FoamResidualPloter.FoamResidualPloter()
+        self.writer = FemCaseWriterFenics.FemCaseWriterFenics(self.analysis)
 
     def check_prerequisites(self):
         return ""
@@ -49,25 +46,17 @@ class CfdRunnableFoam(_CfdRunnable):
     def write_case(self):
         return self.writer.write_case()
 
-    def get_solver_cmd(self):  # deprecate this by a bash script file to start foam solver
-        import FoamCaseBuilder.utility
-        cmd = "bash -c \"source {}/etc/bashrc && ./Allrun\"".format(FoamCaseBuilder.utility.getFoamDir())
-        FreeCAD.Console.PrintMessage("Solver run command: " + cmd + "\n")
-        return cmd
-        
     def solve(self):
         pass  # start external process, TODO:  move code from TaskPanel to here
 
     def view_result_externally(self):
-        self.writer.builder.viewResult()  # paraview
+        pass
+        # Todo: load result in paraview
 
     def view_result(self):
-        #  foamToVTK will write result into VTK data files
-        result = self.writer.builder.exportResult()
-        #result = "/home/qingfeng/Documents/TestCase/VTK/TestCase_345.vtk"  # test passed
-        from importCfdResultFoamVTK import importCfdResult
-        importCfdResult(result, self.analysis)
+        # show result by Fenics plot(), indepdent of FreeCAD GUI
+        pass
 
     def process_output(self, text):
-        self.ploter.process_text(text)
-        self.ploter.plot()
+        # not necessary
+        pass
