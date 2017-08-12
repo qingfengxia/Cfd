@@ -68,7 +68,19 @@ def setupWorkingDir(solver_object):
     return wd
 
 def getModulePath():
-    return os.path.dirname(__file__)
+    return get_module_path()
+
+# Figure out where the module is installed - in the app's module directory or the
+# user's app data folder (the second overrides the first).
+def get_module_path():
+    """returns the current Cfd module path."""
+    import os
+    user_mod_path = os.path.join(FreeCAD.ConfigGet("UserAppData"), "Mod/Cfd")
+    app_mod_path = os.path.join(FreeCAD.ConfigGet("AppHomePath"), "Mod/Cfd")
+    if os.path.exists(user_mod_path):
+        return user_mod_path
+    else:
+        return app_mod_path
 
 ################################################
 
@@ -92,12 +104,18 @@ if FreeCAD.GuiUp:
             if fem_object in analysis_obj.Member:
                 return analysis_obj
 
-    def createSolver():
+    def createSolver(solver_name='OpenFOAM'):
         # Dialog to choose different solver, commandSolver
-        FreeCAD.ActiveDocument.openTransaction("Create OpenFOAM Solver")
-        FreeCADGui.addModule("CfdSolverFoam")
+        FreeCAD.ActiveDocument.openTransaction("Create CFD Solver")
         FreeCADGui.addModule("FemGui")
-        FreeCADGui.doCommand("FemGui.getActiveAnalysis().Member = FemGui.getActiveAnalysis().Member + [CfdSolverFoam.makeCfdSolverFoam()]")
+        if solver_name == 'OpenFOAM':
+            FreeCADGui.addModule("CfdSolverFoam")
+            create_solver_script = "CfdSolverFoam.makeCfdSolverFoam()"
+        else:
+            FreeCADGui.addModule("CfdSolverFenics")
+            create_solver_script = "CfdSolverFenics.makeCfdSolverFenics()"
+        FreeCADGui.doCommand("FemGui.getActiveAnalysis().Member = FemGui.getActiveAnalysis().Member" + 
+                        "[{}]".format(create_solver_script))
 
     def createMesh(sel):
         FreeCAD.ActiveDocument.openTransaction("Create CFD mesh by GMSH")
@@ -174,19 +192,6 @@ def convertQuantityToMKS(input, quantity_type, unit_system="MKS"):
     see:
     """
     return input
-
-
-# Figure out where the module is installed - in the app's module directory or the
-# user's app data folder (the second overrides the first).
-def get_module_path():
-    """returns the current Cfd module path."""
-    import os
-    user_mod_path = os.path.join(FreeCAD.ConfigGet("UserAppData"), "Mod/Cfd")
-    app_mod_path = os.path.join(FreeCAD.ConfigGet("AppHomePath"), "Mod/Cfd")
-    if os.path.exists(user_mod_path):
-        return user_mod_path
-    else:
-        return app_mod_path
 
 
 #################### UNV mesh writer #########################################

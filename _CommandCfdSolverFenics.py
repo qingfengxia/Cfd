@@ -1,6 +1,6 @@
 #***************************************************************************
 #*                                                                         *
-#*   Copyright (c) 2015 - Qingfeng Xia <qingfeng.xia()eng.ox.ac.uk> *
+#*   Copyright (c) 2017 - Qingfeng Xia <qingfeng.xia()eng.ox.ac.uk> *
 #*                                                                         *
 #*   This program is free software; you can redistribute it and/or modify  *
 #*   it under the terms of the GNU Lesser General Public License (LGPL)    *
@@ -20,43 +20,30 @@
 #*                                                                         *
 #***************************************************************************
 
-__title__ = "Classes for Fenics CFD solver"
+__title__ = "Command to create Fenics CFD solver"
 __author__ = "Qingfeng Xia"
 __url__ = "http://www.freecadweb.org"
 
-import os.path
 
 import FreeCAD
+from _CfdCommand import CfdCommand
+if FreeCAD.GuiUp:
+    import FreeCADGui
+    from PySide import QtCore, QtGui
 
-import FemCaseWriterFenics
-import CfdTools
-from _CfdRunnable import _CfdRunnable
+class _CommandCfdSolverFenics(CfdCommand):
+    "Command to create OpenFOAM solver for CFD anlysis"
+    def __init__(self):
+        super(_CommandCfdSolverFenics, self).__init__()
+        self.resources = {'Pixmap': 'fem-solver',  # FIXME: change icon
+                          'MenuText': QtCore.QT_TRANSLATE_NOOP("Cfd_SolverFenics", "Create a Fenics CFD solver"),
+                          'Accel': "C, S",
+                          'ToolTip': QtCore.QT_TRANSLATE_NOOP("Cfd_SolverFenics", "Create a Fenics solver object for CFD anlysis")}
+        self.is_active = 'with_analysis'
 
+    def Activated(self):
+        import CfdTools
+        CfdTools.createSolver("Fenics")
 
-#  Concrete Class for CfdRunnable for FenicsSolver
-#  todo: test write_case() and implement solve()
-class CfdRunnableFenics(_CfdRunnable):
-    def __init__(self, analysis=None, solver=None):
-        super(CfdRunnableFenics, self).__init__(analysis, solver)
-        self.writer = FemCaseWriterFenics.FemCaseWriterFenics(self.analysis)
-
-    def check_prerequisites(self):
-        return ""
-
-    def write_case(self):
-        return self.writer.write_case()
-
-    def solve(self):
-        pass  # start external process, TODO:  move code from TaskPanel to here
-
-    def view_result_externally(self):
-        pass
-        # Todo: load result in paraview
-
-    def view_result(self):
-        # show result by Fenics plot(), indepdent of FreeCAD GUI
-        pass
-
-    def process_output(self, text):
-        # not necessary
-        pass
+if FreeCAD.GuiUp:
+    FreeCADGui.addCommand('Cfd_SolverFenics', _CommandCfdSolverFenics())
