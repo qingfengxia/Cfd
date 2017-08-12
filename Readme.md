@@ -7,23 +7,23 @@ the team from CSIR South Africa, 2016
 + Alfred Bogears <http://www.csir.co.za/dr-alfred-bogaers>
 + Johan Heyns  <http://www.linkedin.com/in/johan-heyns-54b75511>
 
-Note: CSIR team has forked this repo into <https://github.com/jaheyns/Cfd>, focusing on usability for new users and OpenFOAM. 
-
-Meanwhile, this repo still targets at preparing real-world case files from FreeCAD goemetry for advanced users, which also means user needs to tweak the case files in production environment.
-
-Features from CSIR fork will be picked up regularly in the future. Before the release of FreeCAD 0.18, the author will focus on implementing infrastructure for CFDworkbench (FoamCaseBuilder), commit to FemWorkbench of FreeCAD directly.
+CSIR team has forked this repo into <https://github.com/jaheyns/Cfd>, focusing on usability for new users and OpenFOAM. Meanwhile, this repo still targets at preparing real-world case files from FreeCAD goemetry for advanced users, which also means user needs to tweak the OpenFOAM case files in production environment. Features from CSIR fork will be picked up regularly in the future. 
 
 changelog and roadmap at [Roadmap.md](./Roadmap.md)
 
 ## LGPL license as FreeCAD
 
-Use only with FreeCAD-daily version since Dec 2016.
-Currently, only OpenFOAM (official 3.0 +) solver is implemented, tested on Ubuntu 16.04
+Use only with FreeCAD-daily version since Dec 2016. Currently, only OpenFOAM (official 3.0 +) solver is implemented, tested on Ubuntu 16.04
 
 This module aims to accelerate CFD case build up. Limited by the long solving time and mesh quality sensitivity of CFD problem, this module will not as good as FEM module. For engineering application, please seek support from other commercial CFD software.
 
 
 ## Features and limitation
+
+Currently, only *OpenFOAM* laminar solver are supported, but *Fenincs* solver will be added before 2018. 
+
+Before the release of FreeCAD 0.18, the author will focus on implementing infrastructure for CFDworkbench (FoamCaseBuilder), commit to FemWorkbench of FreeCAD directly.
+
 
 ![FreeCAD CFDworkbench screenshot](https://github.com/qingfengxia/qingfengxia.github.io/blob/master/images/FreeCAD_CFDworkbench_screenshot.png)
 
@@ -38,7 +38,7 @@ This module aims to accelerate CFD case build up. Limited by the long solving ti
 ### Limitation:
 
 1. only laminar flow with dedicate solver and boundary setup can converge, turbulence model is not fully tested limited by meshing quality
-2. thermal sovler is under development
+2. OpenFOAM thermal sovler is under development
 
 ### Platform support status
 - install on Linux:
@@ -63,13 +63,12 @@ This module aims to accelerate CFD case build up. Limited by the long solving ti
 
 - PyFoam (0.6.6+) `sudo pip install PyFoam`
 
-- gnuplot.py/gnuplot-py
- 
-optional:
+- gnuplot.py/gnuplot-py (plot by matplotlib is also under testing)
 
 - paraFoam (paraview for Openfoam, usually installed with OpenFoam)
-- salome for mesihng
-- gnuplot
+
+- gmsh (requested by FemWorkbench)
+
 
 Debian/Ubuntu: see more details of Prerequisites installation in *Readme.md* in *FoamCaseBuilder* folder
 

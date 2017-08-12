@@ -84,7 +84,7 @@ see more at <https://github.com/jaheyns/CfdFoam>
 
 - pure python class of BoundaryCondition, instead of C++ FemConstraintFluidBoundary
 
-- paraview 
+- paraview template
 
 - porous model 
 
@@ -98,13 +98,19 @@ see more at <https://github.com/jaheyns/CfdFoam>
  + CFD workbench icon is designed and located in Cfd module path 
  + runFoamCommand() refactoring to unicode path support is done
 
-#### todo in July 2017
+#### initial support of Fenics solver for laminar flow
+
+- fenics solver is devloed in `fsolver` repo: <https://github.com/qingfengxia/fsolvers>
+- 3D mesh with boundary export is done via gmsh
+- fenics  solver related  new classes are added into CFD workbench repo
+
+#### todo in 2017
 
 - 2 freecad std test files with CFD case setup, put into Cfd/Example/ or std path of freecad
 - turbulence model further testing, in parallel with South Africa team
 - 2D meshing support: unv currently only deal with 3D, but possible to support 2D
 - general initalizer class, added into solver object
-- import FemWeight as a general body force constraint
+- refactor FemSelfWeight as a general body force constraint
 
 
 ======================================
@@ -117,10 +123,6 @@ see more at <https://github.com/jaheyns/CfdFoam>
 - make runBashCommand() work in Bash on windows 10 (WSL)
   Currently, case path mapping has been done for win10 Linux subsystem
 - but bash for windows 10 support is yet, can not retrieve result from Popen
-
-#### fenics FEM solvers
-- solver is under dev by myself
-- mesh export is done, but boundary export is yet done
 
 #### turbulence and heat transfering
 - bugfix: after changing turbulence model from laminar to any turbulence model,existent boundary constraints' turbulence spec combobox is empty. Similar to heat transfter setting
