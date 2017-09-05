@@ -115,7 +115,7 @@ if FreeCAD.GuiUp:
             FreeCADGui.addModule("CfdSolverFenics")
             create_solver_script = "CfdSolverFenics.makeCfdSolverFenics()"
         FreeCADGui.doCommand("FemGui.getActiveAnalysis().Member = FemGui.getActiveAnalysis().Member" + 
-                        "[{}]".format(create_solver_script))
+                        " + [" + create_solver_script + "]")
 
     def createMesh(sel):
         FreeCAD.ActiveDocument.openTransaction("Create CFD mesh by GMSH")

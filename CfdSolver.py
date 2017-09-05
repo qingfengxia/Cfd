@@ -26,7 +26,7 @@ __url__ = "http://www.freecadweb.org"
 
 import os.path
 
-supported_physical_domains = ['Mechanical', 'Fluidic', 'Electromagnetic']  # to identify physical domains
+supported_physical_domains = ['Mechanical', 'Fluidic', 'Thermal', 'Electromagnetic']  # to identify physical domains
 
 ## Fem::FemSolverObject 's Proxy python type for CFD solver
 ## common CFD properties are defined, solver specific properties in derived class
