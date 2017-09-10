@@ -55,16 +55,18 @@ class FemCaseWriterFenics:
         self.solver_obj = CfdTools.getSolver(analysis_obj)
         self.mesh_obj = CfdTools.getMesh(analysis_obj)
         self.material_obj = CfdTools.getMaterial(analysis_obj)
-        self.bc_group = CfdTools.getConstraintGroup(analysis_obj)
+        self.bc_group = CfdTools.getConstraintGroup(analysis_obj)  # not work for pure Python constraint yet
         self.mesh_generated = False
         # unit schema detection is usful for mesh scaling, boundary type area, pressure calculation
         self.unit_shema = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Units/").GetInt("UserSchema")
 
         self.case_file_name = self.solver_obj.WorkingDir + os.path.sep + self.solver_obj.InputCaseName + u".json"
         self.mesh_file_name = self.solver_obj.WorkingDir + os.path.sep + self.solver_obj.InputCaseName + u".xml"
-        # Collections.OrderedDict  s also can not dump json
-        self.case_settings = {'case_name': self.solver_obj.InputCaseName,
-                                        'case_folder': self.solver_obj.WorkingDir,  'case_file': self.case_file_name}
+
+        self.case_settings = OrderedDict()  # OrderedDict does not support pprint
+        self.case_settings['case_name'] = self.solver_obj.InputCaseName
+        self.case_settings['case_folder'] = self.solver_obj.WorkingDir
+        self.case_settings['case_file'] = self.case_file_name
 
     def write_solver_name(self):
         if self.solver_obj.PhysicalDomain == u"Fluidic":
@@ -87,7 +89,7 @@ class FemCaseWriterFenics:
         self.write_solver_name()
         self.write_material()
         self.write_boundary_condition()
-        # body load, should be set by a SelfWeight/Acceleration FemConstraint object
+        self.write_body_source() like a SelfWeight/Acceleration FemConstraint object
         self.write_initial_values()  # TODO: set by a DocumentObject
 
         self.write_solver_control()
@@ -102,9 +104,10 @@ class FemCaseWriterFenics:
         pp.pprint(self.case_settings)
 
         if self.validated():
-            import json
+            import json  # standard json has the parameter: object_pairs_hook=OrderedDict
             with open(self.case_file_name, 'w') as fp:
-                json.dump(self.case_settings, fp)
+                json.dump(self.case_settings, fp, ensure_ascii=True,  indent = 4)
+                #use_decimal=True,  Decimal instead of float
             FreeCAD.Console.PrintMessage("Sucessfully write case file {}\n".format(self.case_file_name))
 
         os.chdir(_cwd)  # restore working dir
@@ -157,14 +160,14 @@ class FemCaseWriterFenics:
             if 'KinematicViscosity' in self.material_obj.Material:  # Fem workbench general FemMaterial category = Fluid
                 kinVisc = FreeCAD.Units.Quantity(self.material_obj.Material['KinematicViscosity'])
                 kinVisc = kinVisc.getValueAs('m^2/s')
-                mat['kinematic_viscosity'] = kinVisc
+                mat['kinematic_viscosity'] = kinVisc.Value
             elif 'DynamicViscosity' in self.material_obj.Material:  # CFD workbench CfdFluidMaterail
                 Viscosity = FreeCAD.Units.Quantity(self.material_obj.Material['DynamicViscosity'])
                 Viscosity = Viscosity.getValueAs('Pa*s')
                 Density = FreeCAD.Units.Quantity(self.material_obj.Material['Density'])
                 Density = Density.getValueAs('kg/m^3')
                 if Density:
-                    kinVisc = Viscosity/float(Density)  # Density must not be zero. while null material has zero density
+                    kinVisc = (Viscosity/Density).Value  # Density must not be zero. while null material has zero density
                 else:
                     FreeCAD.Console.PrintError("Density of the materail is zero, default to water 1000 kg/m^3")
                     kinVisc = Viscosity/float(1000)
@@ -173,11 +176,11 @@ class FemCaseWriterFenics:
                 FreeCAD.Console.PrintWarning("No viscosity property is found in the material object, using default {}". format(kinVisc))
 
             # TODO: thermal properties
-            if 'SpecificHeat' in self.material_obj.Material:
-                mat['specific_heat'] = FreeCAD.Units.Quantity(self.material_obj.Material['SpecificHeat']).getValueAs('J/kg/K')
+            if 'SpecificHeat' in self.material_obj.Material:  # sjon dump can not process Quantity
+                mat['specific_heat'] = FreeCAD.Units.Quantity(self.material_obj.Material['SpecificHeat']).getValueAs('J/kg/K').Value
             if 'ThermalConductivity' in self.material_obj.Material:
-                mat['conductivity'] = FreeCAD.Units.Quantity(self.material_obj.Material['ThermalConductivity']).getValueAs('W/m/K')
-            mat['density'] = FreeCAD.Units.Quantity(self.material_obj.Material['Density']).getValueAs('kg/m^3')
+                mat['conductivity'] = FreeCAD.Units.Quantity(self.material_obj.Material['ThermalConductivity']).getValueAs('W/m/K').Value
+            mat['density'] = FreeCAD.Units.Quantity(self.material_obj.Material['Density']).getValueAs('kg/m^3').Value
 
             # TODO: mechanical properties
             #
@@ -317,7 +320,7 @@ class FemCaseWriterFenics:
         elif self.solver_obj.PhysicalDomain == u"Mechanical":
             self.write_mechanical_boundary_conditions()
         else:
-            print('Error: {} solver is not supported by Fencis and FreeCAD yet'.format(self.solver_obj.PhysicalDomain))
+            print('Error: {} boundary is not supported by Fencis and FreeCAD yet'.format(self.solver_obj.PhysicalDomain))
 
     def write_initial_values(self):
         if self.solver_obj.PhysicalDomain == u"Fluidic":
@@ -329,12 +332,15 @@ class FemCaseWriterFenics:
             pass
  
     def write_body_source(self):
-        self.case_settings['body_source'] = {'type': "translational", 'value':  (0, 0, -9.8)}
+        if self.solver_obj.PhysicalDomain == u"Fluidic":
+            self.case_settings['body_source'] = None  # {'type': "translational", 'value':  (0, 0, -9.8)}
+        else:
+            print('Error: {} body source is not supported by Fencis and FreeCAD yet'.format(self.solver_obj.PhysicalDomain))
 
     def write_solver_control(self):
         """ relaxRatio, reference values, residual contnrol, maximum_interation
         """
-        self.case_settings['solver_settings'] = {"maximum_interation": 100, 
+        self.case_settings['solver_settings'] = {"solver_parameters": {},
                                                                         "reference_values": {'pressure': 1e5, 'velocity': (0, 0, 1)},
                                                                         }
 

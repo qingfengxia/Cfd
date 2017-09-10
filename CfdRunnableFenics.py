@@ -1,6 +1,6 @@
 #***************************************************************************
 #*                                                                         *
-#*   Copyright (c) 2015 - Qingfeng Xia <qingfeng.xia()eng.ox.ac.uk> *
+#*   Copyright (c) 2017 - Qingfeng Xia <qingfeng.xia()eng.ox.ac.uk> *
 #*                                                                         *
 #*   This program is free software; you can redistribute it and/or modify  *
 #*   it under the terms of the GNU Lesser General Public License (LGPL)    *
@@ -32,6 +32,8 @@ import FemCaseWriterFenics
 import CfdTools
 from _CfdRunnable import _CfdRunnable
 
+from FenicsSolver import main
+
 
 #  Concrete Class for CfdRunnable for FenicsSolver
 #  todo: test write_case() and implement solve()
@@ -44,10 +46,11 @@ class CfdRunnableFenics(_CfdRunnable):
         return ""
 
     def write_case(self):
-        return self.writer.write_case()
+        self.case_file = self.writer.write_case()
+        return True
 
     def solve(self):
-        pass  # start external process, TODO:  move code from TaskPanel to here
+        main.main(self.case_file)  # start external process, TODO:  move code from TaskPanel to here
 
     def view_result_externally(self):
         pass
