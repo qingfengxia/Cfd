@@ -32,6 +32,27 @@ import os.path
 import FreeCAD
 import Fem
 
+#FIXME: for compatible with unsplit CfdTools.py
+#from CfdFoamTools import *
+
+
+def checkFreeCADVersion(term_print=True):
+    message = ""
+    FreeCAD.Console.PrintMessage("Checking CFD workbench dependencies...\n")
+
+    # Check FreeCAD version
+    if term_print:
+        print("Checking FreeCAD version")
+    ver = FreeCAD.Version()
+    gitver = int(ver[2].split()[0])
+    if int(ver[0]) == 0 and (int(ver[1]) < 17 or (int(ver[1]) == 17 and gitver < 11832)):
+        fc_msg = "FreeCAD version ({}.{}.{}) must be at least 0.17.11832".format(
+            int(ver[0]), int(ver[1]), gitver)
+        if term_print:
+            print(fc_msg)
+        message += fc_msg + '\n'
+    return message
+
 
 def isWorkingDirValid(wd):
     if not (os.path.isdir(wd) and os.access(wd, os.W_OK)):
@@ -104,6 +125,14 @@ if FreeCAD.GuiUp:
             if fem_object in analysis_obj.Member:
                 return analysis_obj
 
+    def getParentAnalysisObject(obj):  # FIXME: this is not good enough, 
+        """ Return CfdAnalysis object to which this obj belongs in the tree """
+        for o in FreeCAD.activeDocument().Objects:
+            if o.Name.startswith("CfdAnalysis"):
+                if obj in o.Member:
+                    return o
+        return None
+
     def createSolver(solver_name='OpenFOAM'):
         # Dialog to choose different solver, commandSolver
         FreeCAD.ActiveDocument.openTransaction("Create CFD Solver")
@@ -165,25 +194,44 @@ def getCfdConstraintGroup(analysis_object):
     return group
 
 
-def getMesh(analysis_object):
+def getMesh(analysis_object):  # FIXME, deprecate this !
     for i in analysis_object.Member:
         if i.isDerivedFrom("Fem::FemMeshObject"):
             return i
     # python will return None by default, so check None outside
+
+def getMeshObject(analysis_object):
+    isPresent = False
+    meshObj = []
+    if analysis_object:
+        members = analysis_object.Member
+    else:
+        members = FreeCAD.activeDocument().Objects
+    for i in members:
+        if hasattr(i, "Proxy") \
+                and hasattr(i.Proxy, "Type") \
+                and (i.Proxy.Type == "FemMeshGmsh" or i.Proxy.Type == "CfdMeshCart"):
+            if isPresent:
+                FreeCAD.Console.PrintError("Analysis contains more than one mesh object.")
+            else:
+                meshObj.append(i)
+                isPresent = True
+    if not isPresent:
+        meshObj = [None]  # just a placeholder to be created in event that it is not present
+    return meshObj[0], isPresent
 
 
 def isSolidMesh(fem_mesh):
     if fem_mesh.VolumeCount > 0:  # solid mesh
         return True
 
-            
 def getResult(analysis_object):
     for i in analysis_object.Member:
         if(i.isDerivedFrom("Fem::FemResultObject")):
             return i
     return None
 
-
+################################################################
 def convertQuantityToMKS(input, quantity_type, unit_system="MKS"):
     """ convert non MKS unit quantity to SI MKS (metre, kg, second)
     FreeCAD default length unit is mm, not metre, thereby, area is mm^2, pressure is MPa, etc
@@ -192,6 +240,28 @@ def convertQuantityToMKS(input, quantity_type, unit_system="MKS"):
     see:
     """
     return input
+
+def setInputFieldQuantity(inputField, quantity):
+    """ Set the quantity (quantity object or unlocalised string) into the inputField correctly """
+    # Must set in the correctly localised value as the user would enter it.
+    # A bit painful because the python locale settings seem to be based on language,
+    # not input settings as the FreeCAD settings are. So can't use that; hence
+    # this rather roundabout way involving the UserString of Quantity
+    q = Units.Quantity(quantity)
+    # Avoid any truncation
+    q.Format = (12, 'e')
+    inputField.setProperty("quantityString", q.UserString)
+
+# This is taken from hide_parts_constraints_show_meshes which was removed from FemCommands for some reason
+def hide_parts_show_meshes():
+    if FreeCAD.GuiUp:
+        for acnstrmesh in FemGui.getActiveAnalysis().Member:
+            if "Mesh" in acnstrmesh.TypeId:
+                aparttoshow = acnstrmesh.Name.replace("_Mesh", "")
+                for apart in FreeCAD.activeDocument().Objects:
+                    if aparttoshow == apart.Name:
+                        apart.ViewObject.Visibility = False
+                acnstrmesh.ViewObject.Visibility = True
 
 
 #################### UNV mesh writer #########################################

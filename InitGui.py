@@ -35,6 +35,12 @@ class CfdWorkbench(Workbench):
         self.__class__.MenuText = "CFD"
         self.__class__.ToolTip = "CFD workbench"
 
+        from PySide import QtCore
+        ICONS_PATH = CfdTools.getModulePath() + "/Resources/icons"
+        QtCore.QDir.addSearchPath("icons", ICONS_PATH)
+        import CfdPreferencePage
+        FreeCADGui.addPreferencePage(CfdPreferencePage.CfdPreferencePage, "CFD")
+
     def Initialize(self):
         from PySide import QtCore  # must import in this function, not at the beginning of this file for translation support
         import Fem
@@ -47,6 +53,7 @@ class CfdWorkbench(Workbench):
         #import _CommandCfdResult  # this function is implemented in File->Open Instead, or solver control task panel push button
 
         import _CommandCfdMeshGmshFromShape
+        import _CommandCfdMeshCartFromShape
         #import _CommandCfdFluidMaterial  # import FemMaterialFluid
 
         # python classes developed in FemWorkbench, filename and commands changed March 2017
