@@ -58,31 +58,85 @@ _DEFAULT_FOAM_DIR = '/opt/openfoam4'
 _DEFAULT_FOAM_VERSION = (4,0)
 
 
+
 def _isWindowsPath(p):
     if p.find(':') > 0:
         return True
     else:
         return False
 
+def getShortWindowsPath(long_name):
+    """
+    Gets the short path name of a given long path.
+    http://stackoverflow.com/a/23598461/200291
+    """
+    import ctypes
+    from ctypes import wintypes
+    _GetShortPathNameW = ctypes.windll.kernel32.GetShortPathNameW
+    _GetShortPathNameW.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD]
+    _GetShortPathNameW.restype = wintypes.DWORD
+
+    output_buf_size = 0
+    while True:
+        output_buf = ctypes.create_unicode_buffer(output_buf_size)
+        needed = _GetShortPathNameW(long_name, output_buf, output_buf_size)
+        if output_buf_size >= needed:
+            return output_buf.value
+        else:
+            output_buf_size = needed
+
 def _toWindowsPath(p):
-    #fixedme: it does not deal with path with quote, space
     pp = p.split('/')
-    assert pp[0] == '' and pp[1] == 'mnt' 
-    return pp[2] + ":\\" + ('\\').join(pp[3:])
+    if getFoamRuntime() == "BashWSL":
+        # bash on windows: /mnt/c/Path -> C:\Path
+        if p.startswith('/mnt/'):
+            return pp[2].toupper() + ':\\' + '\\'.join(pp[3:])
+        else:
+            return p.replace('/', '\\')
+    elif getFoamRuntime() == "BlueCFD":
+        # Under blueCFD (mingw): /c/path -> c:\path; /home/ofuser/blueCFD -> <blueCFDDir>
+        if p.startswith('/home/ofuser/blueCFD'):
+            return getFoamDir() + '\\' + '..' + '\\' + '\\'.join(pp[4:])
+        elif p.startswith('/'):
+            return pp[1].upper() + ':\\' + '\\'.join(pp[2:])
+        else:
+            return p.replace('/', '\\')
+    else:  # Nothing needed for posix
+        return p
 
 def _fromWindowsPath(p):
-    # bash on windows "C:\Path" -> /mnt/c/Path
-    # cygwin can set the mount point for all windows drives under /mnt in /etc/fstab
     drive, tail = os.path.splitdrive(p)
     pp = tail.replace('\\', '/')
-    return "/mnt/" + (drive[:-1]).lower() + pp
+    if getFoamRuntime() == "BashWSL":
+        # bash on windows: C:\Path -> /mnt/c/Path
+        if os.path.isabs(p):
+            return "/mnt/" + (drive[:-1]).lower() + pp
+        else:
+            return pp
+    elif getFoamRuntime() == "BlueCFD":
+        # Under blueCFD (mingw): c:\path -> /c/path
+        if os.path.isabs(p):
+            return "/" + (drive[:-1]).lower() + pp
+        else:
+            return pp
+    else:  # Nothing needed for posix
+        return p
 
 def translatePath(p):
-    # remove quote at first, leave the quote protection done outside
-    pp = os.path.abspath(p)
-    if _isWindowsPath(p) and getFoamRuntime() == "BashWSL":
-        pp = _fromWindowsPath(pp)
-    return pp
+    """ Transform path to the perspective of the Linux subsystem in which OpenFOAM is run (e.g. mingw) """
+    if platform.system() == 'Windows':
+        return fromWindowsPath(p)
+    else:
+        return p
+
+
+def reverseTranslatePath(p):
+    """ Transform path from the perspective of the OpenFOAM subsystem to the host system """
+    if platform.system() == 'Windows':
+        return toWindowsPath(p)
+    else:
+        return p
+
 
 def runFoamCommandOnWSL(case, cmds, output_file=None):
     """ Wait for command to complete on bash on windows 10
@@ -125,28 +179,42 @@ def runFoamCommandOnWSL(case, cmds, output_file=None):
 
 ###################################################
 
+# Some standard install locations that are searched if an install directory is not specified
+FOAM_DIR_DEFAULTS = {"Windows": ["C:\\Program Files\\blueCFD-Core-2016\\OpenFOAM-4.x"],
+                     "Linux": ["/opt/openfoam4", "/opt/openfoam-dev",
+                               "~/OpenFOAM/OpenFOAM-4.x", "~/OpenFOAM/OpenFOAM-4.0", "~/OpenFOAM/OpenFOAM-4.1",
+                               "~/OpenFOAM/OpenFOAM-dev"]
+                     }
 def _detectFoamDir():
-    # compatible for python3, check_output() return bytes type in python3
+    """ Try to guess Foam install dir from WM_PROJECT_DIR or, failing that, various defaults """
+    foam_dir = None
+    if platform.system() == "Linux":
+        cmdline = ['bash', '-l', '-c', 'echo $WM_PROJECT_DIR']
+        foam_dir = subprocess.check_output(cmdline, stderr=subprocess.PIPE)
+        # Python 3 compatible, check_output() return type byte
+        foam_dir = str(foam_dir)
+        if len(foam_dir) > 1:               # If env var is not defined, python 3 returns `b'\n'` and python 2`\n`
+            if foam_dir[:2] == "b'":
+                foam_dir = foam_dir[2:-3]   # Python3: Strip 'b' from front and EOL char
+            else:
+                foam_dir = foam_dir.strip()  # Python2: Strip EOL char
+        else:
+            foam_dir = None
+        if foam_dir and not os.path.exists(os.path.join(foam_dir, "etc", "bashrc")):
+            foam_dir = None
     if platform.system() == 'Windows':
         case_path = None
-        foam_dir = runFoamCommandOnWSL(case_path, 'echo $WM_PROJECT_DIR')
-    else:
-        # OSError No such file or directory, for file '~/.bashrc'
-        #cmdline = """bash -i -c 'source ~/.bashrc && {}' """.format('echo $WM_PROJECT_DIR')
-        cmdline = ['bash', '-i', '-c', 'source ~/.bashrc && echo $WM_PROJECT_DIR']
-        #print(cmdline)
-        foam_dir = subprocess.check_output(cmdline, stderr=subprocess.PIPE)
-    foam_dir = str(foam_dir)
-    if len(foam_dir)>1:  # if env var is not defined, return `b'\n'` for python3 and `\n` for python2
-        if foam_dir[:2] == "b'":  # for python 3
-            foam_dir = foam_dir[2:-3] #strip 2 chars from front and tail `b'/opt/openfoam4\n'`
-        else:
-            foam_dir= foam_dir.strip()  # strip the EOL char
-        return foam_dir
-    else:
-        print("""Environment var 'WM_PROJECT_DIR' is not defined nor FOAM_DIR is set
-                 fallback to default {}""".format(_DEFAULT_FOAM_DIR))
-        return _DEFAULT_FOAM_DIR
+        foam_dir = runFoamCommandOnWSL(case_path, 'echo $WM_PROJECT_DIR')  # which icoFoam
+
+    if not foam_dir:
+        for d in FOAM_DIR_DEFAULTS[platform.system()]:
+            foam_dir = os.path.expanduser(d)
+            if foam_dir and not os.path.exists(os.path.join(foam_dir, "etc", "bashrc")):
+                foam_dir = None
+            else:
+                break
+    return foam_dir
+
 
 def _detectFoamVersion():
     if platform.system() == 'Windows':
@@ -168,6 +236,7 @@ def _detectFoamVersion():
         print("""environment var 'WM_PROJECT_VERSION' is not defined\n,
               fallback to default {}""".format(_DEFAULT_FOAM_VERSION))
         return _DEFAULT_FOAM_VERSION
+
 
 _FOAM_SETTINGS = {"FOAM_DIR": _detectFoamDir(), "FOAM_VERSION": _detectFoamVersion()}
 
@@ -486,6 +555,74 @@ def createRawFoamFile(case, location, dictname, lines, classname = 'dictionary')
         f.writelines(lines)
 
 ##################################################################
+def runFoamCommand(cmdline, case=None):
+    """ Run a command in the OpenFOAM environment and wait until finished. Return output.
+        Also print output as we go.
+        cmdline - The command line to run as a string
+              e.g. transformPoints -scale "(0.001 0.001 0.001)"
+        case - Case directory or path
+    """
+    proc = CfdFoamProcess()
+    exit_code = proc.run(cmdline, case)
+    # Reproduce behaviour of failed subprocess run
+    if exit_code:
+        raise subprocess.CalledProcessError(exit_code, cmdline)
+    return proc.output
+
+
+class CfdFoamProcess:
+    def __init__(self):
+        self.process = CfdConsoleProcess.CfdConsoleProcess(stdoutHook=self.readOutput, stderrHook=self.readOutput)
+        self.output = ""
+
+    def run(self, cmdline, case=None):
+        print("Running ", cmdline)
+        self.process.start(makeRunCommand(cmdline, case), env_vars=getRunEnvironment())
+        if not self.process.waitForFinished():
+            raise Exception("Unable to run command " + cmdline)
+        return self.process.exitCode()
+
+    def readOutput(self, output):
+        self.output += output
+
+def startFoamApplication(cmd, case, finishedHook=None, stdoutHook=None, stderrHook=None):
+    """ Run OpenFOAM application and automatically generate the log.application file.
+        Returns a CfdConsoleProcess object after launching
+        cmd  - List or string with the application being the first entry followed by the options.
+              e.g. ['transformPoints', '-scale', '"(0.001 0.001 0.001)"']
+        case - Case path
+    """
+    if isinstance(cmd, list) or isinstance(cmd, tuple):
+        cmds = cmd
+    elif isinstance(cmd, str):
+        cmds = cmd.split(' ')  # Insensitive to incorrect split like space and quote
+    else:
+        raise Exception("Error: Application and options must be specified as a list or tuple.")
+
+    app = cmds[0].rsplit('/', 1)[-1]
+    logFile = "log.{}".format(app)
+
+    cmdline = ' '.join(cmds)  # Space to separate options
+    # Pipe to log file and terminal
+    cmdline += " 1> >(tee -a " + logFile + ") 2> >(tee -a " + logFile + " >&2)"
+    # Tee appends to the log file, so we must remove first. Can't do directly since
+    # paths may be specified using variables only available in foam runtime environment.
+    cmdline = "{{ rm {}; {}; }}".format(logFile, cmdline)
+
+    proc = CfdConsoleProcess.CfdConsoleProcess(finishedHook=finishedHook, stdoutHook=stdoutHook, stderrHook=stderrHook)
+    print("Running ", ' '.join(cmds), " -> ", logFile)
+    proc.start(makeRunCommand(cmdline, case), env_vars=getRunEnvironment())
+    if not proc.waitForStarted():
+        raise Exception("Unable to start command " + ' '.join(cmds))
+    return proc
+
+
+def _runFoamApplication(cmd, case):
+    """ Same as startFoamApplication, but waits until complete. Returns exit code. """
+    proc = startFoamApplication(cmd, case)
+    proc.waitForFinished()
+    return proc.exitCode()
+
 
 def runFoamApplication(cmd, case=None, logFile=None):
     """
@@ -550,8 +687,10 @@ def convertMesh(case, mesh_file, scale):
         cmdline = ['ideasUnvToFoam', '"{}"'.format(mesh_file)]  # mesh_file path may also need translate
         runFoamApplication(cmdline,case)
         changeBoundaryType(case, 'defaultFaces', 'wall')  # rename default boundary type to wall
-    if mesh_file[-4:] == ".geo":  # GMSH mesh
-        print('Error:GMSH exported *.geo mesh is not support yet')
+    if mesh_file[-4:] == ".msh":  # GMSH mesh
+        cmdline = ['gmshToFoam', '"{}"'.format(mesh_file)]  # mesh_file path may also need translate
+        runFoamApplication(cmdline,case)
+        changeBoundaryType(case, 'defaultFaces', 'wall')  # rename default boundary type to wall
     if mesh_file[-4:] == ".msh":  # ansys fluent mesh
         cmdline = ['fluentMeshToFoam', '"{}"'.format(mesh_file)]  # mesh_file path may also need translate
         runFoamApplication(cmdline, case)
@@ -563,7 +702,6 @@ def convertMesh(case, mesh_file, scale):
         runFoamApplication(cmdline, case)
     else:
         print("Error: mesh scaling ratio is must be a float or integer\n")
-        
 
 def listBoundaryNames(case):
     return BoundaryDict(case).patches()
