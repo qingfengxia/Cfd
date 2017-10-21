@@ -53,14 +53,13 @@ class CfdWorkbench(Workbench):
         #import _CommandCfdResult  # this function is implemented in File->Open Instead, or solver control task panel push button
 
         import _CommandCfdMeshGmshFromShape
-        import _CommandCfdMeshCartFromShape
-        #import _CommandCfdFluidMaterial  # import FemMaterialFluid
+        #import _CommandCfdMeshCartFromShape  # not yet finish porting
+        #import PyGui._CommandFemMeshNetgenFromShape  # not needed, also netgen may not compiled
 
         # python classes developed in FemWorkbench, filename and commands changed March 2017
         import PyGui._CommandFemConstraintSelfWeight
         import PyGui._CommandFemMeshBoundaryLayer
         import PyGui._CommandFemMaterialFluid
-        import PyGui._CommandFemMeshNetgenFromShape
         import PyGui._CommandFemMeshRegion
         #import PyGui._CommandFemMeshGroup  # not necessary for the time being
         import PyGui._CommandFemMeshPrintInfo
@@ -70,7 +69,6 @@ class CfdWorkbench(Workbench):
         # Post Processing commands are located in FemWorkbench, implemented and imported in C++
         cmdlst = ['Cfd_Analysis', 'Cfd_Solver', 'Cfd_SolverFenics','FEM_MaterialFluid', 'Separator', # superseded 'Cfd_FluidMaterial',
                         'FEM_ConstraintFluidBoundary', 'FEM_ConstraintSelfWeight', 'Separator', 
-                        'FEM_MeshNetgenFromShape',
                         'Cfd_MeshGmshFromShape', # add parameter adjustment for 'FEM_MeshGmshFromShape',
                         'FEM_MeshBoundaryLayer', 'FEM_MeshRegion', 'FEM_MeshPrintInfo', 'FEM_MeshClear', "Separator",
                         'Cfd_SolverControl']
