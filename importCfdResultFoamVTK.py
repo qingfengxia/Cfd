@@ -65,7 +65,7 @@ def open(filename):
 
 
 def importCfdResult(filename, analysis=None, result_name_prefix=None):
-    from CfdResult import makeCfdResult
+    from CfdObjects import makeCfdResult
     import Fem
 
     result_obj = makeCfdResult(result_name_prefix)

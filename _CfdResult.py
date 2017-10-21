@@ -27,13 +27,6 @@ __url__ = "http://www.freecadweb.org"
 import FreeCAD
 import Fem
 
-def makeCfdResult(result_obj_name):
-    obj= FreeCAD.ActiveDocument.addObject('Fem::FemResultObjectPython', result_obj_name)
-    _CfdResult(obj)
-    if FreeCAD.GuiUp:
-        from _ViewProviderCfdResult import _ViewProviderCfdResult
-        _ViewProviderCfdResult(obj.ViewObject)
-    return obj
 
 class _CfdResult(object):
     def __init__(self, obj):
