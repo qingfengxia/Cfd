@@ -45,14 +45,15 @@ class _CommandCfdAnalysis(CfdCommand):
     def Activated(self):
         FreeCAD.ActiveDocument.openTransaction("Create CFD Analysis")
         FreeCADGui.addModule("FemGui")
-        FreeCADGui.addModule("CfdAnalysis")
-        FreeCADGui.doCommand("CfdAnalysis.makeCfdAnalysis('CfdAnalysis')")
+        FreeCADGui.addModule("CfdObjects")
+        FreeCADGui.doCommand("CfdObjects.makeCfdAnalysis('CfdAnalysis')")
         FreeCADGui.doCommand("FemGui.setActiveAnalysis(App.activeDocument().ActiveObject)")
 
         import CfdTools
         CfdTools.createSolver()  # using FreeCADGui.doCommand style
-        #FreeCADGui.addModule("CfdFluidMaterial")
-        #FreeCADGui.doCommand("FemGui.getActiveAnalysis().Member = FemGui.getActiveAnalysis().Member + [CfdFluidMaterial.makeCfdFluidMaterial('FluidMaterial')]")
+
+        FreeCADGui.addModule("CfdObjects")
+        FreeCADGui.doCommand("FemGui.getActiveAnalysis().Member = FemGui.getActiveAnalysis().Member + [CfdObjects.makeCfdFluidMaterial('FluidMaterial')]")
 
         sel = FreeCADGui.Selection.getSelection()
         if (len(sel) == 1):

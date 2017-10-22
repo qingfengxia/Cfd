@@ -88,23 +88,33 @@ class CfdCaseWriterFoam:
         """ This is FreeCAD specific code, convert from UNV to OpenFoam
         """
         caseFolder = self.solver_obj.WorkingDir + os.path.sep + self.solver_obj.InputCaseName
-        unvMeshFile = caseFolder + os.path.sep + self.solver_obj.InputCaseName + u".unv"
 
-        if self.mesh_obj.Proxy.Type == "FemMeshGmsh": # Gmsh has already write boundary mesh for FemConstraint derived class
-            self.mesh_generated = CfdTools.write_unv_mesh(self.mesh_obj, self.bc_group, unvMeshFile, is_gmsh = True)
-            # however, the generated boundary patch name for OpenFOAM has suffix: '_Faces' for 3D.
+        if self.mesh_obj.Proxy.Type == u"FemMeshGmsh": # Gmsh has already write boundary mesh for FemConstraint derived class
+            using_unv_format = True
+            if using_unv_format:
+                foamMeshFile = caseFolder + os.path.sep + self.solver_obj.InputCaseName + u".unv"
+            else:  # GMSH format ascii
+                foamMeshFile = caseFolder + os.path.sep + self.solver_obj.InputCaseName + u".msh"
+
+            if using_unv_format:
+                self.mesh_generated = CfdTools.write_unv_mesh(self.mesh_obj, self.bc_group, foamMeshFile, is_gmsh = True)
+                # however, the generated boundary patch name for OpenFOAM has suffix: '_Faces' for 3D.
+                # FreecAD (internal standard length) mm by default; while in CFD, it is metre, so mesh needs scaling
+                # unit_shema == 1, may mean Metre-kg-second
+                # cfd result import, will also involve mesh scaling, it is done in c++  Fem/VTKTools.cpp
+                if self.unit_shema == 0:
+                    scale = 0.001
+                else:
+                    scale = 1
+            else:  # feature not yet merged into Fem master 2017-10-21
+                self.mesh_generated = CfdTools.export_gmsh_mesh(self.mesh_obj, foamMeshFile)
+                scale = 1  # importGmshMesh.export already set the output mesh scale to metre
         else:
-            self.mesh_generated = CfdTools.write_unv_mesh(self.mesh_obj, self.bc_group, unvMeshFile)
+            FreeCAD.Console.PrintError("Only Gmsh is supported for OpenFOAM mesh")
+            return False
+            #self.mesh_generated = CfdTools.write_unv_mesh(self.mesh_obj, self.bc_group, unvMeshFile
 
-        # FreecAD (internal standard length) mm by default; while in CFD, it is metre, so mesh needs scaling
-        # unit_shema == 1, may mean Metre-kg-second
-        # cfd result import, will also involve mesh scaling, it is done in c++  Fem/VTKTools.cpp
-
-        if self.unit_shema == 0:
-            scale = 0.001
-        else:
-            scale = 1
-        self.builder.setupMesh(unvMeshFile, scale)
+        self.builder.setupMesh(foamMeshFile, scale)
         #FreeCAD.Console.PrintMessage('mesh file {} converted and scaled with ratio {}\n'.format(unvMeshFile, scale))
 
     def write_material(self, material=None):
@@ -120,7 +130,7 @@ class CfdCaseWriterFoam:
                 fluidName = str(self.material_obj.Label)  # Label is unicode
             # viscosity could be specified in two ways, to be compatible with CfdFoam workbench
             if 'KinematicViscosity' in self.material_obj.Material:  # Fem workbench general FemMaterial category = Fluid
-                kinVisc = FreeCAD.Units.Quantity(self.material_obj.Material['KinematicViscosity'])
+                kinVisc = FreeCAD.Units.Quantity(self.material_obj.Material['KinematicViscosity']).getValueAs('m^2/s')
             elif 'DynamicViscosity' in self.material_obj.Material:  # CFD workbench CfdFluidMaterail
                 Viscosity = FreeCAD.Units.Quantity(self.material_obj.Material['DynamicViscosity'])
                 Viscosity = Viscosity.getValueAs('Pa*s')
@@ -147,7 +157,8 @@ class CfdCaseWriterFoam:
         for bc in self.bc_group:
             #FreeCAD.Console.PrintMessage("write boundary condition: {}\n".format(bc.Label))
             assert bc.isDerivedFrom("Fem::ConstraintFluidBoundary")
-            bc_dict = {'name': bc.Label, "type": bc.BoundaryType, "subtype": bc.Subtype, "value": bc.BoundaryValue}
+            # bc.Name is used, instead of bc.Label (shown to users in GUI) to match unvMeshConversion by FemGmshTool.py
+            bc_dict = {'name': bc.Name, "type": bc.BoundaryType, "subtype": bc.Subtype, "value": bc.BoundaryValue}
             if bc_dict['type'] == 'inlet' and bc_dict['subtype'] == 'uniformVelocity':
                 bc_dict['value'] = [abs(v) * bc_dict['value'] for v in tuple(bc.DirectionVector)]
                 # fixme: App::PropertyVector should be normalized to unit length

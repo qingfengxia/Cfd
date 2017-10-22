@@ -149,8 +149,8 @@ if FreeCAD.GuiUp:
     def createMesh(sel):
         FreeCAD.ActiveDocument.openTransaction("Create CFD mesh by GMSH")
         mesh_obj_name = sel[0].Name + "_Mesh"
-        FreeCADGui.addModule("CfdMeshGmsh")  # FemGmsh has been adjusted for CFD like only first order element
-        FreeCADGui.doCommand("CfdMeshGmsh.makeCfdMeshGmsh('" + mesh_obj_name + "')")
+        FreeCADGui.addModule("CfdObjects")  # FemGmsh has been adjusted for CFD like only first order element
+        FreeCADGui.doCommand("CfdObjects.makeCfdMeshGmsh('" + mesh_obj_name + "')")
         FreeCADGui.doCommand("App.ActiveDocument.ActiveObject.Part = App.ActiveDocument." + sel[0].Name)
         FreeCADGui.addModule("FemGui")
         if FemGui.getActiveAnalysis():
@@ -266,6 +266,24 @@ def hide_parts_show_meshes():
 
 #################### UNV mesh writer #########################################
 
+def export_gmsh_mesh(obj, meshfileString):
+    # support only 3D
+    if not obj.Proxy.Type == 'FemMeshGmsh':
+        FreeCAD.Console.PrintError("Object selected is not a FemMeshGmsh type\n")
+        return
+
+    import FemGmshTools
+    gmsh = FemGmshTools.FemGmshTools(obj, FemGui.getActiveAnalysis())
+    meshfile = gmsh.export_mesh(u"Gmsh MSH", meshfileString)
+    if meshfile:
+        msg = "Info: Mesh is written to `{}` by Gmsh\n".format(meshfile)
+        FreeCAD.Console.PrintMessage(msg)
+        return None
+    else:
+        error = "Mesh is NOT written to `{}` by Gmsh\n".format(meshfileString)
+        FreeCAD.Console.PrintError(error)
+        return error
+
 def write_unv_mesh(mesh_obj, bc_group, mesh_file_name, is_gmsh = False):
     # if bc_group is specified as empty or None, it means UNV boundary mesh has been write by Fem.export(), no need to write twice
     __objs__ = []
@@ -281,12 +299,7 @@ def write_unv_mesh(mesh_obj, bc_group, mesh_file_name, is_gmsh = False):
 
 
 def _update_unv_boundary_names(bc_group, mesh_file_name):
-    '''
-    import fileinput
-    with fileinput.FileInput(fileToSearch, inplace=True, backup='.bak') as file:
-        for line in file:
-            line.replace('_Faces', '')
-            line.replace('_Edges', '')
+    ''' temp solution, not needed for gmshToFoam
     '''
     import shutil
     backup_file = mesh_file_name+u'.bak'
@@ -294,7 +307,8 @@ def _update_unv_boundary_names(bc_group, mesh_file_name):
     f1 = open(backup_file, 'r')
     f2 = open(mesh_file_name, 'w')
     for line in f1:
-        f2.write(line.replace('_Faces', ''))  # how about 2D?
+        f2.write(line.replace('_Faces', ''))  # just for 3D
+        #f2.write(line.replace('_Edges', ''))  # just for 2D
     f1.close()
     f2.close()
     os.remove(backup_file)
