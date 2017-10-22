@@ -126,11 +126,11 @@ Similar with FemWorkbench
 
 ### Test with prebuilt case
 
+A simple example of a pipe with one inlet and one outlet is included in this repo (test_files/TestCase.fcstd). The liquid viscosity is 100 times higher than water, to make it laminar flow.
+[The video tutorial is here](https://www.iesensor.com/download/FreeCAD_CfdWorkbench_openfoam_tutorial.webm)
+
 Johan has built a case, see attachment [test procedure on freecad forum](http://forum.freecadweb.org/viewtopic.php?f=18&t=17322)
 
-
-A simple example of cube pipe with one inlet and one outlet. <https://www.iesensor.com/download/TestCfdCubePipe.fcstd>
-Example setup, calculation will diverge.
 
 ========================================
 
