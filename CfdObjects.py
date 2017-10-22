@@ -20,18 +20,44 @@
 # *                                                                         *
 # ***************************************************************************
 
-__title__ = "CfdMeshGmsh"
-__author__ = "Bernd Hahnebach"
+__title__ = "CfdObjects"
+__author__ = "Bernd Hahnebach, Qingfeng Xia"
 __url__ = "http://www.freecadweb.org"
 
 import FreeCAD
-from ObjectsFem import makeMeshGmsh
+
+def makeCfdAnalysis(name):
+    '''makeCfdAnalysis(name): makes a Cfd Analysis object based on Fem::FemAnalysisPython'''
+    obj = FreeCAD.ActiveDocument.addObject("Fem::FemAnalysisPython", name)
+    if FreeCAD.GuiUp:
+        from _ViewProviderCfdAnalysis import _ViewProviderCfdAnalysis
+        _ViewProviderCfdAnalysis(obj.ViewObject)
+    return obj
+
 
 def makeCfdMeshGmsh(name="CFDMeshGMSH"):
     '''makeCfdMeshGmsh(name): makes a GMSH CFD mesh object'''
-    obj = makeMeshGmsh(name)
+    from ObjectsFem import makeMeshGmsh
+    obj = makeMeshGmsh(FreeCAD.ActiveDocument, name)
     obj.ElementOrder = '1st'
     obj.OptimizeStd = False
-    #may also set meshing algorithm
+    #obj.RecombineAll = True  # genereate bad mesh for curved mesh
+    #may also set meshing algorithm, frontal, gmsh is best for Fenics
+    return obj
 
+
+def makeCfdFluidMaterial(name="FluidMaterial"):
+    '''makeCfdFluidMaterial(name): makes a CFD fluid material object from FemObjects.makeFemMaterialFluid'''
+    from ObjectsFem import makeMaterialFluid
+    obj = makeMaterialFluid(FreeCAD.ActiveDocument, name)
+    return obj
+
+
+def makeCfdResult(result_obj_name = "CfdResult"):
+    obj= FreeCAD.ActiveDocument.addObject('Fem::FemResultObjectPython', result_obj_name)
+    from _CfdResult import _CfdResult
+    _CfdResult(obj)
+    if FreeCAD.GuiUp:
+        from _ViewProviderCfdResult import _ViewProviderCfdResult
+        _ViewProviderCfdResult(obj.ViewObject)
     return obj
