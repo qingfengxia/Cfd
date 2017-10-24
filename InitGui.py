@@ -47,6 +47,7 @@ class CfdWorkbench(Workbench):
         import FemGui
 
         import _CommandCfdAnalysis
+        import _CommandCfdAnalysisFromMesh
         import _CommandCfdSolver  # all solvers should be registered and selected in GUI fired by _CommandCfdSolver
         import _CommandCfdSolverFenics
         import _CommandCfdSolverControl
@@ -67,7 +68,7 @@ class CfdWorkbench(Workbench):
         # vtk pipeline commands defiend and import in cpp needs not imported but can be imported
 
         # Post Processing commands are located in FemWorkbench, implemented and imported in C++
-        cmdlst = ['Cfd_Analysis', 'Cfd_Solver', 'Cfd_SolverFenics','FEM_MaterialFluid', 'Separator', # superseded 'Cfd_FluidMaterial',
+        cmdlst = ['Cfd_Analysis',  'Cfd_AnalysisFromMesh', 'Cfd_Solver', 'Cfd_SolverFenics','FEM_MaterialFluid', 'Separator', # superseded 'Cfd_FluidMaterial',
                         'FEM_ConstraintFluidBoundary', 'FEM_ConstraintSelfWeight', 'Separator', 
                         'Cfd_MeshGmshFromShape', # add parameter adjustment for 'FEM_MeshGmshFromShape',
                         'FEM_MeshBoundaryLayer', 'FEM_MeshRegion', 'FEM_MeshPrintInfo', 'FEM_MeshClear', "Separator",
