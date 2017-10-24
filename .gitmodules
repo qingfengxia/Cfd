@@ -1,0 +1,3 @@
+[submodule "FenicsSolver"]
+	path = FenicsSolver
+	url = https://github.com/qingfengxia/FenicsSolver
