@@ -20,7 +20,7 @@ This module aims to accelerate CFD case build up. Limited by the long solving ti
 
 ## Features and limitation
 
-Currently, only *OpenFOAM* laminar solver are supported, but *Fenincs* solver will be added before 2018. 
+Currently, only *OpenFOAM<https://www.openfoam.com/>* laminar and turbulent solver are supported; while *Fenics<https://fenicsproject.org/>* solver will be added before 2018. 
 
 Before the release of FreeCAD 0.18, the author will focus on implementing infrastructure for CFDworkbench (FoamCaseBuilder), commit to FemWorkbench of FreeCAD directly.
 
@@ -34,10 +34,11 @@ Before the release of FreeCAD 0.18, the author will focus on implementing infras
 3. A general FemSolverControlTaskPanel is proposed for any FemSolver.
 4. VTK mesh and result IO, commit to FemWorkbench
 5. result can only be viewed in paraview. but possible to export result to VTK format then load back to FreeCAD. (it is implemented in Oct 2016)
+6. FenicsSolver is integrate and basic case writer is reaby, but waiting for meshing export
 
 ### Limitation:
 
-1. only laminar flow with dedicate solver and boundary setup can converge, turbulence model is not fully tested limited by meshing quality
+1. turbulence model case setup is usable, but only laminar flow with dedicate solver and boundary setup can converge
 2. OpenFOAM thermal sovler is under development
 
 ### Platform support status
@@ -126,8 +127,12 @@ Similar with FemWorkbench
 
 ### Test with prebuilt case
 
-A simple example of a pipe with one inlet and one outlet is included in this repo (test_files/TestCase.fcstd). The liquid viscosity is 100 times higher than water, to make it laminar flow.
+A simple example of a pipe with one inlet and one outlet is included in this repo (test_files/TestCase.fcstd). The liquid viscosity is 1000 times higher than water, to make it laminar flow. 
 [The video tutorial is here](https://www.iesensor.com/download/FreeCAD_CfdWorkbench_openfoam_tutorial.webm)
+
+
+Turbulence flow case setup is also usable, see (test_files/TestCaseKE.fcstd), but Reynolds number is set to be 1000, otherwise, calculation will diverge due to bad tetragen mesh. Better CFD meshing is planned for cfmesh, perhaps, snappyHexMesh.
+
 
 Johan has built a case, see attachment [test procedure on freecad forum](http://forum.freecadweb.org/viewtopic.php?f=18&t=17322)
 
