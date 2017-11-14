@@ -49,6 +49,11 @@ class CfdRunnableFoam(_CfdRunnable):
     def write_case(self):
         return self.writer.write_case()
 
+    def edit_case(self):
+        case_path = self.solver.WorkingDir + os.path.sep + self.solver.InputCaseName
+        FreeCAD.Console.PrintMessage("Please edit the case input files externally at: {}".format(case_path))
+        self.writer.builder.editCase()
+
     def get_solver_cmd(self):  # deprecate this by a bash script file to start foam solver
         import FoamCaseBuilder.utility
         cmd = "bash -c \"source {}/etc/bashrc && ./Allrun\"".format(FoamCaseBuilder.utility.getFoamDir())

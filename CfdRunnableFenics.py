@@ -28,11 +28,11 @@ import os.path
 
 import FreeCAD
 
-import FemCaseWriterFenics
+import CaeCaseWriterFenics
 import CfdTools
 from _CfdRunnable import _CfdRunnable
 
-from FenicsSolver import main
+import FenicsSolver
 
 
 #  Concrete Class for CfdRunnable for FenicsSolver
@@ -40,17 +40,41 @@ from FenicsSolver import main
 class CfdRunnableFenics(_CfdRunnable):
     def __init__(self, analysis=None, solver=None):
         super(CfdRunnableFenics, self).__init__(analysis, solver)
-        self.writer = FemCaseWriterFenics.FemCaseWriterFenics(self.analysis)
+        self.writer = CaeCaseWriterFenics.CaeCaseWriterFenics(self.analysis)
 
     def check_prerequisites(self):
         return ""
 
     def write_case(self):
-        self.case_file = self.writer.write_case()
+        self.case_file = self.writer.case_file_name
         return True
 
+    def edit_case(self):
+        "Edit Fenics case input file (json, xml, etc) by platform default editor"
+        import subprocess
+        import sys
+        path = self.case_file
+        FreeCAD.Console.PrintMessage("Edit case input file: " + path + ", in platform default editor\n")
+        if sys.platform == 'darwin':
+            subprocess.Popen(['open', '--', path])
+        elif sys.platform.find("linux") == 0:  # python 2: linux2 or linux3; but 'linux' for python3
+            subprocess.Popen(['xdg-open', path])
+        elif sys.platform == 'win32':
+            subprocess.Popen(['explorer', path]) # check_call() will block the python code
+
+    def get_solver_cmd(self):
+        # get full path to solver script
+        #solver_script_path = os.path.dirname(__file__) + os.path.sep + "main.py"
+        import CfdTools
+        solver_script_path = CfdTools.getModulePath() + os.path.sep + "FenicsSolver/main.py"
+        cmd = 'python2 "{}" "{}"'.format(solver_script_path, self.case_file)
+        # mpirun -np {} 
+        FreeCAD.Console.PrintMessage("Solver run command: " + cmd + "\n")
+        return cmd
+
     def solve(self):
-        main.main(self.case_file)  # start external process, TODO:  move code from TaskPanel to here
+        # start external process, currently not in use  TODO:  move code from TaskPanel to here
+        FenicsSolver.main.main(self.case_file)
 
     def view_result_externally(self):
         pass
@@ -61,5 +85,5 @@ class CfdRunnableFenics(_CfdRunnable):
         pass
 
     def process_output(self, text):
-        # not necessary
-        pass
+        # will not plot progress, just log to stdout
+        print(text)

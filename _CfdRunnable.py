@@ -67,8 +67,3 @@ class _CfdRunnable(object):
 
     def check_prerequisites(self):
         return ""
-
-    def edit_case(self):
-        case_path = self.solver.WorkingDir + os.path.sep + self.solver.InputCaseName
-        FreeCAD.Console.PrintMessage("Please edit the case input files externally at: {}".format(case_path))
-        self.writer.builder.editCase()
