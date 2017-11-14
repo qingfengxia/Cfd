@@ -56,7 +56,7 @@ class _ViewProviderCfdSolverFenics:
         doc = FreeCADGui.getDocument(vobj.Object.Document)
         # it should be possible to find the AnalysisObject although it is not a documentObjectGroup
         if not FemGui.getActiveAnalysis():
-            analysis_obj = CfdTools.getActiveAnalysis(self.Object)
+            analysis_obj = CfdTools.getParentAnalysisObject(self.Object)
             if analysis_obj:
                 FemGui.setActiveAnalysis(analysis_obj)
             else:

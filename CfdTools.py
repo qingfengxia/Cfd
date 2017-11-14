@@ -105,6 +105,26 @@ def get_module_path():
 
 ################################################
 
+def getActiveAnalysis():
+    # find the fem analysis object this fem_object belongs to
+    if FreeCAD.GuiUp:
+        import FemGui
+        if FemGui.getActiveAnalysis():
+            return FemGui.getActiveAnalysis()
+    else:  # assume the first Fem::FemAnalysis obj is active
+        for o in FreeCAD.activeDocument().Objects:
+            if o.Name.startswith("CfdAnalysis"):  # FIXME: is the name always starts with "CfdAnalysis"?
+                if obj in o.Group:
+                    return o
+        return None
+
+def getParentAnalysisObject(fem_object): 
+    """ Return CfdAnalysis object to which this obj belongs in the tree """
+    doc = fem_object.Document
+    for analysis_obj in doc.findObjects('Fem::FemAnalysis'):
+        if fem_object in analysis_obj.Group:
+            return analysis_obj
+
 if FreeCAD.GuiUp:
     import FreeCADGui
     import FemGui
@@ -116,21 +136,6 @@ if FreeCAD.GuiUp:
         for i in FemGui.getActiveAnalysis().Group:
             if(i.isDerivedFrom("Fem::FemResultObject")):
                 return i
-        return None
-
-    def getActiveAnalysis(fem_object):
-        # find the fem analysis object this fem_object belongs to
-        doc = fem_object.Document
-        for analysis_obj in doc.findObjects('Fem::FemAnalysis'):
-            if fem_object in analysis_obj.Group:
-                return analysis_obj
-
-    def getParentAnalysisObject(obj):  # FIXME: this is not good enough, 
-        """ Return CfdAnalysis object to which this obj belongs in the tree """
-        for o in FreeCAD.activeDocument().Objects:
-            if o.Name.startswith("CfdAnalysis"):
-                if obj in o.Group:
-                    return o
         return None
 
     ################################################

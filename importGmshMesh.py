@@ -35,7 +35,7 @@ import subprocess
 
 import FreeCAD
 import CaeMesherGmsh
-
+import CfdTools
 
 ########## generic FreeCAD import and export methods ##########
 # gmsh exportable file types are supported, and boundary mesh might also be exported
@@ -95,13 +95,8 @@ def export(objectslist, fileString):
         FreeCAD.Console.PrintError("Object selected is not a FemMeshGmsh type\n")
         return
 
-    if FreeCAD.GuiUp:
-        import FemGui
-        analysis = FemGui.getActiveAnalysis()
-        gmsh = CaeMesherGmsh.CaeMesherGmsh(obj, analysis)
-    else:
-        # it is still possible to lookup analysis object from document
-        gmsh = CaeMesherGmsh.CaeMesherGmsh(obj)
+    gmsh = CaeMesherGmsh.CaeMesherGmsh(obj, CfdTools.getParentAnalysisObject(obj))
+
     if fileString != "":
         fileName, fileExtension = os.path.splitext(fileString)
         for k in CaeMesherGmsh.CaeMesherGmsh.output_format_suffix:
@@ -134,11 +129,11 @@ def export_fenics_mesh(obj, meshfileString):
         FreeCAD.Console.PrintError(error)
         return error
     meshfileStem = (meshfileString[:-4])
-    if isinstance(meshfileStem, (unicode,)):
+    if isinstance(meshfileStem, (unicode,)):  # FIXME:  python3 has no such type unicode
         meshfileStem = meshfileStem.encode('ascii')
 
-    gmsh = CaeMesherGmsh.CaeMesherGmsh(obj, FemGui.getActiveAnalysis())
-    meshfile = gmsh.export_mesh(u"Gmsh MSH", meshfileStem + ".msh")
+    gmsh = CaeMesherGmsh.CaeMesherGmsh(obj, CfdTools.getParentAnalysisObject(obj))
+    meshfile = gmsh.export_mesh(u"Gmsh MSH", meshfileStem + u".msh")
     if meshfile:
         msg = "Info: Mesh has been written to `{}` by Gmsh\n".format(meshfile)
         FreeCAD.Console.PrintMessage(msg)
@@ -169,12 +164,12 @@ def show_fenics_mesh(fname):
         plot(boundaries)
 
     plot(mesh)
-    interactive()
+    interactive()  # FIXME: this event loop may conflict with FreeCAD GUI's
 
 
 def export_foam_mesh(obj, meshfileString, foamCaseFolder=None):
     # support only 3D
-    gmsh = CaeMesherGmsh.CaeMesherGmsh(obj, FemGui.getActiveAnalysis())
+    gmsh = CaeMesherGmsh.CaeMesherGmsh(obj, CfdTools.getParentAnalysisObject(obj))
     meshfile = gmsh.export_mesh(u"Gmsh MSH", meshfileString)
     if meshfile:
         msg = "Info: Mesh is not written to `{}` by Gmsh\n".format(meshfile)
