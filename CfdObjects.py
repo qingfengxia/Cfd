@@ -34,17 +34,45 @@ def makeCfdAnalysis(name):
         _ViewProviderCfdAnalysis(obj.ViewObject)
     return obj
 
+def makeCfdSolver(solver_name ='OpenFOAM'):
+    if solver_name == 'OpenFOAM':
+        import CfdSolverFoam
+        obj = CfdSolverFoam.makeCfdSolverFoam()
+    elif solver_name == 'Fenics':
+        import CfdSolverFenics
+        obj = CfdSolverFenics.makeCfdSolverFenics()
+    else:
+        # Todo: ChoiceDialog to choose different solver, commandSolver
+        FreeCAD.Console.Error("only solver name with Fenics and OpenFOAM is supported")
+    return obj
 
 def makeCfdMeshGmsh(name="CFDMeshGMSH"):
     '''makeCfdMeshGmsh(name): makes a GMSH CFD mesh object'''
-    from ObjectsFem import makeMeshGmsh
-    obj = makeMeshGmsh(FreeCAD.ActiveDocument, name)
+    doc = FreeCAD.ActiveDocument
+    obj = doc.addObject("Fem::FemMeshObjectPython", name)
+    from _CaeMeshGmsh import _CaeMeshGmsh
+    _CaeMeshGmsh(obj)
+    if FreeCAD.GuiUp:
+        from _ViewProviderCaeMesh import _ViewProviderCaeMesh
+        _ViewProviderCaeMesh(obj.ViewObject)
+
     obj.ElementOrder = '1st'
     obj.OptimizeStd = False
     #obj.RecombineAll = True  # genereate bad mesh for curved mesh
     #may also set meshing algorithm, frontal, gmsh is best for Fenics
     return obj
 
+def makeCfdMeshImported(name="ImportedCFDMesh"):
+    '''make mesh object to load external mesh'''
+    doc = FreeCAD.ActiveDocument
+    obj = doc.addObject("Fem::FemMeshObjectPython", name)
+    from _CaeMeshImported import _CaeMeshImported
+    _CaeMeshImported(obj)
+    #PyObjects._FemMeshImported._FemMeshImported(obj)
+    #if FreeCAD.GuiUp:  # not needed
+    #    import PyGui._ViewProviderFemMeshGmsh
+    #    PyGui._ViewProviderFemMeshGmsh._ViewProviderFemMeshGmsh(obj.ViewObject)
+    return obj
 
 def makeCfdFluidMaterial(name="FluidMaterial"):
     '''makeCfdFluidMaterial(name): makes a CFD fluid material object from FemObjects.makeFemMaterialFluid'''
@@ -54,7 +82,8 @@ def makeCfdFluidMaterial(name="FluidMaterial"):
 
 
 def makeCfdResult(result_obj_name = "CfdResult"):
-    obj= FreeCAD.ActiveDocument.addObject('Fem::FemResultObjectPython', result_obj_name)
+    doc = FreeCAD.ActiveDocument
+    obj= doc.addObject('Fem::FemResultObjectPython', result_obj_name)
     from _CfdResult import _CfdResult
     _CfdResult(obj)
     if FreeCAD.GuiUp:

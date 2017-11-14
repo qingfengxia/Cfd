@@ -76,7 +76,7 @@ class CfdCommand(object):
 
         def results_present(self):
             results = False
-            analysis_members = FemGui.getActiveAnalysis().Member
+            analysis_members = FemGui.getActiveAnalysis().Group
             for o in analysis_members:
                 if o.isDerivedFrom('Fem::FemResultObject'):
                     results = True
@@ -86,7 +86,7 @@ class CfdCommand(object):
             result_is_in_active_analysis = False
             sel = FreeCADGui.Selection.getSelection()
             if len(sel) == 1 and sel[0].isDerivedFrom("Fem::FemResultObject"):
-                for o in FemGui.getActiveAnalysis().Member:
+                for o in FemGui.getActiveAnalysis().Group:
                     if o == sel[0]:
                         result_is_in_active_analysis = True
                         break
@@ -155,7 +155,7 @@ class CfdCommand(object):
 
         def analysis_has_solver(self):
             solver = False
-            analysis_members = FemGui.getActiveAnalysis().Member
+            analysis_members = FemGui.getActiveAnalysis().Group
             for o in analysis_members:
                 if o.isDerivedFrom("Fem::FemSolverObjectPython"):
                     solver = True
@@ -166,7 +166,7 @@ class CfdCommand(object):
 
         def hide_meshes_show_parts_constraints(self):
             if FreeCAD.GuiUp:
-                for acnstrmesh in FemGui.getActiveAnalysis().Member:
+                for acnstrmesh in FemGui.getActiveAnalysis().Group:
                     if "Constraint" in acnstrmesh.TypeId:
                         acnstrmesh.ViewObject.Visibility = True
                     if "Mesh" in acnstrmesh.TypeId:

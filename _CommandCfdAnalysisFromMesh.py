@@ -59,14 +59,19 @@ class _CommandCfdAnalysisFromMesh(CfdCommand):
         FreeCADGui.Selection.clearSelection()
 
         filters = u"IDES mesh (*.unv);;Med mesh(*.med);;VTK mesh (*.vtk *.vtu)"
-        mesh_file = QFileDialog.getOpenFileName(None, u"Open mesh files", u"./", filters)  #  QFileDialog.ExistingFiles
-        # getOpenFileNameAndFilter()
+        mesh_file = QFileDialog.getOpenFileName(None, u"Open mesh files", u"./", filters)
+        # why return a tuple of filename and selectedfilter
 
         import CfdTools
         solver_name = 'OpenFOAM'
         CfdTools.createAnalysis(solver_name)
 
-        CfdTools.importGeometryAndMesh(geo_file, mesh_file)
+        FreeCADGui.addModule("CfdTools")
+        FreeCADGui.doCommand("CfdTools.importGeometryAndMesh(u'{}', u'{}')".format(geo_file[0], mesh_file[0]))
+        #CfdTools.importGeometryAndMesh(geo_file[0], mesh_file[0])
+        FreeCADGui.addModule("FemGui")
+        if FemGui.getActiveAnalysis():
+            FreeCADGui.doCommand("FemGui.getActiveAnalysis().addObject(App.ActiveDocument.ActiveObject)")
 
 
 if FreeCAD.GuiUp:

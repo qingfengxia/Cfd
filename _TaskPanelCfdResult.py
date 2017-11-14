@@ -261,7 +261,7 @@ class _TaskPanelCfdResult:
                 FreeCAD.Console.PrintError('no Mesh object found in ResultObject {}'.format(self.result_object.Name))
                 """
                 # the first mesh object found is the mesh before writing case and solving
-                for i in FemGui.getActiveAnalysis().Member:
+                for i in FemGui.getActiveAnalysis().Group:
                     if i.isDerivedFrom("Fem::FemMeshObject"):
                         self.MeshObject = i
                         break

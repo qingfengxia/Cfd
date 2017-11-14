@@ -113,7 +113,7 @@ if FreeCAD.GuiUp:
         if (len(sel) == 1):
             if sel[0].isDerivedFrom("Fem::FemResultObject"):
                 return sel[0]
-        for i in FemGui.getActiveAnalysis().Member:
+        for i in FemGui.getActiveAnalysis().Group:
             if(i.isDerivedFrom("Fem::FemResultObject")):
                 return i
         return None
@@ -122,49 +122,101 @@ if FreeCAD.GuiUp:
         # find the fem analysis object this fem_object belongs to
         doc = fem_object.Document
         for analysis_obj in doc.findObjects('Fem::FemAnalysis'):
-            if fem_object in analysis_obj.Member:
+            if fem_object in analysis_obj.Group:
                 return analysis_obj
 
     def getParentAnalysisObject(obj):  # FIXME: this is not good enough, 
         """ Return CfdAnalysis object to which this obj belongs in the tree """
         for o in FreeCAD.activeDocument().Objects:
             if o.Name.startswith("CfdAnalysis"):
-                if obj in o.Member:
+                if obj in o.Group:
                     return o
         return None
 
-    def createSolver(solver_name='OpenFOAM'):
-        # Dialog to choose different solver, commandSolver
-        FreeCAD.ActiveDocument.openTransaction("Create CFD Solver")
+    ################################################
+    def createAnalysis(solver_name):
+        FreeCAD.ActiveDocument.openTransaction("Create CFD Analysis")
         FreeCADGui.addModule("FemGui")
-        if solver_name == 'OpenFOAM':
-            FreeCADGui.addModule("CfdSolverFoam")
-            create_solver_script = "CfdSolverFoam.makeCfdSolverFoam()"
-        else:
-            FreeCADGui.addModule("CfdSolverFenics")
-            create_solver_script = "CfdSolverFenics.makeCfdSolverFenics()"
-        FreeCADGui.doCommand("FemGui.getActiveAnalysis().Member = FemGui.getActiveAnalysis().Member" + 
-                        " + [" + create_solver_script + "]")
+        FreeCADGui.addModule("CfdObjects")
+
+        FreeCADGui.doCommand("CfdObjects.makeCfdAnalysis('CfdAnalysis')")
+        FreeCADGui.doCommand("FemGui.setActiveAnalysis(App.activeDocument().ActiveObject)")
+
+        FreeCADGui.doCommand("FemGui.getActiveAnalysis().addObject(CfdObjects.makeCfdSolver('{}')".format(solver_name) + ")")
+
+        FreeCADGui.doCommand("FemGui.getActiveAnalysis().addObject(CfdObjects.makeCfdFluidMaterial('FluidMaterial'))")
+
+    def createSolver(solver_name):
+        FreeCAD.ActiveDocument.openTransaction("Create Solver")
+        FreeCADGui.addModule("FemGui")
+        FreeCADGui.addModule("CfdObjects")
+        CfdObjects.makeCfdSolver('{}'.format(solver_name))
+        if FemGui.getActiveAnalysis():
+            FreeCADGui.doCommand("FemGui.getActiveAnalysis().addObject(App.ActiveDocument.ActiveObject)")
 
     def createMesh(sel):
         FreeCAD.ActiveDocument.openTransaction("Create CFD mesh by GMSH")
+        # get meshing choice, or from part dimension
         mesh_obj_name = sel[0].Name + "_Mesh"
         FreeCADGui.addModule("CfdObjects")  # FemGmsh has been adjusted for CFD like only first order element
         FreeCADGui.doCommand("CfdObjects.makeCfdMeshGmsh('" + mesh_obj_name + "')")
         FreeCADGui.doCommand("App.ActiveDocument.ActiveObject.Part = App.ActiveDocument." + sel[0].Name)
         FreeCADGui.addModule("FemGui")
         if FemGui.getActiveAnalysis():
-            FreeCADGui.doCommand("FemGui.getActiveAnalysis().Member = FemGui.getActiveAnalysis().Member + [App.ActiveDocument.ActiveObject]")
+            FreeCADGui.doCommand("FemGui.getActiveAnalysis().addObject(App.ActiveDocument.ActiveObject)")
         FreeCADGui.doCommand("Gui.ActiveDocument.setEdit(App.ActiveDocument.ActiveObject.Name)")
 
+    def importGeometryAndMesh(geo_file, mesh_file):
+        # caller guarant input parameter is valid path and type, each is a tuple of (filename, suffix)
+        docname = FreeCAD.ActiveDocument.Name
+        if geo_file:
+            geo_suffix = geo_file.split(u'.')[-1]
+            if geo_suffix not in [u'iges', u'igs', u'step', u'stp', u'brep']:
+                FreeCAD.PrintError(u"only step, brep and iges geometry files are supported, while input file suffix is: {}".format(geo_suffix))
+                return False
+            # there must be a document to import objects
+            #FreeCADGui.addModule("Part")
+            #FreeCADGui.doCommand("Part.insert(u'" + geo_file + "','" + docname + "')")
+            import Part
+            Part.insert(geo_file , docname)
+            part_obj = FreeCAD.ActiveDocument.ActiveObject
+        else:
+            part_obj = None
+
+        mesh_suffix = mesh_file.split(u'.')[-1]
+        if mesh_suffix not in [u'unv', u'inp', u'vtk', u'vtu', u'med']:
+            FreeCAD.PrintError(u"input file suffix: {}, is NOT supported for mesh importing".format(geo_suffix))
+            return False
+
+        import Fem
+        fem_mesh = Fem.read(mesh_file)
+        #FreeCADGui.addModule("Fem")
+        #FreeCADGui.doCommand("Fem.read(u'" + mesh_file + "')")
+        # Fem.insert() gives <Fem::FemMeshObject object> can not add dynamic property
+
+        # mesh must NOT been scaled to metre, or using LengthUnit property
+        if fem_mesh: #mesh_obj.isDerivedFrom("Part::FeaturePython"):
+            #FreeCADGui.addModule("CfdObjects")  # FemGmsh has been adjusted for CFD like only first order element
+            #FreeCADGui.doCommand("CfdObjects.makeCfdMeshImported('" + mesh_obj_name + "')")
+            import CfdObjects
+            mesh_obj = CfdObjects.makeCfdMeshImported()
+            mesh_obj.FemMesh = fem_mesh
+            mesh_obj.Part = part_obj
+            FreeCAD.Console.PrintMessage('The Part should have an FEM mesh imported')
+            return mesh_obj
+        else:
+            FreeCAD.Console.PrintError('Mesh importing failed for {}'.format(mesh_file))
+
+
+##################################################
 def getMaterial(analysis_object):
-    for i in analysis_object.Member:
+    for i in analysis_object.Group:
         if i.isDerivedFrom('App::MaterialObjectPython'):
             return i
 
 
 def getSolver(analysis_object):
-    for i in analysis_object.Member:
+    for i in analysis_object.Group:
         if i.isDerivedFrom("Fem::FemSolverObjectPython"):  # Fem::FemSolverObject is C++ type name
             return i
 
@@ -180,7 +232,7 @@ def getSolverSettings(solver):
 
 def getConstraintGroup(analysis_object):
     group = []
-    for i in analysis_object.Member:
+    for i in analysis_object.Group:
         if i.isDerivedFrom("Fem::Constraint"):
             group.append(i)
     return group
@@ -188,14 +240,14 @@ def getConstraintGroup(analysis_object):
 
 def getCfdConstraintGroup(analysis_object):
     group = []
-    for i in analysis_object.Member:
+    for i in analysis_object.Group:
         if i.isDerivedFrom("Fem::ConstraintFluidBoundary"):
             group.append(i)
     return group
 
 
 def getMesh(analysis_object):  # FIXME, deprecate this !
-    for i in analysis_object.Member:
+    for i in analysis_object.Group:
         if i.isDerivedFrom("Fem::FemMeshObject"):
             return i
     # python will return None by default, so check None outside
@@ -204,7 +256,7 @@ def getMeshObject(analysis_object):
     isPresent = False
     meshObj = []
     if analysis_object:
-        members = analysis_object.Member
+        members = analysis_object.Group
     else:
         members = FreeCAD.activeDocument().Objects
     for i in members:
@@ -226,7 +278,7 @@ def isSolidMesh(fem_mesh):
         return True
 
 def getResult(analysis_object):
-    for i in analysis_object.Member:
+    for i in analysis_object.Group:
         if(i.isDerivedFrom("Fem::FemResultObject")):
             return i
     return None
@@ -255,7 +307,7 @@ def setInputFieldQuantity(inputField, quantity):
 # This is taken from hide_parts_constraints_show_meshes which was removed from FemCommands for some reason
 def hide_parts_show_meshes():
     if FreeCAD.GuiUp:
-        for acnstrmesh in FemGui.getActiveAnalysis().Member:
+        for acnstrmesh in FemGui.getActiveAnalysis().Group:
             if "Mesh" in acnstrmesh.TypeId:
                 aparttoshow = acnstrmesh.Name.replace("_Mesh", "")
                 for apart in FreeCAD.activeDocument().Objects:

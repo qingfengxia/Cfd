@@ -43,22 +43,13 @@ class _CommandCfdAnalysis(CfdCommand):
         self.is_active = 'with_document'
 
     def Activated(self):
-        FreeCAD.ActiveDocument.openTransaction("Create CFD Analysis")
-        FreeCADGui.addModule("FemGui")
-        FreeCADGui.addModule("CfdObjects")
-        FreeCADGui.doCommand("CfdObjects.makeCfdAnalysis('CfdAnalysis')")
-        FreeCADGui.doCommand("FemGui.setActiveAnalysis(App.activeDocument().ActiveObject)")
-
         import CfdTools
-        CfdTools.createSolver()  # using FreeCADGui.doCommand style
-
-        FreeCADGui.addModule("CfdObjects")
-        FreeCADGui.doCommand("FemGui.getActiveAnalysis().Member = FemGui.getActiveAnalysis().Member + [CfdObjects.makeCfdFluidMaterial('FluidMaterial')]")
-
+        solver_name = 'OpenFOAM'
+        CfdTools.createAnalysis(solver_name)
         sel = FreeCADGui.Selection.getSelection()
         if (len(sel) == 1):
             if(sel[0].isDerivedFrom("Fem::FemMeshObject")):
-                FreeCADGui.doCommand("FemGui.getActiveAnalysis().Member = FemGui.getActiveAnalysis().Member + [App.activeDocument()." + sel[0].Name + "]")
+                FreeCADGui.doCommand("FemGui.getActiveAnalysis().addObject(App.activeDocument()." + sel[0].Name + ")")
             if(sel[0].isDerivedFrom("Part::Feature")):
                 CfdTools.createMesh(sel)  #code shared with mesh command
         FreeCADGui.Selection.clearSelection()

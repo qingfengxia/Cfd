@@ -36,14 +36,32 @@ App.ActiveDocument.recompute()
 Gui.SendMsgToActiveView("ViewFit")
 Gui.activateWorkbench("FemWorkbench")
 #
-mesh_obj = App.activeDocument().addObject('Fem::FemMeshShapeNetgenObject', 'Cylinder_Mesh')
+mesh_obj = App.activeDocument().addObject('Fem::FemMeshShapeNetgenObject', 'Cylinder_Mesh')  #
 App.activeDocument().ActiveObject.Shape = App.activeDocument().Cylinder
 Gui.activeDocument().setEdit(App.ActiveDocument.ActiveObject.Name)
 Gui.activeDocument().resetEdit()
 #
+"""
+#macro
+Gui.activateWorkbench("CfdWorkbench")
+App.newDocument("Unnamed1")
+App.setActiveDocument("Unnamed1")
+App.ActiveDocument=App.getDocument("Unnamed1")
+Gui.ActiveDocument=Gui.getDocument("Unnamed1")
+import FemGui
+import CfdObjects
+CfdObjects.makeCfdAnalysis('CfdAnalysis')
+FemGui.setActiveAnalysis(App.activeDocument().ActiveObject)
+FemGui.getActiveAnalysis().addObject(CfdObjects.makeCfdSolver('OpenFOAM'))
+FemGui.getActiveAnalysis().addObject(CfdObjects.makeCfdFluidMaterial('FluidMaterial'))
+import CfdTools
+CfdTools.importGeometryAndMesh(u'/home/qingfeng/geometry.brep', u'/home/qingfeng/mesh.unv')
+
+"""
+
 import FemGui
 import CfdAnalysis
-analysis_obj = CfdAnalysis.makeCfdAnalysis('OpenFOAMAnalysis')
+analysis_obj = CfdAnalysis.makeCfdAnalysis('OpenFOAMAnalysis')  #
 analysis_obj.Member = analysis_obj.Member  + [mesh_obj]
 Gui.getDocument("Unnamed").getObject("Cylinder_Mesh").Visibility=False
 Gui.getDocument("Unnamed").getObject("Cylinder").Visibility=True
