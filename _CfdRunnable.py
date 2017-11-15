@@ -37,27 +37,14 @@ class _CfdRunnable(object):
     #  "__init__" tries to use current active analysis in analysis is left empty.
     #  Rises exception if analysis is not set and there is no active analysis
     #  The constructur of FemTools is for use of analysis without solver object
-    def __init__(self, analysis=None, solver=None):
-        if analysis and analysis.isDerivedFrom("Fem::FemAnalysisPython"):
-            ## @var analysis
-            #  FEM analysis - the core object. Has to be present.
-            #  It's set to analysis passed in "__init__" or set to current active analysis by default if nothing has been passed to "__init__"
-            self.analysis = analysis
-        else:
-            if FreeCAD.GuiUp:
-                import FemGui
-                self.analysis = FemGui.getActiveAnalysis()
-
-        self.solver = None
+    def __init__(self, solver):
         if solver and solver.isDerivedFrom("Fem::FemSolverObjectPython"):
             ## @var solver
             #  solver of the analysis. Used to store the active solver and analysis parameters
             self.solver = solver
         else:
-            if analysis:
-                self.solver = CfdTools.getSolver(self.analysis)
-            if self.solver == None:
-                FreeCAD.Console.printMessage("FemSolver object is missing from Analysis Object")
+            raise TypeError("FemSolver object is missing in constructing CfdRunnable object")
+        self.analysis = CfdTools.getParentAnalysisObject(self.solver)
 
         if self.analysis:
             self.results_present = False

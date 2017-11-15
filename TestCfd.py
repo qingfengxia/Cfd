@@ -24,22 +24,21 @@
 # *                                                                         *
 # ***************************************************************************/
 
-import FreeCAD
-
-import Fem
-import FemMaterial
-
-import CfdTools
-import CfdAnalysis
-import CfdSolverFoam
-import CfdCaseWriterFoam
-import CfdResultFoamVTK
-import CfdRunnableFoam
-import CfdSolver
+import sys
+sys.path.append('/usr/lib/freecad-daily/lib')  # not necessary for run in FreeCAD's TestWorkbench
+# manually test: run `python2 -m unittest TestCFD` in Cfd module folder
 
 import tempfile
 import os.path
 import unittest
+
+import FreeCAD
+import Fem
+
+import CfdTools
+import CfdObjects
+import CfdCaseWriterFoam
+import CfdRunnableFoam
 
 home_path = FreeCAD.getHomePath()
 temp_dir = tempfile.gettempdir() + '/CFD_unittests'
@@ -70,17 +69,17 @@ class CfdTest(unittest.TestCase):
         self.active_doc.recompute()
 
     def create_new_analysis(self):
-        self.analysis = CfdAnalysis.makeCfdAnalysis('CfdAnalysis')
+        self.analysis = CfdObjects.makeCfdAnalysis('CfdAnalysis')
         self.active_doc.recompute()
 
     def create_new_solver(self):
-        self.solver_object = CfdSolver.makeCfdSolver('OpenFOAM')
+        self.solver_object = CfdObjects.makeCfdSolver('OpenFOAM')
         self.solver_object.WorkingDir = cfd_analysis_dir
-        self.solver_object.CaseName = case_name
+        self.solver_object.InputCaseName = case_name
         self.active_doc.recompute()
 
     def create_new_material(self):
-        self.new_material_object = FemMaterial.makeFemMaterial('FluidMaterial')
+        self.new_material_object = CfdObjects.makeCfdFluidMaterial('FluidMaterial')
         self.new_material_object.Category = 'Fluid'
         mat = self.new_material_object.Material
         mat['Name'] = "oneLiquid"
@@ -89,10 +88,14 @@ class CfdTest(unittest.TestCase):
         self.new_material_object.Material = mat
 
     def create_new_mesh(self):
-        self.mesh_object = self.active_doc.addObject('Fem::FemMeshObject', mesh_name)
-        self.mesh = Fem.FemMesh()
-        # todo !!!
-        self.mesh_object.FemMesh = self.mesh
+        self.mesh_object = CfdObjects.makeCfdMeshGmsh()
+        error = CfdTools.runGmsh(self.mesh_object)
+        return error
+    
+    def import_mesh(self, mesh_file):
+        # import from saved mesh file
+        self.imported_mesh_object = CfdObjects.makeCfdMeshImported()
+        self.imported_mesh_object.FemMesh = Fem.read(mesh_file)
         self.active_doc.recompute()
 
     def create_wall_constraint(self):
@@ -106,8 +109,8 @@ class CfdTest(unittest.TestCase):
         self.velocity_inlet_constraint = self.active_doc.addObject("Fem::ConstraintFluidBoundary", "velocity_inlet")
         self.velocity_inlet_constraint.References = [(self.box, "Face6")]
         self.velocity_inlet_constraint.BoundaryType = 'inlet'
-        self.velocity_inlet_constraint.BoundarySubtype = 'velocityInlet'
-        self.velocity_inlet_constraint.Value = 0.01
+        self.velocity_inlet_constraint.Subtype = 'uniformVelocity'
+        self.velocity_inlet_constraint.BoundaryValue = 0.01
         #self.velocity_inlet_constraint.Direction = (self.box, ["Edge5"])
         #self.velocity_inlet_constraint.Reversed = False
 
@@ -120,13 +123,14 @@ class CfdTest(unittest.TestCase):
         #self.pressure_outlet_constraint.Reversed = True
 
     def create_cfd_runnable(self):
-        self.runnable_object = CfdRunnableFoam.CfdRunnableFoam(self.analysis, self.solver_object)
+        self.runnable_object = CfdRunnableFoam.CfdRunnableFoam(self.solver_object)
 
     def run_cfd_simulation(self):
         pass  # it taks too long to finish, skip it in unit test
 
     def load_cfd_result(self):
-        CfdResultFoamVTK.importCfdResult(result_filename, analysis=self.analysis)
+        import importCfdResultVTKFoam
+        importCfdResultVTKFoam.importCfdResult(result_filename, analysis=self.analysis)
 
     def save_file(self, fc_file_name):
         self.active_doc.saveAs(fc_file_name)
@@ -136,46 +140,44 @@ class CfdTest(unittest.TestCase):
         fcc_print('--------------- Start of Cfd tests ---------------')
         fcc_print('Checking Cfd new analysis...')
         self.create_new_analysis()
-        self.assertTrue(self.analysis, "FemTest of new analysis failed")
+        self.assertTrue(self.analysis, "CfdTest of new analysis failed")
 
         fcc_print('Checking Cfd new solver...')
         self.create_new_solver()
-        self.assertTrue(self.solver_object, "FemTest of new solver failed")
-        self.analysis.Member = self.analysis.Member + [self.solver_object]
+        self.assertTrue(self.solver_object, "CfdTest of new solver failed")
+        self.analysis.addObject(self.solver_object)
 
         fcc_print('Checking Cfd new mesh...')
         self.create_new_mesh()
-        self.assertTrue(self.mesh, "FemTest of new mesh failed")
-        self.analysis.Member = self.analysis.Member + [self.mesh_object]
+        self.assertTrue(self.mesh_object, "CfdTest of new mesh failed")
+        self.analysis.addObject(self.mesh_object)
 
         fcc_print('Checking Cfd new material...')
         self.create_new_material()
-        self.assertTrue(self.new_material_object, "FemTest of new material failed")
-        self.analysis.Member = self.analysis.Member + [self.new_material_object]
+        self.assertTrue(self.new_material_object, "CfdTest of new material failed")
+        self.analysis.addObject(self.new_material_object)
 
         fcc_print('Checking Cfd wall boundary condition...')
         self.create_wall_constraint()
-        self.assertTrue(self.wall_constraint, "FemTest of new fixed constraint failed")
-        self.analysis.Member = self.analysis.Member + [self.wall_constraint]
+        self.assertTrue(self.wall_constraint, "CfdTest of new fixed constraint failed")
+        self.analysis.addObject(self.wall_constraint)
 
         fcc_print('Checking Cfd new velocity inlet constraint...')
-        self.create_velocity_input_constraint()
-        self.assertTrue(self.velocity_input_constraint, "FemTest of new force constraint failed")
-        self.analysis.Member = self.analysis.Member + [self.velocity_input_constraint]
+        self.create_velocity_inlet_constraint()
+        self.assertTrue(self.velocity_inlet_constraint, "CfdTest of new force constraint failed")
+        self.analysis.addObject(self.velocity_inlet_constraint)
 
         fcc_print('Checking Cfd new pressure outlet constraint...')
         self.create_pressure_outlet_constraint()
-        self.assertTrue(self.pressure_outlet_constraint, "FemTest of new pressure constraint failed")
-        self.analysis.Member = self.analysis.Member + [self.pressure_outlet_constraint]
+        self.assertTrue(self.pressure_outlet_constraint, "CfdTest of new pressure constraint failed")
+        self.analysis.addObject(self.pressure_outlet_constraint)
 
         fcc_print('Setting up working directory {}'.format(cfd_analysis_dir))
         CfdTools.setupWorkingDir(self.solver_object)
-        self.assertTrue(True if fea.working_dir == cfd_analysis_dir else False,
+        self.assertTrue(True if self.solver_object.WorkingDir == cfd_analysis_dir else False,
                         "Setting working directory {} failed".format(cfd_analysis_dir))
 
         fcc_print('Checking Cfd setup prerequisites for CFD analysis... not yet implemented')
-        #error = fea.check_prerequisites()
-        #self.assertFalse(error, "FemToolsCcx check_prerequisites returned error message: {}".format(error))
 
         fcc_print('Setting analysis type to laminar flow"')
         self.solver_object.TurbulenceModel = "laminar"
@@ -187,19 +189,7 @@ class CfdTest(unittest.TestCase):
         sucessful = self.runnable_object.write_case()
         self.assertTrue(sucessful, "Writing CFD cae failed")
 
-        # todo: compare to confirm writting correctness
-        #fcc_print('Comparing {} to {}'.format(cfd_analysis_dir, mesh_name))
-        #ret = compare_case_files(cfd_analysis_dir + "/" + mesh_name + '.inp')
-        #self.assertFalse(ret, "FemToolsCcx write_inp_file test failed.\n{}".format(ret))
-
-        """
-        fcc_print('Checking Cfd vtk result file read from cfd analysis...')
-        self.assertTrue(fea.results_present, "Cannot read results from {}.frd frd file".format(fea.base_name))
-
-        fcc_print('Reading stats from result object for static analysis...')
-        ret = compare_stats(fea, cfd_expected_values)
-        self.assertFalse(ret, "Invalid results read from .frd file")
-        """
+        # todo: compare to confirm case writting and solution correctness
 
         fcc_print('Save FreeCAD file for CFD analysis to {}...'.format(cfd_save_fc_file))
         self.save_file(cfd_save_fc_file)

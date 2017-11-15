@@ -171,13 +171,28 @@ if FreeCAD.GuiUp:
             FreeCADGui.doCommand("FemGui.getActiveAnalysis().addObject(App.ActiveDocument.ActiveObject)")
         FreeCADGui.doCommand("Gui.ActiveDocument.setEdit(App.ActiveDocument.ActiveObject.Name)")
 
-    def importGeometryAndMesh(geo_file, mesh_file):
-        # caller guarant input parameter is valid path and type, each is a tuple of (filename, suffix)
-        docname = FreeCAD.ActiveDocument.Name
-        if geo_file:
+
+def runGmsh(mesh_obj, anaysis_obj=None):
+    if not anaysis_obj:
+        anaysis_obj = getParentAnalysisObject(mesh_obj)
+    import CaeMesherGmsh
+    gmsh_mesh = CaeMesherGmsh.CaeMesherGmsh(mesh_obj, anaysis_obj)
+    error = ''
+    try:
+        error = gmsh_mesh.create_mesh()
+    except:
+        import sys
+        print("Unexpected error when creating mesh: ", sys.exc_info()[0])
+    return error
+
+def importGeometryAndMesh(geo_file, mesh_file):
+    # caller guarant input parameter is valid path and type, each is a tuple of (filename, suffix)
+    docname = FreeCAD.ActiveDocument.Name
+    if geo_file:
+        if os.path.exists(geo_file):
             geo_suffix = geo_file.split(u'.')[-1]
             if geo_suffix not in [u'iges', u'igs', u'step', u'stp', u'brep']:
-                FreeCAD.PrintError(u"only step, brep and iges geometry files are supported, while input file suffix is: {}".format(geo_suffix))
+                FreeCAD.Console.PrintError(u"only step, brep and iges geometry files are supported, while input file suffix is: {}".format(geo_suffix))
                 return False
             # there must be a document to import objects
             #FreeCADGui.addModule("Part")
@@ -185,32 +200,34 @@ if FreeCAD.GuiUp:
             import Part
             Part.insert(geo_file , docname)
             part_obj = FreeCAD.ActiveDocument.ActiveObject
-        else:
-            part_obj = None
+        elif geo_file.isDerivedFrom("Part::Feature"):
+            part_obj = geo_file
+    else:
+        part_obj = None
 
-        mesh_suffix = mesh_file.split(u'.')[-1]
-        if mesh_suffix not in [u'unv', u'inp', u'vtk', u'vtu', u'med']:
-            FreeCAD.PrintError(u"input file suffix: {}, is NOT supported for mesh importing".format(geo_suffix))
-            return False
+    mesh_suffix = mesh_file.split(u'.')[-1]
+    if mesh_suffix not in [u'unv', u'inp', u'vtk', u'vtu', u'med']:
+        FreeCAD.Console.PrintError(u"input file suffix: {}, is NOT supported for mesh importing".format(geo_suffix))
+        return False
 
-        import Fem
-        fem_mesh = Fem.read(mesh_file)
-        #FreeCADGui.addModule("Fem")
-        #FreeCADGui.doCommand("Fem.read(u'" + mesh_file + "')")
-        # Fem.insert() gives <Fem::FemMeshObject object> can not add dynamic property
+    import Fem
+    fem_mesh = Fem.read(mesh_file)
+    #FreeCADGui.addModule("Fem")
+    #FreeCADGui.doCommand("Fem.read(u'" + mesh_file + "')")
+    # Fem.insert() gives <Fem::FemMeshObject object> can not add dynamic property
 
-        # mesh must NOT been scaled to metre, or using LengthUnit property
-        if fem_mesh: #mesh_obj.isDerivedFrom("Part::FeaturePython"):
-            #FreeCADGui.addModule("CfdObjects")  # FemGmsh has been adjusted for CFD like only first order element
-            #FreeCADGui.doCommand("CfdObjects.makeCfdMeshImported('" + mesh_obj_name + "')")
-            import CfdObjects
-            mesh_obj = CfdObjects.makeCfdMeshImported()
-            mesh_obj.FemMesh = fem_mesh
-            mesh_obj.Part = part_obj
-            FreeCAD.Console.PrintMessage('The Part should have an FEM mesh imported')
-            return mesh_obj
-        else:
-            FreeCAD.Console.PrintError('Mesh importing failed for {}'.format(mesh_file))
+    # mesh must NOT been scaled to metre, or using LengthUnit property
+    if fem_mesh: #mesh_obj.isDerivedFrom("Part::FeaturePython"):
+        #FreeCADGui.addModule("CfdObjects")  # FemGmsh has been adjusted for CFD like only first order element
+        #FreeCADGui.doCommand("CfdObjects.makeCfdMeshImported('" + mesh_obj_name + "')")
+        import CfdObjects
+        mesh_obj = CfdObjects.makeCfdMeshImported()
+        mesh_obj.FemMesh = fem_mesh
+        mesh_obj.Part = part_obj
+        FreeCAD.Console.PrintMessage('The Part should have an FEM mesh imported')
+        return mesh_obj
+    else:
+        FreeCAD.Console.PrintError('Mesh importing failed for {}'.format(mesh_file))
 
 
 ##################################################

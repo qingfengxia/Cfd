@@ -77,7 +77,7 @@ class _ViewProviderCfdSolverFenics:
         if FemGui.getActiveAnalysis():
             CfdTools.setupWorkingDir(self.Object)  # WorkingDir must existent and writable
             from CfdRunnableFenics import CfdRunnableFenics
-            fenicsRunnable = CfdRunnableFenics(FemGui.getActiveAnalysis(), self.Object)
+            fenicsRunnable = CfdRunnableFenics(self.Object)
             from _TaskPanelCfdSolverControl import _TaskPanelCfdSolverControl
             taskd = _TaskPanelCfdSolverControl(fenicsRunnable)
             taskd.obj = vobj.Object

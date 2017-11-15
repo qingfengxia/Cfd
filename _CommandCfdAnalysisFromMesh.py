@@ -52,7 +52,7 @@ class _CommandCfdAnalysisFromMesh(CfdCommand):
         sel = FreeCADGui.Selection.getSelection()
         if (len(sel) == 1) and (sel[0].isDerivedFrom("Part::Feature")):
             # using existing part_feature, no need to import geometry, but get obj as link
-            geo_file = None
+            geo_file = sel[0]
         else:
             filters = u"BREP (*.brep *.brp);;STEP (*.step *.stp);;IGES (*.iges *.igs)"
             geo_file = QFileDialog.getOpenFileName(None, u"Open geometry files", u"./", filters)

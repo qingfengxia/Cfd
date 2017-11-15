@@ -36,10 +36,9 @@ import FenicsSolver
 
 
 #  Concrete Class for CfdRunnable for FenicsSolver
-#  todo: test write_case() and implement solve()
 class CfdRunnableFenics(_CfdRunnable):
-    def __init__(self, analysis=None, solver=None):
-        super(CfdRunnableFenics, self).__init__(analysis, solver)
+    def __init__(self, solver=None):
+        super(CfdRunnableFenics, self).__init__(solver)
         self.writer = CaeCaseWriterFenics.CaeCaseWriterFenics(self.analysis)
 
     def check_prerequisites(self):

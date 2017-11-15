@@ -36,8 +36,8 @@ from _CfdRunnable import _CfdRunnable
 #  Concrete Class for CfdRunnable for OpenFOAM
 #  implemented write_case() and solver_case(), not yet for load_result()
 class CfdRunnableFoam(_CfdRunnable):
-    def __init__(self, analysis=None, solver=None):
-        super(CfdRunnableFoam, self).__init__(analysis, solver)
+    def __init__(self, solver=None):
+        super(CfdRunnableFoam, self).__init__(solver)
         self.writer = CfdCaseWriterFoam.CfdCaseWriterFoam(self.analysis)
 
         from FoamCaseBuilder import FoamResidualPloter

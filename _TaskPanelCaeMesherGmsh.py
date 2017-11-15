@@ -140,15 +140,8 @@ class _TaskPanelCaeMesherGmsh:
         self.console_log("We are going to start ...")
         self.get_active_analysis()
 
-        import CaeMesherGmsh
-        gmsh_mesh = CaeMesherGmsh.CaeMesherGmsh(self.obj, self.analysis)
         self.console_log("Start GMSH ...")
-        error = ''
-        try:
-            error = gmsh_mesh.create_mesh()
-        except:
-            import sys
-            print("Unexpected error when creating mesh: ", sys.exc_info()[0])
+        error = CfdTools.runGmsh(self.obj, self.analysis)
         if error:
             print(error)
             self.console_log('GMSH had warnings ...')
