@@ -124,8 +124,8 @@ def _run_command(comandlist):
 
 
 def export_fenics_mesh(obj, meshfileString):
-    if not meshfileString[-4:] == ".xml":
-        error = "Error: only xml mesh is supported by gmsh conversion"
+    if not (meshfileString[-4:] == ".xml" or meshfileString[-5:] == ".hdf5"):
+        error = "Error: only xml or hdf5 mesh is supported by gmsh conversion"
         FreeCAD.Console.PrintError(error)
         return error
     meshfileStem = (meshfileString[:-4])
@@ -142,10 +142,12 @@ def export_fenics_mesh(obj, meshfileString):
         comandlist = ['dolfin-convert {}.msh {}.xml'.format(meshfileStem,meshfileStem)]  # work only with shell = True
         # mixed str and unicode in comandlist cause error to run in subprocess
         error = _run_command(comandlist)
-        if not os.path.exists(meshfileStem+"_physical_region.xml"):
+        if not os.path.exists(meshfileStem+"_facet_region.xml"):
             FreeCAD.Console.PrintWarning("Mesh  boundary file `{}` not generated\n".format(meshfileStem+"_physical_region.xml"))
         if error:
             return error
+        if meshfileString[-5:] == ".hdf5":
+            raise NotImplemetnedError('')
     else:
         error = "Failed to write mesh file `{}` by Gmsh\n".format(meshfileString)
         FreeCAD.Console.PrintError(error)

@@ -148,14 +148,13 @@ if FreeCAD.GuiUp:
         FreeCADGui.doCommand("FemGui.setActiveAnalysis(App.activeDocument().ActiveObject)")
 
         FreeCADGui.doCommand("FemGui.getActiveAnalysis().addObject(CfdObjects.makeCfdSolver('{}')".format(solver_name) + ")")
-
         FreeCADGui.doCommand("FemGui.getActiveAnalysis().addObject(CfdObjects.makeCfdFluidMaterial('FluidMaterial'))")
 
     def createSolver(solver_name):
         FreeCAD.ActiveDocument.openTransaction("Create Solver")
         FreeCADGui.addModule("FemGui")
         FreeCADGui.addModule("CfdObjects")
-        CfdObjects.makeCfdSolver('{}'.format(solver_name))
+        FreeCADGui.doCommand("CfdObjects.makeCfdSolver('{}')".format(solver_name))
         if FemGui.getActiveAnalysis():
             FreeCADGui.doCommand("FemGui.getActiveAnalysis().addObject(App.ActiveDocument.ActiveObject)")
 
@@ -294,6 +293,30 @@ def getMeshObject(analysis_object):
         meshObj = [None]  # just a placeholder to be created in event that it is not present
     return meshObj[0], isPresent
 
+
+def getPartDimension(part_obj):
+    shty = part_obj.Shape.ShapeType
+    if shty == 'Solid' or shty == 'CompSolid':
+        # print('Found: ' + shty)
+        dimension = 3
+    elif shty == 'Face' or shty == 'Shell':
+        # print('Found: ' + shty)
+        dimension = 3
+    elif shty == 'Edge' or shty == 'Wire':
+        # print('Found: ' + shty)
+        dimension = 1
+    elif shty == 'Vertex':
+        # print('Found: ' + shty)
+        FreeCAD.Console.PrintError("You can not mesh a Vertex.\n")
+        dimension = 0
+    elif shty == 'Compound':
+        # print('  Found a ' + shty)
+        FreeCAD.Console.PrintLog("  Found a Compound. Since it could contain any kind of shape dimension 3 is used.\n")
+        dimension = '3'  # dimension 3 works for 2D and 1d shapes as well
+    else:
+        self.dimension = 0
+        FreeCAD.Console.PrintError('Could not retrive Dimension from shape type. Please choose dimension.')
+    return dimension
 
 def isSolidMesh(fem_mesh):
     if fem_mesh.VolumeCount > 0:  # solid mesh

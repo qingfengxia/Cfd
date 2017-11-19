@@ -45,15 +45,14 @@ class CfdRunnableFenics(_CfdRunnable):
         return ""
 
     def write_case(self):
-        self.case_file = self.writer.case_file_name
-        return True
+        return self.writer.write_case()
 
     def edit_case(self):
         "Edit Fenics case input file (json, xml, etc) by platform default editor"
         import subprocess
         import sys
-        path = self.case_file
-        FreeCAD.Console.PrintMessage("Edit case input file: " + path + ", in platform default editor\n")
+        path = self.writer.case_file_name
+        FreeCAD.Console.PrintMessage("Edit case input file: {}, in platform default editor\n".format(path))
         if sys.platform == 'darwin':
             subprocess.Popen(['open', '--', path])
         elif sys.platform.find("linux") == 0:  # python 2: linux2 or linux3; but 'linux' for python3

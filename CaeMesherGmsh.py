@@ -360,9 +360,19 @@ class CaeMesherGmsh(CaeMesher):
 
     def export_mesh(self, output_format, output_filestring=None):
         # This function aims to export more mesh formats than FemMesh supported
-        _output_format = self.mesh_obj.OutputFormat  # push back the current OutputFormat
+        _default_output_format = self.mesh_obj.OutputFormat  # push back the current OutputFormat
+        _default_scaling_factor = self.mesh_obj.LengthScalingFactor
         output_filename = None
         try:
+            # from FreeCAD length unit to MKS
+            unit_shema = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Units/").GetInt("UserSchema")
+            if unit_shema == 0:  # mm as length unit, default for CAD
+                _scaling_factor = 0.001
+                self.mesh_obj.LengthScalingFactor = _scaling_factor
+                FreeCAD.Console.PrintWarning("set length scaling factor = {}, \
+                    to export mesh length in meter!".format(self.mesh_obj.LengthScalingFactor))
+            else:
+                _scaling_factor = 1  # FIXME: no scaling for all other unit schemes
             self.mesh_obj.OutputFormat = output_format
             # same as create_mesh(), without loading mesh into FreeCAD
             self.get_dimension()
@@ -387,7 +397,8 @@ class CaeMesherGmsh(CaeMesher):
         except Exception as e:
             print(e)
         finally:
-            self.mesh_obj.OutputFormat = _output_format
+            self.mesh_obj.OutputFormat = _default_output_format
+            self.mesh_obj.LengthScalingFactor = _default_scaling_factor
         return output_filename
 
     def create_mesh(self):
@@ -530,8 +541,9 @@ class CaeMesherGmsh(CaeMesher):
                 geo.write('Physical Volume("Interior") = {1};\n')
             if self.dimension == '2':
                 geo.write('Physical Surface("Interior") = {1};\n')
+            print("Warning: no subdomain group data are defined, default interior is exported")
         else:
-            print("Warning: no subdomain group data are written, thus subdomain nesh will not be exported")
+            print("Info:  subdomain mesh cells be exported")
         if boundaries == 0:
             print("Warning: no boundary group data are written, thus boundary mesh will not be exported")
         geo.write("\n\n")
@@ -631,15 +643,9 @@ class CaeMesherGmsh(CaeMesher):
         else:
             geo.write("Mesh  " + self.dimension + ";\n")
         geo.write("\n")
-        if self.mesh_obj.LengthScalingFactor != 1.0:  # from FreeCAD length unit to MKS
-            unit_shema = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Units/").GetInt("UserSchema")
-            if unit_shema == 0:  # mm as length unit, default for CAD
-                _scaling_factor = 0.001
-                if self.mesh_obj.LengthScalingFactor != _scaling_factor:
-                    FreeCAD.Console.PrintWarning("length scaling factor = {}, \
-                    does not export length in meter!".format(self.mesh_obj.LengthScalingFactor))
-                geo.write("// length scale from current FreeCAD length unit to MKS unit (meter)\n")
-                geo.write("Mesh.ScalingFactor={};\n".format(_scaling_factor))
+
+        geo.write("// length scale from current FreeCAD length unit to MKS unit (meter)\n")
+        geo.write("Mesh.ScalingFactor={};\n".format(self.mesh_obj.LengthScalingFactor))
 
         # output format control
         geo.write("// output format 1=msh, 2=unv, 10=automatic, 27=stl, 32=cgns, 33=med, 39=inp, 40=ply2\n")
