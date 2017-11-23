@@ -301,7 +301,7 @@ def getPartDimension(part_obj):
         dimension = 3
     elif shty == 'Face' or shty == 'Shell':
         # print('Found: ' + shty)
-        dimension = 3
+        dimension = 2
     elif shty == 'Edge' or shty == 'Wire':
         # print('Found: ' + shty)
         dimension = 1

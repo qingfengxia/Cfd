@@ -71,7 +71,7 @@ class CfdWorkbench(Workbench):
         cmdlst = ['Cfd_Analysis',  'Cfd_AnalysisFromMesh', 'Cfd_Solver', 'Cfd_SolverFenics','FEM_MaterialFluid', 'Separator', # superseded 'Cfd_FluidMaterial',
                         'FEM_ConstraintFluidBoundary', 'FEM_ConstraintSelfWeight', 'Separator', 
                         'Cfd_MeshGmshFromShape', # add parameter adjustment for 'FEM_MeshGmshFromShape',
-                        'FEM_MeshBoundaryLayer', 'FEM_MeshRegion', 'FEM_MeshPrintInfo', 'FEM_MeshClear', "Separator",
+                        'FEM_MeshBoundaryLayer', 'FEM_MeshRegion', 'FEM_MeshGroup','FEM_MeshPrintInfo', 'FEM_MeshClear', "Separator",
                         'Cfd_SolverControl']
                         #"Separator", "FEM_PostPipelineFromResult", "FEM_PostCreateClipFilter", 
                         #"FEM_PostCreateScalarClipFilter", "FEM_PostCreateCutFilter"]

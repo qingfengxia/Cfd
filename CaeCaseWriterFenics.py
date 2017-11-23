@@ -22,6 +22,8 @@
 
 """
 A general fenics case writer for Fenics solver (URL at github)
+FenicsSolver is developed in another repo, as a submodule for Cfd workbench
+git submodule update --recursive --remote
 """
 
 __title__ = "Fenics Case Writer"
@@ -37,11 +39,7 @@ import FreeCAD
 import CfdTools
 
 """
-from FemCaseWriterFenics import FemCaseWriterFenics
-w = FemCaseWriterFenics(App.getDocument("TestCfdCubePipe").CfdAnalysis)
-w.write_case()
-
-CfdTools functions should be merged inte FemTools.py before this class can be integrated into Fem workbench
+CfdTools functions should be merged into FemTools.py before this class can be integrated into Fem workbench
 """
 
 ## write FEM analysis setup into Fenics case file
@@ -102,6 +100,7 @@ class CaeCaseWriterFenics:
         #self.case_settings['turbulence_settings'] = {"name": self.solver_obj.TurbulenceModel}  # not supported yet
         self.write_transient_control()
         self.write_output_control()
+        self.write_thermal_settings()
 
         ## debug output
         print("\n debug output of case setting dict\n")
@@ -234,15 +233,16 @@ class CaeCaseWriterFenics:
             zero_vector = (0,0,0)
         else:
             zero_vector = (0,0)
-        bcs_n['default_wall'] = {'name': 'default_wall', 'boundary_id': 0, \
-                                'values':[{'variable':'velocity', 'type':'Dirichlet', 'value': self.zero_vector}]}
-        if self.solver_obj.HeatTransfering:
-            bcs_n['default_wall'] ['values'].append({'variable':'temperature', 'type':'Neumann', 'value': self.zero_vector})
+        # default wall should be identified by gmsh mesher
+        #bcs_n['default_wall'] = {'name': 'default_wall', 'boundary_id': 0, \
+        #                        'values':[{'variable':'velocity', 'type':'Dirichlet', 'value': zero_vector}]}
+        #if self.solver_obj.HeatTransfering:
+        #    bcs_n['default_wall'] ['values'].append({'variable':'temperature', 'type':'Neumann', 'value': self.zero_vector})
 
         for bc in bcs:
-            bc_n = {'boundary_id': bc['boundary_id'], 'values': []}
+            bc_n = {'boundary_id': bc['boundary_id'], 'values': {}}
             bc_n_v = {}
-            if bc['subtype'].lower().find('velocity') > 0:
+            if bc['subtype'].lower().find('velocity') >= 0:
                 bc_n_v['variable'] = 'velocity'
                 bc_n_v['type'] = 'Dirichlet'
                 bc_n_v['value'] = bc['value']
@@ -253,9 +253,9 @@ class CaeCaseWriterFenics:
             elif bc['type'].lower() == 'wall':
                 bc_n_v['variable'] = 'velocity'
                 bc_n_v['type'] = 'Dirichlet'
-                if bc['type'].lower() == "fixed":
+                if bc['subtype'].lower() == "fixed":
                     bc_n_v['value'] = zero_vector
-                elif bc['type'].lower() == "moving":
+                elif bc['subtype'].lower() == "moving":
                     bc_n_v['value'] = bc['value']
                 else:
                     print('Error: Wall of subtype {} is not not supported by Fencis yet'.format(bc['subtype']))
@@ -266,9 +266,9 @@ class CaeCaseWriterFenics:
                 print('Error: interfce of subtype {} is not supported by Fencis yet'.format(bc['usbtype']))
             else:
                 print('Error: Boundary type {} and subtype {} is not supported by Fencis yet'.format(bc['type'], bc['usbtype']))
-            bc_n['values'].append(bc_n_v)
+            bc_n['values'][bc_n_v['variable']] = bc_n_v
             if self.solver_obj.HeatTransfering:
-                bc_n['values'].append(_from_fluidic_thermal_to_fenics_boundary(bc))
+                bc_n['values']['temperature'] = _from_fluidic_thermal_to_fenics_boundary(bc)
             bcs_n[bc['name']] = bc_n
         return bcs_n
 
@@ -335,7 +335,7 @@ class CaeCaseWriterFenics:
             bc_dict = {'name': bc.Label, "boundary_id":i+1, "type": bc.BoundaryType,  # it is essential the first bounary with id=1
                             "subtype": bc.Subtype, "value": bc.BoundaryValue}
             if bc_dict['type'] == 'inlet' and bc_dict['subtype'] == 'uniformVelocity':
-                # deal with 2D geometry
+                # deal with 2D geometry but 2D direction vector is reversed
                 bc_dict['value'] = list(v * bc_dict['value'] for v in tuple(bc.DirectionVector)[:self.dimension])
                 # fixme: App::PropertyVector should be normalized to unit length
             if self.solver_obj.HeatTransfering:
@@ -362,6 +362,9 @@ class CaeCaseWriterFenics:
         else:
             print('Error: {} boundary is not supported by Fencis and FreeCAD yet'.format(self.solver_obj.PhysicalDomain))
 
+    def write_thermal_settings(self):
+        self.case_settings['solving_temperature'] = self.solver_obj.HeatTransfering
+
     def write_initial_values(self):
         if self.solver_obj.PhysicalDomain == u"Fluidic":
             self.case_settings['initial_values'] = {'pressure': 0.0, 'velocity': (0,0,0)[:self.dimension]}
@@ -370,6 +373,8 @@ class CaeCaseWriterFenics:
             # must set a nonzero for velocity field to srart withour regarded converged
         elif self.solver_obj.PhysicalDomain == u"Thermal":
             self.case_settings['initial_values'] = {'temperature': 300}
+        elif self.solver_obj.PhysicalDomain == u"Mechanical":
+            pass  # init values are not necessary for displacement
         else:
             pass
  
@@ -382,7 +387,10 @@ class CaeCaseWriterFenics:
     def write_solver_control(self):
         """ relaxRatio, reference values, residual contnrol, maximum_interation
         """
-        self.case_settings['solver_settings'] = {"solver_parameters": {},
+        self.case_settings['solver_settings'] = {"solver_parameters": {"relative_tolerance": 1e-5, 
+                                                                        "maximum_iterations": 500,
+                                                                        "monitor_convergence": True  # print to console
+                                                                        },
                                                  "reference_values": {'pressure': 1e5, 'velocity': (1, 1, 1)[:self.dimension]},
                                                  }
 

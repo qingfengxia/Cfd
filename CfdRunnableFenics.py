@@ -40,6 +40,7 @@ class CfdRunnableFenics(_CfdRunnable):
     def __init__(self, solver=None):
         super(CfdRunnableFenics, self).__init__(solver)
         self.writer = CaeCaseWriterFenics.CaeCaseWriterFenics(self.analysis)
+        self.case_file = self.writer.case_file_name
 
     def check_prerequisites(self):
         return ""
