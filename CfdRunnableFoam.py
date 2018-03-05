@@ -75,4 +75,5 @@ class CfdRunnableFoam(_CfdRunnable):
 
     def process_output(self, text):
         self.ploter.process_text(text)
-        self.ploter.plot()
+        #self.ploter.plot()  # matplotlib plot using QTimer to update plotting
+        # potential bug:  the ploter's QTimer should be stopped, once solver process finished, 

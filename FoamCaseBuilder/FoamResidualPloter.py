@@ -27,12 +27,12 @@ __url__ = "http://www.freecadweb.org"
 import numpy
 
 try:
-    import Gnuplot
-    has_gnuplot = True
+    from PySide import QtCore
+    import FreeCAD
+    import Plot
+    withinFreeCAD = True
 except:
-    print("can not import gnuplot module `Gnuplot`, install it to plot progress")
-    has_gnuplot = False
-    #
+    withinFreeCAD = False
     import matplotlib
     print(plt.get_backend())  #TkAgg
     matplotlib.use("svg")
@@ -41,15 +41,16 @@ except:
 
 
 ''' this class can only process velocity and pressure residues, pyFoam has already got this function
-backends: matplotlib, gnuplot
-gnuplot may be superseded by pyFoam
-matplotlib is not working, because matplotlib using PyQt eventloop, same as FreeCAD will freeze GUI
-this class can be used without FreeCAD, it should process file or IOstream
+backends: matplotlib (with or without FreeCAD), gnuplot (should be phrased out)
+matplotlib is not working within FreeCAD, because matplotlib using PyQt eventloop, same as FreeCAD will freeze GUI
+Instead, Plot module of FreeCAD should be used
+matplotlib standalone mode is not yet working
 '''
 class FoamResidualPloter():
-    def __init__(self, backend = 'gnuplot'):
+    def __init__(self, backend = 'matplotlib'):
         self.reset()
         if backend == 'gnuplot':
+            import Gnuplot
             self.g = Gnuplot.Gnuplot()
             self.g('set style data lines')
             self.g.title("Simulation residuals")
@@ -61,22 +62,49 @@ class FoamResidualPloter():
             self.g("set yrange [0.95:1.05]")
             self.g("set xrange [0:1]")
         elif backend == 'matplotlib':
-            fig1 = plt.figure()
-            self.axis = fig1.add_subplot(1,1,1)
-            self.axis.set_title("Simulation residuals")
-            self.axis.set_xlabel("Iteration")
-            self.axis.set_ylabel("Residual")
-            self.axis.grid(True)
-            self.axis.set_yscale('log')
-            self.axis.set_ylim(1e-4, 1e2)  # or autoscale?
-            #xaxis data is not needed for steady case
-            for var in self.residuals:
-                self.axis.plot(self.residuals[var], label = var)
-            plt.legend()
-            #plt.show()  # will freeze the GUI,
+            if withinFreeCAD:
+                self.fig = Plot.figure(FreeCAD.ActiveDocument.Name + "Residuals")
+                self.Timer = QtCore.QTimer()
+                self.Timer.timeout.connect(self.refresh)
+                self.Timer.start(1000)
+                self.updated = False
+            else:
+                self.fig = plt.figure()
+                self.axis = self.fig.add_subplot(1,1,1)
+                self.axis.set_title("Simulation residuals")
+                self.axis.set_xlabel("Iteration")
+                self.axis.set_ylabel("Residual")
+                self.axis.grid(True)
+                self.axis.set_yscale('log')
+                self.axis.set_ylim(1e-4, 1e2)  # or autoscale?
+                #xaxis data is not needed for steady case
+                for var in self.residuals:
+                    self.axis.plot(self.residuals[var], label = var)
+                plt.legend()
+                #todo: setup animation hook
         else:
             print('plot backend {} is not supported'.format(backend))
         self.backend = backend
+
+    def refresh(self):  ## only for matplotlib in FreeCAD plot module
+        if self.updated:
+            self.updated = False
+            ax = self.fig.axes
+            ax.cla()
+            ax.set_title("Simulation residuals")
+            ax.set_xlabel("Iteration")
+            ax.set_ylabel("Residual")
+
+            ax.plot(self.UxResiduals, label="$U_x$", color='violet', linewidth=1)
+            ax.plot(self.UyResiduals, label="$U_y$", color='green', linewidth=1)
+            ax.plot(self.UzResiduals, label="$U_z$", color='blue', linewidth=1)
+            ax.plot(self.pResiduals, label="$p$", color='orange', linewidth=1)
+
+            ax.grid()
+            ax.set_yscale('log')
+            ax.legend()
+
+        self.fig.canvas.draw()
 
     def reset(self):
         # set init values for plotting tool independent data, gnuplot does not accept numpy.array?
@@ -108,11 +136,13 @@ class FoamResidualPloter():
                 self.UzResiduals.append(float(split[7].split(',')[0]))
             if "p," in split and self.niter > len(self.pResiduals):
                 self.pResiduals.append(float(split[7].split(',')[0]))
+        self.updated = True
 
     def plot(self):
         if self.backend == 'gnuplot':
             # NOTE: the mod checker is in place for the possibility plotting takes longer
             # NOTE: than a small test case to solve
+            import Gnuplot
             if numpy.mod(self.niter, 1) == 0:
                 self.g.plot(Gnuplot.Data(self.UxResiduals, with_='line', title="Ux", inline=1),
                             Gnuplot.Data(self.UyResiduals, with_='line', title="Uy", inline=1),
@@ -121,10 +151,11 @@ class FoamResidualPloter():
 
             if self.niter >= 2:
                 self.g("set autoscale")  # NOTE: this is just to supress the empty yrange error when GNUplot autscales
-        elif self.backend == 'matplotlib':
-            if self.niter%5==0:  #only re-plot some data points
-                self.axis.clear()
-                for var in self.residuals:
-                    self.axis.plot(self.residuals[var], label = var)
+        elif self.backend == 'matplotlib':  ## only for matplotlib NOT in FreeCAD plot module
+            if not withinFreeCAD:
+                if self.niter%5==0:  #only re-plot some data points
+                    self.axis.clear()
+                    for var in self.residuals:
+                        self.axis.plot(self.residuals[var], label = var)
         else:
-            pass
+            print('plot backend {} is not supported'.format(backend))
