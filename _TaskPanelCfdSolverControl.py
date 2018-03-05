@@ -36,7 +36,6 @@ import time
 import subprocess
 
 import FreeCAD
-from FemTools import FemTools
 import CfdTools
 
 if FreeCAD.GuiUp:

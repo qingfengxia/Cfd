@@ -45,6 +45,7 @@ class CfdWorkbench(Workbench):
         from PySide import QtCore  # must import in this function, not at the beginning of this file for translation support
         import Fem
         import FemGui
+        FreeCADGui.addModule("FemGui")  # FemCommandFluidMaterial need import FemGui first
 
         import _CommandCfdAnalysis
         import _CommandCfdAnalysisFromMesh
@@ -57,14 +58,14 @@ class CfdWorkbench(Workbench):
         #import _CommandCfdMeshCartFromShape  # not yet finish porting
         #import PyGui._CommandFemMeshNetgenFromShape  # not needed, also netgen may not compiled
 
-        # python classes developed in FemWorkbench, filename and commands changed March 2017
-        import PyGui._CommandFemConstraintSelfWeight
-        import PyGui._CommandFemMeshBoundaryLayer
-        import PyGui._CommandFemMaterialFluid
-        import PyGui._CommandFemMeshRegion
+        # python classes developed in FemWorkbench, filename and commands changed March 2017, 2018
+        from femcommands.commands import _CommandFemConstraintSelfWeight
+        from femcommands.commands import _CommandFemMeshBoundaryLayer
+        from femcommands.commands import _CommandFemMaterialFluid
+        from femcommands.commands import _CommandFemMeshRegion
         #import PyGui._CommandFemMeshGroup  # not necessary for the time being
-        import PyGui._CommandFemMeshPrintInfo
-        import PyGui._CommandFemMeshClear
+        from femcommands.commands import _CommandFemMeshPrintInfo
+        from femcommands.commands import _CommandFemMeshClear
         # vtk pipeline commands defiend and import in cpp needs not imported but can be imported
 
         # Post Processing commands are located in FemWorkbench, implemented and imported in C++

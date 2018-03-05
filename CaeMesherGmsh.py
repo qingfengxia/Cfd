@@ -34,7 +34,7 @@ from collections import OrderedDict
 
 import FreeCAD
 import Fem
-import FemMeshTools  
+import femmesh.meshtools as FemMeshTools  # FemMeshTools was renamed to "femmesh/meshtools.py", on Feb 2018
 from FreeCAD import Units
 import CfdTools
 
