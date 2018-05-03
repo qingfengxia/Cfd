@@ -20,10 +20,11 @@
 # *                                                                         *
 # ***************************************************************************
 
-from __future__ import print_function
-from utility import *
-_debug = True
+from __future__ import print_function, absolute_import
 
+import multiprocessing  # used in BasicBuilder to detect CPU cores
+from .utility import *
+from .utility import _debug
 
 """
 incompressible flow with RAS and LES turbulence setup, 
@@ -260,8 +261,6 @@ class BasicBuilder(object):
         createRunScript(self._casePath, self._solverSettings['potentialInit'], self._solverSettings['parallel'], self._solverName, self._paralleSettings['numberOfSubdomains']) # Specify init_potential (defaults to true)
 
     def build(self):
-        #if not rebuilding:
-        #    createCaseFromTemplate(self._casePath, self._templatePath)
 
         self.setupFluidProperties()  # materials properties
         self.setupTurbulenceProperties()
@@ -339,18 +338,6 @@ class BasicBuilder(object):
             f = ParsedParameterFile(self._casePath + os.path.sep + "0" + os.path.sep + var)
             print("    {}:      {}".format(var, f['internalField']))
 
-    def getSolverCmd(self):
-        # casePath may need translate for OpenFOAM on windows
-        log = "{}/log.{}".format(self._casePath, self._solverName)
-        case = translatePath(self._casePath)
-        if self._solverSettings['parallel']:
-            cmd = "decomposePar -case {}  && ".format(case)
-            nCores = multiprocessing.cpu_count()
-            cmd += "mpirun -np {} {} -case {} > {}".format(nCores, self._solverName, case, log) 
-        else:
-            cmd = "{} -case {} > {}".format(self._solverName, case, log)
-        return cmd
-
     def editCase(self):
         "Edit Foam case by platform file explorer like Nautilus on Ubuntu"
         import subprocess
@@ -390,7 +377,12 @@ class BasicBuilder(object):
 
 
     ####################################################################################
-    
+    def getSolverCommand(self):
+        if os.path.exists(self._casePath + os.path.sep + "Allrun"):
+            return "./Allrun"
+        else:
+            self.getSolverName()
+
     def getSolverName(self):
         return _getSolverName(self._solverSettings)
 

@@ -35,7 +35,7 @@ import os.path
 import FreeCAD
 
 import CfdTools
-import FoamCaseBuilder as fcb  # independent module, not depending on FreeCAD
+import CfdFoamTools as fcb
 
 
 ## write CFD analysis setup into OpenFOAM case

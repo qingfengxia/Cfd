@@ -52,11 +52,16 @@ if FreeCAD.GuiUp:
 
 ########################################################
 # developed by CfdFoam fork, functions have same API with FoamCaseBuilder/utility.py, merged back to FoamCaseBuilder
-import FoamCaseBuilder
-from FoamCaseBuilder.utility import runFoamCommand, startFoamApplication, reverseTranslatePath, translatePath
-from FoamCaseBuilder.utility import _detectFoamDir as detectFoamDir
-from FoamCaseBuilder.utility import _runFoamApplication as runFoamApplication
 
+
+import FoamCaseBuilder  # this should not be imported in other py file: case writer
+from FoamCaseBuilder import BasicBuilder, ThermalBuilder
+from FoamCaseBuilder import supported_turbulence_models
+#from FoamCaseBuilder import supported_multiphase_models
+from FoamCaseBuilder import supported_radiation_models
+from FoamCaseBuilder.utility import getFoamRuntime
+from FoamCaseBuilder.utility import reverseTranslatePath, translatePath, makeRunCommand
+from FoamCaseBuilder.utility import getFoamDir as detectFoamDir
 
 def getPreferencesLocation():
     # Set parameter location
@@ -86,7 +91,8 @@ def getFoamDir():
 
     return installation_path
 
-#NOTE: overwrite FoamCaseBuilder.utility
+#NOTE: overwrite FoamCaseBuilder.utility, should read from preference parameters
+'''
 def getFoamRuntime():
     if platform.system() == 'Windows':
         #if os.path.exists(os.path.join(getFoamDir(), "..", "msys64")):
@@ -95,6 +101,9 @@ def getFoamRuntime():
         #    return 'BashWSL'
     else:
         return 'Posix'
+'''
+
+############ CfdFOAM  utility will not be used by FoamCaseBuilder #####################
 
 # NOTE: not yet merged
 def getRunEnvironment():
@@ -109,9 +118,77 @@ def getRunEnvironment():
     else:
         return {}
 
+def runFoamCommand(cmdline, case=None):
+    """ Run a command in the OpenFOAM environment and wait until finished. Return output.
+        Also print output as we go.
+        cmdline - The command line to run as a string
+              e.g. transformPoints -scale "(0.001 0.001 0.001)"
+        case - Case directory or path
+    """
+    proc = CfdFoamProcess()
+    exit_code = proc.run(cmdline, case)
+    # Reproduce behaviour of failed subprocess run
+    if exit_code:
+        raise subprocess.CalledProcessError(exit_code, cmdline)
+    return proc.output
 
-############################# misc ###############################
+# it may bypass the requirement: python.Popen() must run from terminal
+# but it is based on QProcess, so need eventloop
+class CfdFoamProcess:
+    def __init__(self):
+        self.process = CfdConsoleProcess.CfdConsoleProcess(stdoutHook=self.readOutput, stderrHook=self.readOutput)
+        self.output = ""
+
+    def run(self, cmdline, case=None):
+        print("Running ", cmdline)
+        self.process.start(makeRunCommand(cmdline, case), env_vars=getRunEnvironment())
+        if not self.process.waitForFinished():
+            raise Exception("Unable to run command " + cmdline)
+        return self.process.exitCode()
+
+    def readOutput(self, output):
+        self.output += output
+
+
+def startFoamApplication(cmd, case, finishedHook=None, stdoutHook=None, stderrHook=None):
+    """ Run OpenFOAM application and automatically generate the log.application file.
+        Returns a CfdConsoleProcess object after launching
+        cmd  - List or string with the application being the first entry followed by the options.
+              e.g. ['transformPoints', '-scale', '"(0.001 0.001 0.001)"']
+        case - Case path
+    """
+    if isinstance(cmd, list) or isinstance(cmd, tuple):
+        cmds = cmd
+    elif isinstance(cmd, str):
+        cmds = cmd.split(' ')  # Insensitive to incorrect split like space and quote
+    else:
+        raise Exception("Error: Application and options must be specified as a list or tuple.")
+
+    app = cmds[0].rsplit('/', 1)[-1]
+    logFile = "log.{}".format(app)
+
+    cmdline = ' '.join(cmds)  # Space to separate options
+    # Pipe to log file and terminal
+    cmdline += " 1> >(tee -a " + logFile + ") 2> >(tee -a " + logFile + " >&2)"
+    # Tee appends to the log file, so we must remove first. Can't do directly since
+    # paths may be specified using variables only available in foam runtime environment.
+    cmdline = "{{ rm {}; {}; }}".format(logFile, cmdline)
+
+    proc = CfdConsoleProcess.CfdConsoleProcess(finishedHook=finishedHook, stdoutHook=stdoutHook, stderrHook=stderrHook)
+    print("Running ", ' '.join(cmds), " -> ", logFile)
+    proc.start(makeRunCommand(cmdline, case), env_vars=getRunEnvironment())
+    if not proc.waitForStarted():
+        raise Exception("Unable to start command " + ' '.join(cmds))
+    return proc
+
+def runFoamApplication(cmd, case):
+    """ Same as startFoamApplication, but waits until complete. Returns exit code. """
+    proc = startFoamApplication(cmd, case)
+    proc.waitForFinished()
+    return proc.exitCode()
+
 '''
+############# misc from CfdFoam, yet needed by Cfd module ##################
 def normalise(v):
     import numpy
     mag = numpy.sqrt(sum(vi**2 for vi in v))

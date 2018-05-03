@@ -48,10 +48,10 @@ class CfdSolverFoam(CfdSolver.CfdSolver):
         self.Type = "CfdSolverFoam"
         obj.SolverName = "OpenFOAM"
 
-        from FoamCaseBuilder import supported_turbulence_models
-        #from FoamCaseBuilder import supported_multiphase_models
+        from CfdFoamTools import supported_turbulence_models
+        #from CfdFoamTools import supported_multiphase_models
         #supported_multiphase_models = ['singplePhase']
-        #from FoamCaseBuilder import supported_radiation_models
+        #from CfdFoamTools import supported_radiation_models
 
         # API: addProperty(self,type,name='',group='',doc='',attr=0,readonly=False,hidden=False)
         if "TurbulenceModel" not in obj.PropertiesList:

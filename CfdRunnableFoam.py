@@ -55,8 +55,7 @@ class CfdRunnableFoam(_CfdRunnable):
         self.writer.builder.editCase()
 
     def get_solver_cmd(self):  # deprecate this by a bash script file to start foam solver
-        import FoamCaseBuilder.utility
-        cmd = "bash -c \"source {}/etc/bashrc && ./Allrun\"".format(FoamCaseBuilder.utility.getFoamDir())
+        cmd = self.writer.builder.getSolverCommand()
         FreeCAD.Console.PrintMessage("Solver run command: " + cmd + "\n")
         return cmd
         
