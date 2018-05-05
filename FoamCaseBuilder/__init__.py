@@ -24,7 +24,7 @@ __version__ = "0.0.4"
 __author__ = "Qingfeng XIA"
 __url__ = "http://www.iesensor.com"
 
-from .utility import *
+from .config import *
 from .BasicBuilder import BasicBuilder, supported_turbulence_models
 from .ThermalBuilder import ThermalBuilder, supported_radiation_models
 from .ThermalBuilder import getDefaultHeatTransferSolverSettings

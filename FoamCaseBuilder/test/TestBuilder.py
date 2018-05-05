@@ -20,21 +20,28 @@
 # *                                                                         *
 # ***************************************************************************
 
+from __future__ import print_function, absolute_import
+
 import sys
 import os
 import tempfile
 import platform
 import os.path
 
-from utility import runFoamApplication, getFoamDir, createRawFoamFile
-
-PACKAGE_PARENT = '..'
+PACKAGE_PARENT = '../..'
 SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
 sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
+import FoamCaseBuilder
+from FoamCaseBuilder.utility import runFoamApplication, runFoamCommand, getFoamDir, createRawFoamFile
+from FoamCaseBuilder.utility import ParsedParameterFile, BoundaryDict
+from FoamCaseBuilder.BasicBuilder import getDefaultSolverSettings, BasicBuilder
+from FoamCaseBuilder.ThermalBuilder import getDefaultHeatTransferSolverSettings, ThermalBuilder
+
 script_path = os.path.dirname(os.path.abspath( __file__ ))
-home_dir = os.path.expanduser("~")
-mesh_file = home_dir  + os.path.sep +'TestCase.unv' #script path may not writable
+case_dir = '/tmp'  # to put test file
+case = "/tmp/TestCase"
+mesh_file = script_path  + os.path.sep +'TestCase.unv' #script path may not writable
 
 if not os.path.exists(mesh_file):
     mesh_file_url = "https://www.iesensor.com/download/TestCase.unv"
@@ -43,31 +50,31 @@ if not os.path.exists(mesh_file):
     runFoamApplication(['curl -o {} {}'.format(mesh_file, mesh_file_url)])
 
 def test_runFoamApplication():
+    print("getFoamDir() = ", getFoamDir())
     runFoamApplication(["icoFoam", '-help'])
-
-def test_detectFoam():
-    from utility import _detectFoamVersion, _detectFoamDir
-    print(_detectFoamVersion())
 
 def test_dictFileLoad():
     #PyFoam 0.66 can parse dict file for OF>=3.0, with "#include file"
-    case= getFoamDir() + "/tutorials/incompressible/simpleFoam/pipeCyclic"
-    file="0.orig/U"
-    from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
+    #case= getFoamDir() + "/tutorials/incompressible/simpleFoam/pipeCyclic"
+    file="0/U"
     f = ParsedParameterFile(case + os.path.sep + file)
+    print(f['boundaryField'])
     print(f['internalField'])
-    print(f['boundaryField']['walls'])
+
+def test_boundaryDictLoad():
+    #PyFoam 0.66 can parse dict file for OF>=3.0, with "#include file"
+    f = BoundaryDict(case)
+    print(f.patches())
+    print(f[f.patches()[0]])
 
 def test_createRawFoamFile():
-    case = home_dir
     _constant_dir_created = False
     if not os.path.exists(case + os.path.sep + "constant"):
         _constant_dir_created = True
         os.mkdir(case + os.path.sep + "constant")
-    lines = ['transportModel  Newtonian;','\n', 'nu              nu [ 0 2 -1 0 0 0 0 ] 1e-06;']
+    lines = ['transportModel  Newtonian;','\n', 'nu              [ 0 2 -1 0 0 0 0 ] 1e-06;']
     createRawFoamFile(case, "constant", "transportProperties", lines)
     file = case + os.path.sep + "constant" + os.path.sep + "transportProperties"  #PyFoam 0.6.6 can not parse this dict for OpenFOAM 3.0+
-    from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
     f = ParsedParameterFile(file)
     print(f['nu'])
     os.remove(file)
@@ -81,10 +88,9 @@ def test_basic_builder(using_laminar_model = True):
     """
     using_pressure_inlet = False  # only for compressible fluid case, not implemented yet
     # case setup is fine for kEpsilon, but will diverge!
-    
-    from BasicBuilder import getDefaultSolverSettings, BasicBuilder
+
     solver_settings = getDefaultSolverSettings()
-    case= home_dir + os.path.sep + "TestCaseCLI"
+    case= case_dir + os.path.sep + "TestCaseCLI"
     #zipped_template_file is deprecated
 
     #default to setup in ~/.bashrc:  source '/opt/openfoam40/etc/bashrc'
@@ -96,7 +102,7 @@ def test_basic_builder(using_laminar_model = True):
     #tutorial_path = "tutorials/incompressible/simpleFoam/pipeCyclic"
     tutorial_path = None # build up case from scratch
     template_path = tutorial_path
-            
+
     #pipe diameter is 20mm
     if using_laminar_model:
         turbulenceSettings={'name': "laminar"}
@@ -105,7 +111,7 @@ def test_basic_builder(using_laminar_model = True):
     else:
         #"Intensity&LengthScale","unspecific","Intensity&HydraulicDiameter"
         turbulenceSettings={'name': "realizableKE", 'specification':"Intensity&HydraulicDiameter",
-                        'intensityValue': 0.05, 'lengthValue': 0.01} 
+                        'intensityValue': 0.05, 'lengthValue': 0.01}
         solver_settings['turbulenceModel'] = "realizableKE"
         # 'kEpsilon' case setup is fine, but divergent is hard for he bad mesh quality
         inletVelocity = (0, 0, 0.1)
@@ -113,9 +119,9 @@ def test_basic_builder(using_laminar_model = True):
 
     transientSettings = {"startTime":0.0, "endTime":1.0, "timeStep":0.001, "writeInterval":100}
     # compressible flow only, currently not supported yet!
-    inlet={'name': "Inlet", 'type': "inlet", 'subtype': "totalPressure", 'value': 10000, 
+    inlet={'name': "Inlet", 'type': "inlet", 'subtype': "totalPressure", 'value': 10000,
             'turbulenceSettings': turbulenceSettings}
-    inlet={'name': "Inlet", 'type': "inlet", 'subtype': "uniformVelocity", 'value': inletVelocity, 
+    inlet={'name': "Inlet", 'type': "inlet", 'subtype': "uniformVelocity", 'value': inletVelocity,
             'turbulenceSettings': turbulenceSettings}
     #inlet={'name': "Inlet", 'type': "inlet", 'subtype': "volumetricFlowRate", 'value': 0.0001, 'turbulenceSettings': turbulenceSettings}
 
@@ -124,14 +130,14 @@ def test_basic_builder(using_laminar_model = True):
 
     case_builder = BasicBuilder(case,  solver_settings, template_path)
     case_builder.createCase() # clear case,  clear data
-    case_builder.setupMesh(mesh_file, 0.001) 
+    case_builder.setupMesh(mesh_file, 0.001)
     case_builder.turbulenceProperties = turbulenceSettings
     #print case_builder.fluidProperties
     case_builder.fluidProperties = {'name':'oneLiquid', 'kinematicViscosity': kinematicViscosity}
     #higher viscosity may help converge in coarse mesh
     case_builder.boundaryConditions = [inlet, outlet]
     case_builder.internalFields = {'U': inletVelocity}
-    
+
     case_builder.build()
     case_builder.setupRelaxationFactors(0.1, 0.1, 0.3) # changed the default setting, not necessary
     case_builder.setupPressureReference(0.0, 0) # pRefValue, pRefValue
@@ -141,26 +147,26 @@ def test_basic_builder(using_laminar_model = True):
 
     #fvScheme file: divSchemes, fvSolution file has turbulence model specific var setting up
     case_builder.setupRelaxationFactors(0.1, 0.1)  # reduce for the coarse 3D mesh
-    #residual
-    
+    # todo: residual plot
+
     cmdline = "simpleFoam -case {} > log.{}".format(case, case_builder._solverName)  # foamJob <solver> & foamLog
-    print("please run the command in new terminal: \n"+ cmdline) 
+    print("please run the command in new terminal: \n"+ cmdline)
     #lauch command outside please, it takes several minutes to converge
     #pyFoamPlotWatcher.py
-    
+
     cmdline = "paraFoam -case {}".format(case)
     print("view result in command with: \n"+ cmdline)
 
 
 def test_heat_transfer_builder(compressible=True):
     #
-    from ThermalBuilder import getDefaultHeatTransferSolverSettings
+    #from ThermalBuilder import getDefaultHeatTransferSolverSettings
     solver_settings = getDefaultHeatTransferSolverSettings()
     solver_settings['compressible'] = compressible
-    case= home_dir + os.path.sep + "TestCaseCLI"
+    case= case_dir + os.path.sep + "TestCaseCLI"
     #template_path = "tutorials/heatTransfer/buoyantBoussinesqSimpleFoam/hotRoom/"
     template_path = None
-    
+
     using_laminar = False
     if using_laminar: # buoyantBoussinesqSimpleFoam solver does not support laminar flow
         turbulenceSettings={'name': 'laminar'}
@@ -172,11 +178,11 @@ def test_heat_transfer_builder(compressible=True):
                     'intensityValue': 0.05, 'lengthValue': 0.01}
         inletVelocity = (0, 0, 1.0)
         inletPressure = 11000
-    
-    inlet={'name': "Inlet", 'type': "inlet", 'subtype': "totalPressure", 'value': inletPressure, 
+
+    inlet={'name': "Inlet", 'type': "inlet", 'subtype': "totalPressure", 'value': inletPressure,
             'turbulenceSettings': turbulenceSettings,
             'thermalSettings': {'subtype':'fixedValue', 'temperature':320}}
-    inlet={'name': "Inlet", 'type': "inlet", 'subtype': "uniformVelocity", 'value': inletVelocity, 
+    inlet={'name': "Inlet", 'type': "inlet", 'subtype': "uniformVelocity", 'value': inletVelocity,
             'turbulenceSettings': turbulenceSettings,
             'thermalSettings': {'subtype':'fixedValue', 'temperature':320}}
     outlet={'name': "Outlet", 'type': "outlet", 'subtype': "staticPressure", 'value': 1e5,
@@ -185,34 +191,35 @@ def test_heat_transfer_builder(compressible=True):
     wall={'name': "defaultFaces", 'type': "wall",'subtype': "fixed", # faces without allocated boundary condition setting
           #'thermalSettings': {'subtype':'heatFlux', 'heatFlux':100}}
           'thermalSettings': {'subtype':'fixedGradient', 'heatFlux':10000}}
-    
-    from ThermalBuilder import ThermalBuilder
+
+    #from ThermalBuilder import ThermalBuilder
     case_builder = ThermalBuilder(case,  solver_settings, template_path)
     case_builder.createCase()
-    
-    case_builder.setupMesh(mesh_file, 0.001) 
+
+    case_builder.setupMesh(mesh_file, 0.001)
     case_builder.turbulenceProperties = turbulenceSettings
     #print case_builder.fluidProperties
     case_builder.fluidProperties = {'name':'air'}
     #higher viscosity may help converge
     case_builder.boundaryConditions = [inlet, outlet, wall]
     case_builder.internalFields = {'U': inletVelocity, 'T': 300, 'p': 100000}
-    
+
     case_builder.build()
     msg = case_builder.check()
     if msg:
         print('Error: case setup check failed with message\n, {}, \n please check dict files'.format(msg))
-    
+
     case_builder.summarize()
 
 if __name__ == '__main__':
-    test_runFoamApplication()
-    test_detectFoam()
+
     if platform.system() == 'Windows':
-        print("Test on Windows is not support, mainly because case path not translated, try Windows Linux System")
+        print("Test on Windows is not support, mainly because case path not translated, try python on Windows Linux System")
     else:
-        test_dictFileLoad()
+        #test_runFoamApplication()
+        test_basic_builder(using_laminar_model = False)
+        #test_dictFileLoad()
+        test_boundaryDictLoad()
         test_createRawFoamFile()
         test_basic_builder()
-        #test_basic_builder(using_laminar_model = False)
         #test_heat_transfer_builder()

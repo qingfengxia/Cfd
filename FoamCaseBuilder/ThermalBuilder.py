@@ -20,11 +20,12 @@
 # *                                                                         *
 # ***************************************************************************
 
-from __future__ import print_function
+from __future__ import print_function, absolute_import
+import multiprocessing  # used in BasicBuilder to detect CPU cores
 
-from BasicBuilder import BasicBuilder
-from utility import *
-from utility import _debug
+from .BasicBuilder import BasicBuilder
+from .utility import *
+from .utility import _debug
 
 supported_thermal_value_types = set([
 'fixedValue', #fixed Temperature

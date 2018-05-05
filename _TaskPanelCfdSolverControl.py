@@ -191,7 +191,7 @@ class _TaskPanelCfdSolverControl:
 
 
     def runSolverProcess(self):
-        # Re-starting a simulation from the last time step has currently been de-actived by using an AllRun script. 
+        # Re-starting a simulation from the last time step has currently been de-actived by using an AllRun script.
         # re-setting the residuals is NOT needed for plotting
 
         self.Start = time.time()
@@ -200,9 +200,15 @@ class _TaskPanelCfdSolverControl:
 
         solverDirectory = os.path.join(self.solver_object.WorkingDir, self.solver_object.InputCaseName)
         self.femConsoleMessage(cmd)
+
         FreeCAD.Console.PrintMessage(solverDirectory + "\n")
-        self.solver_run_process.setWorkingDirectory(solverDirectory)
-        self.solver_run_process.start(cmd)
+        if sys.platform == 'win32':  # FIXME: a tmp solution
+            #getRunEnvironment() for blueCFD
+            #self.solver_run_process.setWorkingDirectory(solverDirectory)  # cause error on WSL
+            self.solver_run_process.start(cmd)
+        else:
+            self.solver_run_process.setWorkingDirectory(solverDirectory)  # has error in source bashrc
+            self.solver_run_process.start('./Allrun')
 
         #NOTE: setting solve button to inactive to ensure that two instances of the same simulation aren's started simulataneously
         self.form.pb_run_solver.setEnabled(False)
@@ -211,7 +217,7 @@ class _TaskPanelCfdSolverControl:
 
         QApplication.restoreOverrideCursor()
         # all the UI update will done after solver process finished signal
-        
+
     def killSolverProcess(self):
         self.femConsoleMessage("Solver manually stopped")
         self.solver_run_process.terminate()
@@ -222,7 +228,7 @@ class _TaskPanelCfdSolverControl:
 
     def solverProcessStarted(self):
         self.femConsoleMessage("External solver process has started!", "#00AA00")
-    
+
     def solverProcessStateChanged(self, newState):
         if (newState == QtCore.QProcess.ProcessState.Starting):
             self.femConsoleMessage("Starting Solver...")
@@ -270,16 +276,14 @@ class _TaskPanelCfdSolverControl:
                 self.femConsoleMessage("Error converting stdout from Solver", "#FF0000")
 
     def showResult(self):
+        self.femConsoleMessage("Loading result into FreeCAD is disabled for bugs...", "#FF0000")
+        """
         self.femConsoleMessage("Loading result sets...")
         self.Start = time.time()
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-        #import FemTools
-        #fea = FemTools.FemTools(self.analysis_object, self.solver_object)
-        #fea.reset_mesh_purge_results_checked()
-        #
         self.solver_runner.view_result()
         QApplication.restoreOverrideCursor()
         self.form.l_time.setText('Time: {0:4.1f}: '.format(time.time() - self.Start))
+        """
 
     def viewResultExternally(self):
         self.solver_runner.view_result_externally()

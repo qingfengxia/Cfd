@@ -58,7 +58,7 @@ class CfdRunnableFoam(_CfdRunnable):
         cmd = self.writer.builder.getSolverCommand()
         FreeCAD.Console.PrintMessage("Solver run command: " + cmd + "\n")
         return cmd
-        
+
     def solve(self):
         pass  # start external process, TODO:  move code from TaskPanel to here
 
@@ -75,4 +75,4 @@ class CfdRunnableFoam(_CfdRunnable):
     def process_output(self, text):
         self.ploter.process_text(text)
         #self.ploter.plot()  # matplotlib plot using QTimer to update plotting
-        # potential bug:  the ploter's QTimer should be stopped, once solver process finished, 
+        # potential bug:  the ploter's QTimer should be stopped, once solver process finished,
