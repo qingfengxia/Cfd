@@ -15,9 +15,9 @@ Finally, only FemSolverObject is accepted into the official for multiple solver 
 - FoamCaseWriter: OpenFOAM case writer, the key part is meshing and case setup
 - Fixed material as air or water
 - 3D UNV meshing writing function, FreeCAD mesh export does not write boundary elements
-- Use fem::constraint Constraint mapping CFD boundary: 
-    Force->Velocity (Displacement is missing), 
-    Pressure->Pressure, Symmetry is missing (Pulley), 
+- Use fem::constraint Constraint mapping CFD boundary:
+    Force->Velocity (Displacement is missing),
+    Pressure->Pressure, Symmetry is missing (Pulley),
     PressureOutlet (Gear), VelocityOutlet(Bearing),
 
 ### Phase II general demonstration (Finished 2016-04-17)
@@ -26,16 +26,16 @@ branch: foambuilder_pre2
 `git clone --branch foambuilder_pre2 https://github.com/qingfengxia/FreeCAD.git  --single-branch`
 
 - FemMaterial:  A domo for general Materail model for any FEM
-   not yet fully functional, to discuss with community for standardizing Material model, 
+   not yet fully functional, to discuss with community for standardizing Material model,
    also design for other CAE analysis EletroMagnetics
-   
+
 - FemConstraintFluidBoundary: CFD boundary conditions are catogeried into 5 types: inlet, outlet, wall, interface, freestream
     GUI menu and toolbar added
-    
+
 - Run the OpenFoam sovler in external terminal, instead of waiting in solver control task panel
 
 - Use exteranal result viewer paraview
-    CFD is cell base solution, while FEM is node base. It is not easy to reuse ResultObject 
+    CFD is cell base solution, while FEM is node base. It is not easy to reuse ResultObject
     volPointInterpolation - interpolate volume field to point field;
 
 ### Phase III general usability (2016-09-05)
@@ -62,16 +62,16 @@ branch: foambuilder_pre2
   + bugfix: double click CfdAnalysis will activate CfdWorkbench instead of FemWorkbench, via adding _ViewProviderCfdAnalysis.py
   + feature: remove the limiation that freecad-daily  must be started in terminal command, pyFoam need write access to current dir
   + bugfix: boundary mesh is not appended to unv volume mesh in CfdTools.py, due to recent femmesh code refactoring from Oct 2016 to Dec 2016. Bugfix from <https://github.com/jaheyns/FreeCAD/blob/master/src/Mod/Cfd/CfdTools.py> works! And it is merged
-  + bugfix can not run runFoamCommand() immediately after another runFoamCommand, which makes freecad-daily stopped/abort, 
+  + bugfix can not run runFoamCommand() immediately after another runFoamCommand, which makes freecad-daily stopped/abort,
 
 ### Phase V (2017): welcome the team from South Africa  and toward official workbench
 
-### contribution from team fromSouth Africa 
+### contribution from team fromSouth Africa
 
 - run and view progress in gnuplot in solver control task panel
-  currently, CfdResult load button will freeze GUI, since result is not existent, 
+  currently, CfdResult load button will freeze GUI, since result is not existent,
 
-- Set up and run solver via run script 'Allrun' abd okit 
+- Set up and run solver via run script 'Allrun' abd okit
 
 - initalize internal field by potentialFoam
 
@@ -86,7 +86,7 @@ see more at <https://github.com/jaheyns/CfdFoam>
 
 - paraview template
 
-- porous model 
+- porous model
 
 - cfmesh for mesh refining
 
@@ -95,7 +95,7 @@ see more at <https://github.com/jaheyns/CfdFoam>
  + FluidMaterial and stdmat material:  a general FemMaterail object serve all kinds of CAE Analysis, commit to FemWorkbench as FemMaterial
  + boundary layer setup based on Gmsh: commit to FemWorkbench
  + restruct Cfd_SolverCommand to fit new Cfd solver , like Fenics
- + CFD workbench icon is designed and located in Cfd module path 
+ + CFD workbench icon is designed and located in Cfd module path
  + runFoamCommand() refactoring to unicode path support is done
 
 #### initial support of Fenics solver for laminar flow
@@ -104,25 +104,22 @@ see more at <https://github.com/jaheyns/CfdFoam>
 - 3D mesh with boundary export is done via gmsh
 - fenics  solver related  new classes are added into CFD workbench repo
 
-#### todo in 2017
+#### new platform windows 10 WSL support
+
+- installation guide and tutorial on Win10 (output from WSL can be piped to Windows process in 1803)
+- check if case path with space and utf8 char works in FoamCaseBuilder
+- make runFoamCommand() work in Bash on windows 10 (WSL)
 
 - 2 freecad std test files with CFD case setup, put into Cfd/Example/ or std path of freecad
-- turbulence model further testing, in parallel with South Africa team
-- 2D meshing support: unv currently only deal with 3D, but possible to support 2D
-- general initalizer class, added into solver object
-- refactor FemSelfWeight as a general body force constraint
-
-
+- matplotlib for residual plot
 ======================================
 ### todo
 
-#### new platform support
+#### FEM workbench
 
-- installation guide and tutorial on MacOSX and Win10
-- check if case path with space and utf8 char works in FoamCaseBuilder
-- make runBashCommand() work in Bash on windows 10 (WSL)
-  Currently, case path mapping has been done for win10 Linux subsystem
-- but bash for windows 10 support is yet, can not retrieve result from Popen
+- 2D meshing support: unv currently only deal with 3D, but possible to support 2D
+- general initalizer class, added into solver object
+- refactor FemSelfWeight as a general body force constraint
 
 #### turbulence and heat transfering
 - bugfix: after changing turbulence model from laminar to any turbulence model,existent boundary constraints' turbulence spec combobox is empty. Similar to heat transfter setting
@@ -140,7 +137,7 @@ see more at <https://github.com/jaheyns/CfdFoam>
 #### Feature request from Fem
    NamedSelection (Collection of mesh face) for boundary:
           for identifying mesh boundary imported from mesh file
-   
+
    Part section: build3DFromCavity buildEnclosureBox
           for example, there a pipe section, how to extract void space in pipe for CFD,
           it is done in Part Next
@@ -162,7 +159,7 @@ see more at <https://github.com/jaheyns/CfdFoam>
 
 list of FemAnalysis instances,  add_analysis()  add_time()
 timeStep, currentTime,  adaptiveTimeStep=False
-historicalTimes chain up all historical case data file. 
+historicalTimes chain up all historical case data file.
 static multiple solvers are also possible
 
 

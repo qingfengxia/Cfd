@@ -5,14 +5,14 @@
 Qingfeng Xia
 Jan 24, 2016
 updated: August 17, 2016
+updated: May 03, 2018
 
 
 ### Introduction
 
-FoamCaseBuilder aims to setup OpenFOAM case from python script, based on PyFoam. 
+FoamCaseBuilder aims to setup OpenFOAM case from python script, based on PyFoam dict reading and writing. 
 
-Merging FEM and CFD into a single processing pipeline (solver -> analysis -> AnalysisControlTaskPanel) is given up. 
-CFD case setup code should be independent from Fem CalculiX code, to reduce work to merge with master each time. 
+FoamCaseBuilder works only for POSIX platform , python 2 and Python 3. Windows 10 WSL is treated as a Linux system.
 
 ### OpenFoam is designed for POSIX, but possible on windows
 
@@ -36,7 +36,7 @@ Set the cygdrive prefix to /mnt in /etc/fstab
 ### Software prerequisits for Testing (Linux ONLY as in year 2016!!!)
 
 - both python 3.4+ and python 2.7 are supported
-- FreeCAD 0.17 daily build: with all FEM features, netgen for meshing 
+- FreeCAD 0.17 stable: with all FEM features, netgen for meshing 
 If you install freecad-daily version 20160921 from PPA, CFD module can be tested with FreeCAD master
 
 - OpenFOAM: 3.0+ will be supported for simplified setting dict; 2.x should works but not tested
