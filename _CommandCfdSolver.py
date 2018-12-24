@@ -35,7 +35,7 @@ class _CommandCfdSolver(CfdCommand):
     "Command to create OpenFOAM solver for CFD anlysis"
     def __init__(self):
         super(_CommandCfdSolver, self).__init__()
-        self.resources = {'Pixmap': 'fem-solver',  # FIXME: change icon
+        self.resources = {'Pixmap': 'cfd-solver-standard',
                           'MenuText': QtCore.QT_TRANSLATE_NOOP("Cfd_Solver", "Create CFD solver"),
                           'Accel': "C, S",
                           'ToolTip': QtCore.QT_TRANSLATE_NOOP("Cfd_Solver", "Create a solver object for CFD anlysis")}

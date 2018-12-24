@@ -36,7 +36,7 @@ class _CommandCfdSolverControl(CfdCommand):
     "the Cfd_SolverControl command definition"
     def __init__(self):
         super(_CommandCfdSolverControl, self).__init__()
-        self.resources = {'Pixmap': 'fem-control-solver',
+        self.resources = {'Pixmap': 'cfd-solver-control',
                           'MenuText': QtCore.QT_TRANSLATE_NOOP("Cfd_SolverControl", "Solver job control"),
                           'Accel': "S, C",
                           'ToolTip': QtCore.QT_TRANSLATE_NOOP("Cfd_SolverControl", "Changes solver attributes and runs the calculations for the selected solver")}

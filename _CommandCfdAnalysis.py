@@ -36,7 +36,7 @@ class _CommandCfdAnalysis(CfdCommand):
     "the Cfd_Analysis command definition"
     def __init__(self):
         super(_CommandCfdAnalysis, self).__init__()
-        self.resources = {'Pixmap': 'fem-cfd-analysis',
+        self.resources = {'Pixmap': 'cfd-analysis',
                           'MenuText': QtCore.QT_TRANSLATE_NOOP("Cfd_Analysis", "Analysis container"),
                           'Accel': "N, C",
                           'ToolTip': QtCore.QT_TRANSLATE_NOOP("Cfd_Analysis", "Creates a analysis container with a Cfd solver")}

@@ -56,23 +56,27 @@ class CfdWorkbench(Workbench):
 
         import _CommandCfdMeshGmshFromShape
         #import _CommandCfdMeshCartFromShape  # not yet finish porting
-        #import PyGui._CommandFemMeshNetgenFromShape  # not needed, also netgen may not compiled
 
         # python classes developed in FemWorkbench, filename and commands changed March 2017, 2018
         from femcommands.commands import _CommandFemConstraintSelfWeight
         from femcommands.commands import _CommandFemMeshBoundaryLayer
         from femcommands.commands import _CommandFemMaterialFluid
         from femcommands.commands import _CommandFemMeshRegion
-        #import PyGui._CommandFemMeshGroup  # not necessary for the time being
-        from femcommands.commands import _CommandFemMeshPrintInfo
+        #from femcommands.commands import _CommandFemMeshNetgenFromShape  # not needed, also netgen may not compiled
+        #from femcommands.commands import _CommandFemMeshGroup  # not necessary for the time being
+
+        try:  # to deal with different class name in recent versions, should be cleaned once v0.18 release, cmdlist is also affected
+            from femcommands.commands import _CommandFemMeshPrintInfo # name in v0.17 release
+        except ImportError:
+            from femcommands.commands import _CommandFemMeshDisplayInfo  # renamed in v0.18dev
         from femcommands.commands import _CommandFemMeshClear
-        # vtk pipeline commands defiend and import in cpp needs not imported but can be imported
+        # vtk pipeline commands  are not imported but can be imported
 
         # Post Processing commands are located in FemWorkbench, implemented and imported in C++
         cmdlst = ['Cfd_Analysis',  'Cfd_AnalysisFromMesh', 'Cfd_Solver', 'Cfd_SolverFenics','FEM_MaterialFluid', 'Separator', # superseded 'Cfd_FluidMaterial',
                         'FEM_ConstraintFluidBoundary', 'FEM_ConstraintSelfWeight', 'Separator', 
                         'Cfd_MeshGmshFromShape', # add parameter adjustment for 'FEM_MeshGmshFromShape',
-                        'FEM_MeshBoundaryLayer', 'FEM_MeshRegion', 'FEM_MeshGroup','FEM_MeshPrintInfo', 'FEM_MeshClear', "Separator",
+                        'FEM_MeshBoundaryLayer', 'FEM_MeshRegion', 'FEM_MeshGroup','FEM_MeshPrintInfo', 'FEM_MeshDisplayInfo', 'FEM_MeshClear', "Separator",
                         'Cfd_SolverControl']
                         #"Separator", "FEM_PostPipelineFromResult", "FEM_PostCreateClipFilter", 
                         #"FEM_PostCreateScalarClipFilter", "FEM_PostCreateCutFilter"]
