@@ -89,31 +89,34 @@ class CfdCaseWriterFoam:
         """
         caseFolder = self.solver_obj.WorkingDir + os.path.sep + self.solver_obj.InputCaseName
 
-        if self.mesh_obj.Proxy.Type == u"FemMeshGmsh": # Gmsh has already write boundary mesh for FemConstraint derived class
-            using_unv_format = True
-            if using_unv_format:
-                foamMeshFile = caseFolder + os.path.sep + self.solver_obj.InputCaseName + u".unv"
-            else:  # GMSH format ascii
-                foamMeshFile = caseFolder + os.path.sep + self.solver_obj.InputCaseName + u".msh"
-
-            if using_unv_format:
-                self.mesh_generated = CfdTools.write_unv_mesh(self.mesh_obj, self.bc_group, foamMeshFile, is_gmsh = True)
-                # however, the generated boundary patch name for OpenFOAM has suffix: '_Faces' for 3D.
-                # FreecAD (internal standard length) mm by default; while in CFD, it is metre, so mesh needs scaling
-                # unit_shema == 1, may mean Metre-kg-second
-                # cfd result import, will also involve mesh scaling, it is done in c++  Fem/VTKTools.cpp
-                if self.unit_shema == 0:
-                    scale = 0.001
-                else:
-                    scale = 1
-            else:  # feature not yet merged into Fem master 2017-10-21
-                self.mesh_generated = CfdTools.export_gmsh_mesh(self.mesh_obj, foamMeshFile)
-                scale = 1  # importGmshMesh.export already set the output mesh scale to metre
+        if self.mesh_obj.Proxy.Type == u"FemMeshGmsh":
+            using_gmsh = True  # Gmsh has already write boundary mesh for FemConstraint derived class
+        elif self.mesh_obj.Proxy.Type == u"CaeMeshImported":
+            using_gmsh = False
         else:
-            FreeCAD.Console.PrintError("Only Gmsh is supported for OpenFOAM mesh")
+            FreeCAD.Console.PrintError("Only FemMeshGmsh or ImportedMesh is supported for OpenFOAM mesh")
             return False
-            #self.mesh_generated = CfdTools.write_unv_mesh(self.mesh_obj, self.bc_group, unvMeshFile
 
+        #self.mesh_generated = CfdTools.write_unv_mesh(self.mesh_obj, self.bc_group, unvMeshFile
+        using_unv_format = True
+        if using_unv_format:
+            foamMeshFile = caseFolder + os.path.sep + self.solver_obj.InputCaseName + u".unv"
+        else:  # GMSH format ascii
+            foamMeshFile = caseFolder + os.path.sep + self.solver_obj.InputCaseName + u".msh"
+        if using_unv_format:
+            self.mesh_generated = CfdTools.write_unv_mesh(self.mesh_obj, self.bc_group, foamMeshFile, is_gmsh = using_gmsh)
+            # however, the generated boundary patch name for OpenFOAM has suffix: '_Faces' for 3D.
+            # FreecAD (internal standard length) mm by default; while in CFD, it is metre, so mesh needs scaling
+            # unit_shema == 1, may mean Metre-kg-second
+            # cfd result import, will also involve mesh scaling, it is done in c++  Fem/VTKTools.cpp
+            if self.unit_shema == 0:
+                scale = 0.001
+            else:
+                scale = 1
+        else:  # feature not yet merged into Fem master 2017-10-21
+            self.mesh_generated = CfdTools.export_gmsh_mesh(self.mesh_obj, foamMeshFile)
+            scale = 1  # importGmshMesh.export already set the output mesh scale to metre
+    
         self.builder.setupMesh(foamMeshFile, scale)
         #FreeCAD.Console.PrintMessage('mesh file {} converted and scaled with ratio {}\n'.format(unvMeshFile, scale))
 

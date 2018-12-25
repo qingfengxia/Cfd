@@ -1,5 +1,5 @@
 
-## FoamCaseBuilder and FreeCAD CfdWorkbench Roadmap
+## FoamCaseBuilder and FreeCAD CfdWorkbench changelog
 
 ### Phase I Concept demonstration (Finished 2016-01-20)
 
@@ -112,8 +112,19 @@ see more at <https://github.com/jaheyns/CfdFoam>
 
 - 2 freecad std test files with CFD case setup, put into Cfd/Example/ or std path of freecad
 - matplotlib for residual plot
+
+
 ======================================
-### todo
+
+## Roadmap
+
+I enter maintain stage for this Cfd module, I will not develop new features, but fix bug.
+
+### Qt5 and Python3 support for Cfd workbench
+
+
+
+### todo (delayed until I have time or have project related with OpenFOAM)
 
 #### FEM workbench
 
@@ -142,16 +153,15 @@ see more at <https://github.com/jaheyns/CfdFoam>
           for example, there a pipe section, how to extract void space in pipe for CFD,
           it is done in Part Next
 
-============================================
-### long term  FSI (beyond year 2017?)
+#### FSI is implemented in FenicsSolver
 
 - More CFD Analysis Type supported, transient, heat transfer and LES model setup
-
-- potential new Cfd solver like fenics, elmer, both solvers has been discussed in Fem forum
 
 - AnalysisCoupler.py
 
 ### not to do, limited by my time
+
+- potential new Cfd solver like fenics, elmer, both solvers has been discussed in Fem forum
 
 - GGI and dynamic mesh will not be supported for the complex GUI building work
 
@@ -161,6 +171,7 @@ list of FemAnalysis instances,  add_analysis()  add_time()
 timeStep, currentTime,  adaptiveTimeStep=False
 historicalTimes chain up all historical case data file.
 static multiple solvers are also possible
+
 
 
 

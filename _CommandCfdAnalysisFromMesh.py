@@ -68,10 +68,9 @@ class _CommandCfdAnalysisFromMesh(CfdCommand):
 
         FreeCADGui.addModule("CfdTools")
         FreeCADGui.doCommand("CfdTools.importGeometryAndMesh(u'{}', u'{}')".format(geo_file[0], mesh_file[0]))
-        #CfdTools.importGeometryAndMesh(geo_file[0], mesh_file[0])
         FreeCADGui.addModule("FemGui")
-        if FemGui.getActiveAnalysis():
-            FreeCADGui.doCommand("FemGui.getActiveAnalysis().addObject(App.ActiveDocument.ActiveObject)")
+        #if FemGui.getActiveAnalysis():  # besides addModule, FemGui need to be imported
+        FreeCADGui.doCommand("FemGui.getActiveAnalysis().addObject(App.ActiveDocument.ActiveObject)")
 
 
 if FreeCAD.GuiUp:

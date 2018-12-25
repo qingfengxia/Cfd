@@ -61,7 +61,7 @@ added features:
 -  Windows 10 with Bash on Windows (WSL ubuntu 16.04) support (tested on windows 10 v1803):
 
         Official OpenFOAM  (Ubuntu deb) can be installed and run on windows via Bash on Windows (WSL) Since version 1803 can piped process output back python, which is needed to detect OpenFOAM installation.  There is a tutorial to install OpenFOAM on windows WSL: <https://openfoam.org/download/windows-10/>, make sure OpenFOAM bashrc is sourced in `~/.bashrc`.   On FreeCAD v0.17 for windows, gmsh has been installed, but 'PyFoam' is not included to the FreeCAD's python2.7 bundle. However, `pip` bundled with FreeCAD does not work, instead, 'PyFoam' is downloaded and extracted to "C:\Program Files\FreeCAD 0.17\bin\Lib\site-packages".
-    For paraview, it is recommended to uninstall WSL's paraview by `sudo apt-get remove openfoam5paraview54`, to use windows version (make sure paraview is installed and on PAHT) for better 3D performance. paraview on WSL just does not work for me, although `fglgears` works on software rendering via`export LIBGL_ALWAYS_INDIRECT=1`.
+    For paraview, it is recommended to uninstall WSL's paraview by `sudo apt-get remove openfoam5paraview54`, to use windows version (make sure paraview is installed and on PAHT) for better 3D performance. paraview on WSL just does not work for me, although `glxgears` works on software rendering via`export LIBGL_ALWAYS_INDIRECT=1`.
 
 - MAC (not tested):
 
@@ -111,20 +111,14 @@ e.g, on POSIX system:
 
 `sudo ln -s (path_to_CFD)  (path_to_freecad)/Mod`
 
+### Qt5 and Python3 support will follow with FreeCAD's official release
 
-========================================
+There is a possibibilty that FreeCAD 0.18 will release a Python3 support, since python for Qt5 (pyside2) is generally available. There should be little work on this Cfd module to support Python3.
+
 
 ## Testing
 
-### Test FoamCaseBuider (only in Linux terminal mode)
-
-There is a test script to test installation of this FoamCaseBuilder, copy the file FoamCaseBuilder/TestBuilder.py to somewhere writtable and run
-
-`python2 pathtoFoamCaseBuilder/TestBuilder.py`
-
-This script will download a mesh file and build up a case without FreeCAD.
-
-### tutorial to build up case in FreeCAD
+### Tutorial to build up case in FreeCAD interactively
 
 Similar with FemWorkbench
 
@@ -158,18 +152,30 @@ Turbulence flow case setup is also usable, see (test_files/TestCaseKE.fcstd), bu
 Johan has built a case, see attachment [test procedure on freecad forum](http://forum.freecadweb.org/viewtopic.php?f=18&t=17322)
 
 
-========================================
+In 2018, I have completed a new feature, intergrate teh external Salome meshing tool into FreeCAD and OpenFOAM workflow.
+
+
+### Test FoamCaseBuider package (only in Linux terminal mode)
+
+There is a test script to test installation of this FoamCaseBuilder, copy the file FoamCaseBuilder/TestBuilder.py to somewhere writtable and run
+
+`python2 pathtoFoamCaseBuilder/TestBuilder.py`
+
+This script will download a mesh file and build up a case without FreeCAD.
+
+
 
 ## Roadmap
 
 ### see external [Roadmap.md](./Roadmap.md)
 
 
-=======================================
 
 ## How to contribute this module
 
-You can fork this module to add new CFD solver or fix bugs for this OpenFOAM solver.
+Cfd is still under testing and development, but we are planning to be merged into FreeCAD official.
+
+You can fork this Cfd module (stay with official stable FreeCAD release) to add new CFD solver or fix bugs for this OpenFOAM solver by send pull request.
 
 There is a ebook "Module developer's guide on FreeCAD source code", there are two chapters describing how Fem and Cfd modules are designed and implemented.
 
@@ -177,16 +183,5 @@ There is a ebook "Module developer's guide on FreeCAD source code", there are tw
 
 This is an outdated version for early preview:
 <https://www.iesensor.com/download/FreeCAD_Mod_Dev_Guide__20161224.pdf>
-
-## Collaboration strategy
-
-Cfd is still under testing and dev, it will not be ready to be included into official in the next 6 m.
-
-Currently route I can imagine:
-CFD workbench new developers fork official FreeCAD and my Cfd githttps://github.com/qingfengxia/Cfd.git.
-
-Cfd workbench depends on Fem for meshing and boundary(FemConstraint) and post-processing, most of them are coded in C++ so it is hard to split from Fem. If you need add feature on above, you branch FreeCAD official, not mime (but do let me know, pull request will only accepted if it is fully discussed on forum and reviewed by other dev like Bernd, me). see my ebook on how to pull request. Any other cfd python code, do pull request me (my Cfd.git) e.g. I developed vtk mesh and result import and export feature, git directly to official Fem workbench.
-
-User can install freecad-daily, and git update/install Cfd.git so all got updated code without pain for installation.
 
 

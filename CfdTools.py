@@ -223,6 +223,8 @@ def importGeometryAndMesh(geo_file, mesh_file):
         mesh_obj = CfdObjects.makeCfdMeshImported()
         mesh_obj.FemMesh = fem_mesh
         mesh_obj.Part = part_obj
+        mesh_obj.Imported = True
+        mesh_obj.ImportedMeshPath = mesh_file
         FreeCAD.Console.PrintMessage('The Part should have an FEM mesh imported')
         return mesh_obj
     else:
