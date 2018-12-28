@@ -1,0 +1,41 @@
+; Metadata template for FreeCAD addons obtained from:
+; https://gist.github.com/luzpaz/5e12362f0771eec9e6e82ef0e4d1ba56
+
+[general]
+name=Cfd
+email=qingfeng.xia@iesensor.com
+author=Qingfeng Xia, CfdOF team
+FreeCADMinimumVersion=0.17.11832
+description=Computational Fluid Dynamics (CFD) Workbench (OpenFOAM...)
+about=Simple workflow to get started with CFD analysis by OpenFOAM and possible other solver
+      Supports incompressible laminar and turbulent flow, basic thermal solvers,
+      meshing by integrated gmsh, any external meshing tool.
+version=
+
+; tracker can either link to a bugtracker or a forum thread link
+tracker=https://github.com/qingfengxia/Cfd
+repository=https://github.com/qingfengxia/Cfd
+license=LGPL
+
+; end of mandatory metadata
+
+; start of dependency section
+
+[dependencies]
+workbenches=Fem
+
+; specific python version we need to work with?
+python=
+
+; add 3rd party python libs
+pylibs=
+
+; add 3rd party optional python libs
+optionalpylibs=
+
+; add 3rd party applications
+3rdparty=gmsh
+
+; add dependencies of other FC addons
+FCaddon=Fem
+; end of dependency section
