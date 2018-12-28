@@ -59,6 +59,7 @@ from FoamCaseBuilder import BasicBuilder, ThermalBuilder
 from FoamCaseBuilder import supported_turbulence_models
 #from FoamCaseBuilder import supported_multiphase_models
 from FoamCaseBuilder import supported_radiation_models
+from FoamCaseBuilder import getVariableList
 from FoamCaseBuilder.utility import getFoamRuntime
 from FoamCaseBuilder.utility import reverseTranslatePath, translatePath, makeRunCommand
 from FoamCaseBuilder.utility import getFoamDir as detectFoamDir
@@ -188,7 +189,7 @@ def runFoamApplication(cmd, case):
     return proc.exitCode()
 
 '''
-############# misc from CfdFoam, yet needed by Cfd module ##################
+############# misc from CfdOF, yet needed by Cfd module ##################
 def normalise(v):
     import numpy
     mag = numpy.sqrt(sum(vi**2 for vi in v))
@@ -205,26 +206,6 @@ def cfdError(msg):
         QtGui.QMessageBox.critical(None, "CFDFoam Workbench", msg)
     else:
         FreeCAD.Console.PrintError(msg + "\n")
-
-
-def inputCheckAndStore(value, units, dictionary, key):
-    """ Store the numeric part of value (string or value) in dictionary[key] in the given units if compatible"""
-    # While the user is typing there will be parsing errors. Don't confuse the user by printing these -
-    # the validation icon will show an error.
-    try:
-        quantity = Units.Quantity(value).getValueAs(units)
-    except ValueError:
-        pass
-    else:
-        dictionary[key] = quantity.Value
-
-
-def indexOrDefault(list, findItem, defaultIndex):
-    """ Look for findItem in list, and return defaultIndex if not found """
-    try:
-        return list.index(findItem)
-    except ValueError:
-        return defaultIndex
 
 
 def copyFilesRec(src, dst, symlinks=False, ignore=None):
@@ -357,7 +338,7 @@ def checkCfdDependencies(term_print=True):
                             if term_print:
                                 print(cfmesh_msg)
 
-        # check for gnuplot python module
+        # check for gnuplot python module, this can be removed now, since plotting is done by matplotlib
         if term_print:
             print("Checking for gnuplot:")
         try:

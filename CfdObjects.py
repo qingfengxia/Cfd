@@ -80,6 +80,16 @@ def makeCfdFluidMaterial(name="FluidMaterial"):
     obj = makeMaterialFluid(FreeCAD.ActiveDocument, name)
     return obj
 
+def makeCfdFluidBoundary(name="CfdFluidBoundary"):
+    ''' makeCfdFoamBoundary([name]): Creates a advaned/raw boundary condition setup dict for OpenFOAM'''
+    # obj = FreeCAD.ActiveDocument.addObject("Fem::FeaturePython", name)
+    obj = FreeCAD.ActiveDocument.addObject("Part::FeaturePython", name)
+    import _CfdFluidBoundary
+    _CfdFluidBoundary._CfdFluidBoundary(obj)
+    if FreeCAD.GuiUp:
+        import _ViewProviderCfdFluidBoundary
+        _ViewProviderCfdFluidBoundary._ViewProviderCfdFluidBoundary(obj.ViewObject)
+    return obj
 
 def makeCfdResult(result_obj_name = "CfdResult"):
     doc = FreeCAD.ActiveDocument

@@ -190,7 +190,63 @@ def _getSolverName(settings):
     print(settings)
     raise Exception('No solver is deducted from solver settings')
 
-"""Base on tutorials of OpenFoam 4.0, but show works on OpenFOAM 3.0.x
+_VARIABLE_NAMES = {'U': "Velocity", "p": "Pressure",
+"T": "Temperature", 
+'alphat': "Thermal turbulence",
+'alphas': "phase fraction",
+'k': "Turbulence Intensity(k)", 'omega': "Turbulence omega", 'epsilon': "Turbulence epsilon",
+'p_rgh': "Pressure-rgh"}
+
+#no need for this
+_DEFAULT_VARIABLE_BOUNDARY = {'U': "Velocity", 
+"p": "Pressure",
+"T": "Temperature", 
+'alphat': "Thermal turbulence",
+'alphas': "phase fraction",
+'k': "Turbulence Intensity(k)", 
+'omega': "Turbulence omega", 
+'epsilon': "Turbulence epsilon",
+'p_rgh': "Pressure-rgh"}
+
+def getDefaultBoundarySettings(variable_list):
+    pass
+
+def getVariableList(solverSettings):
+        # density variable/field 'rho' will be automatically created by the compressible solver if not present
+        vars = ['p', 'U'] + getTurbulenceVariables(solverSettings)
+        if solverSettings['buoyant']:
+            vars.append("p_rgh")  # commpressible flow?
+        if solverSettings['dynamicMeshing']:
+            vars.append("pointDisplacement")  # only 6DoF motion solver needs this variable
+        #multiphase flow is not yet supported
+        return list(set(vars + _getThermalVariables(solverSettings)))
+
+def _getThermalVariables(solverSettings):
+    """ incompressible air flow must calc var 'T' and 'alphat' for turbulence flow
+    heatTransfer should consider buoyant effect, adding var 'p_rgh', even for buoyantBoussinesqSimpleFoam
+    radiationModel: G for P1 and fvDOM, IDefault for fvDOM, 
+    alphat = turbulence->nut()/Prt; // turbulent Prantl number is in general randomly chosen between 0.75 and 0.95
+    """
+    if 'radiationModel' in solverSettings:
+        radiationModel = solverSettings['radiationModel']
+    else:
+        radiationModel = 'noRadiation'
+    vars = []
+    if solverSettings['heatTransfering']:
+        if radiationModel == "noRadiation":
+            vars += ['T', 'p_rgh'] # p_rgh for buoyant solver far field pressure field
+        else:
+            print("Error: radiation is not implemented yet")
+            raise NotImplementedError()
+    else:
+        if solverSettings['compressible']:
+            vars += ['T']
+    if solverSettings['turbulenceModel'] not in set(['DNS', 'laminar', 'invisid']):
+        vars += ['alphat']
+    return vars
+
+
+"""Base on tutorials of OpenFoam 4.0, but should works on OpenFOAM 3.0.x to 6.x
 not all solver templates are tested
 search turbulence model by: `find $FOAM_TUTORIALS -name turbulenceProperties | xargs grep -l buoyantKEpsilon`
 """
@@ -414,13 +470,7 @@ class BasicBuilder(object):
             return template_path # case folder zipped with version number
 
     def getSolverCreatedVariables(self):
-        # density variable/field 'rho' will be automatically created if not present
-        vars = ['p', 'U'] + getTurbulenceVariables(self._solverSettings)
-        if self._solverSettings['buoyant']:
-            vars.append("p_rgh")
-        if self._solverSettings['dynamicMeshing']:
-            vars.append("pointDisplacement") #only 6DoF motion solver needs this variable
-        return set(vars)
+        return set(getVariableList(self._solverSettings))
 
     def _createInitVarables(self):
         """assuming a empty 0 folder, and all variable file will be created from scratch
@@ -913,7 +963,7 @@ class BasicBuilder(object):
         var_list = self._solverCreatedVariables
         for var in var_list:
             f = ParsedParameterFile(case + "/0/" + var)
-            if interface_type == "empty":
+            if interface_type == "empty" or interface_type == "2Dinerface":  # 2D case single layer extruded 3D emsh
                 f["boundaryField"]["frontAndBack"] = {}
                 f["boundaryField"]["frontAndBack"]["type"] = "empty"
                 # axis-sym 2D case, axis line is also empty type

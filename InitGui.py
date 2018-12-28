@@ -52,6 +52,7 @@ class CfdWorkbench(Workbench):
         import _CommandCfdSolver  # all solvers should be registered and selected in GUI fired by _CommandCfdSolver
         import _CommandCfdSolverFenics
         import _CommandCfdSolverControl
+        import _CommandCfdFluidBoundary
         #import _CommandCfdResult  # this function is implemented in File->Open Instead, or solver control task panel push button
 
         import _CommandCfdMeshGmshFromShape
@@ -74,7 +75,7 @@ class CfdWorkbench(Workbench):
 
         # Post Processing commands are located in FemWorkbench, implemented and imported in C++
         cmdlst = ['Cfd_Analysis',  'Cfd_AnalysisFromMesh', 'Cfd_Solver', 'Cfd_SolverFenics','FEM_MaterialFluid', 'Separator', # superseded 'Cfd_FluidMaterial',
-                        'FEM_ConstraintFluidBoundary', 'FEM_ConstraintSelfWeight', 'Separator', 
+                        'FEM_ConstraintFluidBoundary', 'Cfd_FluidBoundary', 'FEM_ConstraintSelfWeight', 'Separator', 
                         'Cfd_MeshGmshFromShape', # add parameter adjustment for 'FEM_MeshGmshFromShape',
                         'FEM_MeshBoundaryLayer', 'FEM_MeshRegion', 'FEM_MeshGroup','FEM_MeshPrintInfo', 'FEM_MeshDisplayInfo', 'FEM_MeshClear', "Separator",
                         'Cfd_SolverControl']

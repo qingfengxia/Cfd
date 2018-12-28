@@ -30,6 +30,7 @@ import os
 import os.path
 
 import FreeCAD
+from FreeCAD import Units
 import Fem
 
 #FIXME: for compatible with unsplit CfdTools.py
@@ -106,7 +107,8 @@ def get_module_path():
 ################################################
 
 def getActiveAnalysis():
-    # find the fem analysis object this fem_object belongs to
+    # find the fem analysis object this fem_object belongs to, 
+    # DEPRECATED: try to use `getParentAnalysisObject` as possible
     if FreeCAD.GuiUp:
         import FemGui
         if FemGui.getActiveAnalysis():
@@ -114,8 +116,9 @@ def getActiveAnalysis():
     else:  # assume the first Fem::FemAnalysis obj is active
         for o in FreeCAD.activeDocument().Objects:
             if o.Name.startswith("CfdAnalysis"):  # FIXME: is the name always starts with "CfdAnalysis"?
-                if obj in o.Group:
-                    return o
+                return o
+            if 'Group' not in o.PropertiesList: 
+                return o
         return None
 
 def getParentAnalysisObject(fem_object): 
@@ -205,7 +208,7 @@ def importGeometryAndMesh(geo_file, mesh_file):
         part_obj = None
 
     mesh_suffix = mesh_file.split(u'.')[-1]
-    if mesh_suffix not in [u'unv', u'inp', u'vtk', u'vtu', u'med']:
+    if mesh_suffix not in [u'unv', u'inp', u'vtk', u'vtu', u'med']:  # any type supported by FemMesh import
         FreeCAD.Console.PrintError(u"input file suffix: {}, is NOT supported for mesh importing".format(geo_suffix))
         return False
 
@@ -233,9 +236,15 @@ def importGeometryAndMesh(geo_file, mesh_file):
 
 ##################################################
 def getMaterial(analysis_object):
+    # DEPRECATED: get the first, should be the only material for sinple phase flow
     for i in analysis_object.Group:
         if i.isDerivedFrom('App::MaterialObjectPython'):
             return i
+
+def getMaterials(analysis_object):
+    # return list of all material, but which is the primary phase?
+    return [i for i in analysis_object.Group
+            if i.isDerivedFrom('App::MaterialObjectPython')]
 
 
 def getSolver(analysis_object):
@@ -276,6 +285,7 @@ def getMesh(analysis_object):  # FIXME, deprecate this !
     # python will return None by default, so check None outside
 
 def getMeshObject(analysis_object):
+    # OUTDATED, replaced with CfdOF fork if cartMesh will be merged
     isPresent = False
     meshObj = []
     if analysis_object:
@@ -340,6 +350,19 @@ def convertQuantityToMKS(input, quantity_type, unit_system="MKS"):
     """
     return input
 
+
+def inputCheckAndStore(value, units, dictionary, key):
+    """ Store the numeric part of value (string or value) in dictionary[key] in the given units if compatible"""
+    # While the user is typing there will be parsing errors. Don't confuse the user by printing these -
+    # the validation icon will show an error.
+    try:
+        quantity = Units.Quantity(value).getValueAs(units)
+    except ValueError:
+        pass
+    else:
+        dictionary[key] = quantity.Value
+
+
 def setInputFieldQuantity(inputField, quantity):
     """ Set the quantity (quantity object or unlocalised string) into the inputField correctly """
     # Must set in the correctly localised value as the user would enter it.
@@ -348,8 +371,20 @@ def setInputFieldQuantity(inputField, quantity):
     # this rather roundabout way involving the UserString of Quantity
     q = Units.Quantity(quantity)
     # Avoid any truncation
-    q.Format = (12, 'e')
+    if isinstance(q.Format, tuple):  # Backward compat
+        q.Format = (12, 'e')
+    else:
+        q.Format = {'Precision': 12, 'NumberFormat': 'e', 'Denominator': q.Format['Denominator']}
     inputField.setProperty("quantityString", q.UserString)
+
+
+def indexOrDefault(list, findItem, defaultIndex):
+    """ Look for findItem in list, and return defaultIndex if not found """
+    try:
+        return list.index(findItem)
+    except ValueError:
+        return defaultIndex
+
 
 # This is taken from hide_parts_constraints_show_meshes which was removed from FemCommands for some reason
 def hide_parts_show_meshes():
