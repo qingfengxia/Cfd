@@ -159,26 +159,34 @@ class CfdCaseWriterFoam:
         bc_settings = []
         for bc in self.bc_group:
             #FreeCAD.Console.PrintMessage("write boundary condition: {}\n".format(bc.Label))
-            assert bc.isDerivedFrom("Fem::ConstraintFluidBoundary")
-            # bc.Name is used, instead of bc.Label (shown to users in GUI) to match unvMeshConversion by FemGmshTool.py
-            bc_dict = {'name': bc.Name, "type": bc.BoundaryType, "subtype": bc.Subtype, "value": bc.BoundaryValue}
-            if bc_dict['type'] == 'inlet' and bc_dict['subtype'] == 'uniformVelocity':
-                bc_dict['value'] = [abs(v) * bc_dict['value'] for v in tuple(bc.DirectionVector)]
-                # fixme: App::PropertyVector should be normalized to unit length
-            if self.solver_obj.HeatTransfering:
-                bc_dict['thermalSettings'] = {"subtype": bc.ThermalBoundaryType,
-                                                "temperature": bc.TemperatureValue,
-                                                "heatFlux": bc.HeatFluxValue,
-                                                "HTC": bc.HTCoeffValue}
-            bc_dict['turbulenceSettings'] = {'name': self.solver_obj.TurbulenceModel}
-            # ["Intensity&DissipationRate","Intensity&LengthScale","Intensity&ViscosityRatio", "Intensity&HydraulicDiameter"]
-            if self.solver_obj.TurbulenceModel not in set(["laminar", "invisid", "DNS"]):
-                bc_dict['turbulenceSettings'] = {"name": self.solver_obj.TurbulenceModel,
-                                                "specification": bc.TurbulenceSpecification,
-                                                "intensityValue": bc.TurbulentIntensityValue,
-                                                "lengthValue": bc.TurbulentLengthValue
-                                                }
-
+            if bc.isDerivedFrom("Fem::ConstraintFluidBoundary"):
+                # bc.Name is used, instead of bc.Label (shown to users in GUI) to match unvMeshConversion by FemGmshTool.py
+                bc_dict = {'name': bc.Name, "type": bc.BoundaryType, "subtype": bc.Subtype, "value": bc.BoundaryValue}
+                #
+                if bc_dict['type'] == 'inlet' and bc_dict['subtype'] == 'uniformVelocity':
+                    bc_dict['value'] = [abs(v) * bc_dict['value'] for v in tuple(bc.DirectionVector)]
+                    # fixme: App::PropertyVector should be normalized to unit length
+                if self.solver_obj.HeatTransfering:
+                    bc_dict['thermalSettings'] = {"subtype": bc.ThermalBoundaryType,
+                                                    "temperature": bc.TemperatureValue,
+                                                    "heatFlux": bc.HeatFluxValue,
+                                                    "HTC": bc.HTCoeffValue}
+                bc_dict['turbulenceSettings'] = {'name': self.solver_obj.TurbulenceModel}
+                # ["Intensity&DissipationRate","Intensity&LengthScale","Intensity&ViscosityRatio", "Intensity&HydraulicDiameter"]
+                if self.solver_obj.TurbulenceModel not in set(["laminar", "invisid", "DNS"]):
+                    bc_dict['turbulenceSettings'] = {"name": self.solver_obj.TurbulenceModel,
+                                                    "specification": bc.TurbulenceSpecification,
+                                                    "intensityValue": bc.TurbulentIntensityValue,
+                                                    "lengthValue": bc.TurbulentLengthValue
+                                                    }
+            elif bc.Proxy.Type == "CfdFluidBoundary":  # raw dict is provided as customised boundary patch
+                #bc_dict  = bc.BoundarySettings
+                #bc_dict[] = bc.FoamBoundarySettings
+                #only basic variable UpT must be provided as raw dict, while turbulent setup may be derived from BoundaryType and SubType
+                pass
+                # CfdOF's function is almost same, but organization is different
+            else:
+                FreeCAD.Console.PrintError("boundary condition object '{}' is not supported\n".format(bc.Label))
             bc_settings.append(bc_dict)
         # FIXME: init should be done in bulder, or by initializer class
         self.builder.internalFields = {'p': 0.0, 'U': (0, 0, 0.001)}  # must set a nonzero for velocity field to srart withour regarded converged

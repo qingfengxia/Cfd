@@ -31,9 +31,40 @@ import FreeCAD
 import FreeCADGui
 import FemGui
 
+import _TaskPanelCaeMesherGmsh
+
+import PySide.QtGui as QtGui
+class _TaskPanelCaeMeshImported:
+    def __init__(self, obj):
+        widget2 = QtGui.QWidget()
+        widget2.setWindowTitle("imported mesh setup")
+        text = QtGui.QLabel("Currently taskpanel is not empty, edit the property in property editor",widget2)
+        self.form = widget2
+
+    def getStandardButtons(self):
+        return int(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Apply | QtGui.QDialogButtonBox.Cancel)
+        # show a OK, a apply and a Cancel button
+        # def reject() is called on Cancel button
+        # def clicked(self, button) is needed, to access the apply button
+
+    def accept(self):
+        self.set_mesh_params()
+        FreeCADGui.ActiveDocument.resetEdit()
+        FreeCAD.ActiveDocument.recompute()
+        return True
+
+    def reject(self):
+        FreeCADGui.ActiveDocument.resetEdit()
+        FreeCAD.ActiveDocument.recompute()
+        return True
+
+    def clicked(self, button):
+        if button == QtGui.QDialogButtonBox.Apply:
+            #could reload mesh if necessary
+            pass
 
 class _ViewProviderCaeMesh:
-    "A View Provider for the CaeMesher object"
+    "A View Provider for all CaeMesher object"
     def __init__(self, vobj):
         vobj.Proxy = self
 
@@ -54,8 +85,9 @@ class _ViewProviderCaeMesh:
         self.ViewObject.show()  # show the mesh on edit if it is hided
 
         if vobj.Object.Proxy.Type == "FemMeshGmsh":  # must be of this type to hole meshgroup, boundarylayer
-            import _TaskPanelCaeMesherGmsh
             taskd = _TaskPanelCaeMesherGmsh._TaskPanelCaeMesherGmsh(self.Object)
+        elif vobj.Object.Proxy.Type == "CaeMeshImported":  # taskpanel could be added to update mesh
+            taskd = _TaskPanelCaeMeshImported(self.Object)
         else:
             FreeCAD.Console.PrintError('mesh object {} is not recognized'.format(str(vobj.Object)))
 

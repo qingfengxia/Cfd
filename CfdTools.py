@@ -28,14 +28,16 @@ utility functions like mesh exporting, shared by any CFD solver
 from __future__ import print_function
 import os
 import os.path
+import sys
+if sys.version_info[0] == 3:
+    unicode = str
 
 import FreeCAD
 from FreeCAD import Units
 import Fem
 
-#FIXME: for compatible with unsplit CfdTools.py
-#from CfdFoamTools import *
-
+# register all solver
+SOLVER_LIST = ['OpenFOAM', 'Fenics']
 
 def checkFreeCADVersion(term_print=True):
     message = ""
@@ -90,19 +92,17 @@ def setupWorkingDir(solver_object):
     return wd
 
 def getModulePath():
-    return get_module_path()
-
-# Figure out where the module is installed - in the app's module directory or the
-# user's app data folder (the second overrides the first).
-def get_module_path():
     """returns the current Cfd module path."""
     import os
     user_mod_path = os.path.join(FreeCAD.ConfigGet("UserAppData"), "Mod/Cfd")
     app_mod_path = os.path.join(FreeCAD.ConfigGet("AppHomePath"), "Mod/Cfd")
-    if os.path.exists(user_mod_path):
+    if os.path.exists(user_mod_path): # user's app data folder (the second overrides the first).
         return user_mod_path
     else:
         return app_mod_path
+
+def get_module_path():
+    return getModulePath()
 
 ################################################
 
@@ -141,8 +141,15 @@ if FreeCAD.GuiUp:
                 return i
         return None
 
+    def selectSolver():
+        from FoamCaseBuilder import ChoiceDialog
+        ret = ChoiceDialog.choose(SOLVER_LIST, True) # second parameter: within_qtloop
+        return ret[0]
+
     ################################################
-    def createAnalysis(solver_name):
+    def createAnalysis(solver_name = None):
+        if solver_name == None:
+            solver_name = selectSolver()
         FreeCAD.ActiveDocument.openTransaction("Create CFD Analysis")
         FreeCADGui.addModule("FemGui")
         FreeCADGui.addModule("CfdObjects")
@@ -153,7 +160,9 @@ if FreeCAD.GuiUp:
         FreeCADGui.doCommand("FemGui.getActiveAnalysis().addObject(CfdObjects.makeCfdSolver('{}')".format(solver_name) + ")")
         FreeCADGui.doCommand("FemGui.getActiveAnalysis().addObject(CfdObjects.makeCfdFluidMaterial('FluidMaterial'))")
 
-    def createSolver(solver_name):
+    def createSolver(solver_name = None):
+        if solver_name == None:
+            solver_name = selectSolver()
         FreeCAD.ActiveDocument.openTransaction("Create Solver")
         FreeCADGui.addModule("FemGui")
         FreeCADGui.addModule("CfdObjects")
@@ -191,11 +200,11 @@ def importGeometryAndMesh(geo_file, mesh_file):
     # caller guarant input parameter is valid path and type, each is a tuple of (filename, suffix)
     docname = FreeCAD.ActiveDocument.Name
     if geo_file:
-        if os.path.exists(geo_file):
+        if isinstance(geo_file, (str, unicode)) and os.path.exists(geo_file):
             geo_suffix = geo_file.split(u'.')[-1]
-            if geo_suffix not in [u'iges', u'igs', u'step', u'stp', u'brep']:
-                FreeCAD.Console.PrintError(u"only step, brep and iges geometry files are supported, while input file suffix is: {}".format(geo_suffix))
-                return False
+            #if geo_suffix not in [u'iges', u'igs', u'step', u'stp', u'brep', u'fcstd']:  # should be done in caller
+            #    FreeCAD.Console.PrintError(u"only step, brep, fcstd and iges geometry files are supported, while input file suffix is: {}".format(geo_suffix))
+            #    return False
             # there must be a document to import objects
             #FreeCADGui.addModule("Part")
             #FreeCADGui.doCommand("Part.insert(u'" + geo_file + "','" + docname + "')")
@@ -204,24 +213,20 @@ def importGeometryAndMesh(geo_file, mesh_file):
             part_obj = FreeCAD.ActiveDocument.ActiveObject
         elif geo_file.isDerivedFrom("Part::Feature"):
             part_obj = geo_file
-    else:
-        part_obj = None
+        else:
+            FreeCAD.Console.PrintError("part should be provided as a valid file path or Part::Feature dervied Object")
 
     mesh_suffix = mesh_file.split(u'.')[-1]
-    if mesh_suffix not in [u'unv', u'inp', u'vtk', u'vtu', u'med']:  # any type supported by FemMesh import
-        FreeCAD.Console.PrintError(u"input file suffix: {}, is NOT supported for mesh importing".format(geo_suffix))
-        return False
+    #if mesh_suffix not in [u'unv', u'inp', u'vtk', u'vtu', u'med']:  # any type supported by FemMesh import
+    #    FreeCAD.Console.PrintError(u"input file suffix: {}, is NOT supported for mesh importing".format(geo_suffix))
+    #    return False
 
     import Fem
     fem_mesh = Fem.read(mesh_file)
-    #FreeCADGui.addModule("Fem")
-    #FreeCADGui.doCommand("Fem.read(u'" + mesh_file + "')")
     # Fem.insert() gives <Fem::FemMeshObject object> can not add dynamic property
 
-    # mesh must NOT been scaled to metre, or using LengthUnit property
+    # mesh must NOT been scaled to metre, or using LengthUnit property!
     if fem_mesh: #mesh_obj.isDerivedFrom("Part::FeaturePython"):
-        #FreeCADGui.addModule("CfdObjects")  # FemGmsh has been adjusted for CFD like only first order element
-        #FreeCADGui.doCommand("CfdObjects.makeCfdMeshImported('" + mesh_obj_name + "')")
         import CfdObjects
         mesh_obj = CfdObjects.makeCfdMeshImported()
         mesh_obj.FemMesh = fem_mesh
@@ -232,6 +237,7 @@ def importGeometryAndMesh(geo_file, mesh_file):
         return mesh_obj
     else:
         FreeCAD.Console.PrintError('Mesh importing failed for {}'.format(mesh_file))
+        return False
 
 
 ##################################################

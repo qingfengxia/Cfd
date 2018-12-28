@@ -68,10 +68,10 @@ def makeCfdMeshImported(name="ImportedCFDMesh"):
     obj = doc.addObject("Fem::FemMeshObjectPython", name)
     from _CaeMeshImported import _CaeMeshImported
     _CaeMeshImported(obj)
-    #PyObjects._FemMeshImported._FemMeshImported(obj)
-    #if FreeCAD.GuiUp:  # not needed
-    #    import PyGui._ViewProviderFemMeshGmsh
-    #    PyGui._ViewProviderFemMeshGmsh._ViewProviderFemMeshGmsh(obj.ViewObject)
+
+    if FreeCAD.GuiUp:
+        from _ViewProviderCaeMesh import _ViewProviderCaeMesh
+        _ViewProviderCaeMesh(obj.ViewObject)
     return obj
 
 def makeCfdFluidMaterial(name="FluidMaterial"):

@@ -44,8 +44,7 @@ class _CommandCfdAnalysis(CfdCommand):
 
     def Activated(self):
         import CfdTools
-        solver_name = 'OpenFOAM'
-        CfdTools.createAnalysis(solver_name)
+        CfdTools.createAnalysis()
         sel = FreeCADGui.Selection.getSelection()
         if (len(sel) == 1):
             if(sel[0].isDerivedFrom("Fem::FemMeshObject")):

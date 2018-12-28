@@ -43,31 +43,34 @@ class _CommandCfdAnalysisFromMesh(CfdCommand):
         super(_CommandCfdAnalysisFromMesh, self).__init__()
         icon_path = os.path.join(CfdTools.getModulePath(), "Resources", "icons", "cfd-analysis-from-mesh.svg")
         self.resources = {'Pixmap': icon_path,
-                          'MenuText': QtCore.QT_TRANSLATE_NOOP("Cfd_AnalysisFromMesh", "Analysis container"),
-                          'Accel': "N, I",
+                          'MenuText': QtCore.QT_TRANSLATE_NOOP("Cfd_AnalysisFromMesh", "Analysis from external mesh"),
+                          'Accel': "N, E",
                           'ToolTip': QtCore.QT_TRANSLATE_NOOP("Cfd_AnalysisFromMesh", "Creates a analysis container from existing geometry and mesh files")}
         self.is_active = 'with_document'
 
     def Activated(self):
-        sel = FreeCADGui.Selection.getSelection()
-        if (len(sel) == 1) and (sel[0].isDerivedFrom("Part::Feature")):
-            # using existing part_feature, no need to import geometry, but get obj as link
-            geo_file = sel[0]
-        else:
-            filters = u"BREP (*.brep *.brp);;STEP (*.step *.stp);;IGES (*.iges *.igs)"
-            geo_file = QFileDialog.getOpenFileName(None, u"Open geometry files", u"./", filters)
-        FreeCADGui.Selection.clearSelection()
-
         filters = u"IDES mesh (*.unv);;Med mesh(*.med);;VTK mesh (*.vtk *.vtu)"
         mesh_file = QFileDialog.getOpenFileName(None, u"Open mesh files", u"./", filters)
+        mesh_file = mesh_file[0]
         # why return a tuple of filename and selectedfilter
 
         import CfdTools
-        solver_name = 'OpenFOAM'
-        CfdTools.createAnalysis(solver_name)
+        if not CfdTools.getActiveAnalysis():
+            CfdTools.createAnalysis()
 
         FreeCADGui.addModule("CfdTools")
-        FreeCADGui.doCommand("CfdTools.importGeometryAndMesh(u'{}', u'{}')".format(geo_file[0], mesh_file[0]))
+        sel = FreeCADGui.Selection.getSelection()
+        if (len(sel) == 1) and (sel[0].isDerivedFrom("Part::Feature")):
+            # using existing part_feature, no need to import geometry, but get obj as link
+            geo_obj = sel[0]
+            CfdTools.importGeometryAndMesh(geo_obj, mesh_file)  #Todo: macro recording is yet support
+        else:
+            filters = u"BREP (*.brep *.brp);;STEP (*.step *.stp);;IGES (*.iges *.igs);; FcStd (*.fcstd)"
+            geo_file = QFileDialog.getOpenFileName(None, u"Open geometry files", u"./", filters)
+            geo_file = geo_file[0]
+            FreeCADGui.doCommand("CfdTools.importGeometryAndMesh(u'{}', u'{}')".format(geo_file, mesh_file))
+        FreeCADGui.Selection.clearSelection()
+
         FreeCADGui.addModule("FemGui")
         #if FemGui.getActiveAnalysis():  # besides addModule, FemGui need to be imported
         FreeCADGui.doCommand("FemGui.getActiveAnalysis().addObject(App.ActiveDocument.ActiveObject)")
