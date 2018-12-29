@@ -60,15 +60,18 @@ class CfdSolverFoam(CfdSolver.CfdSolver):
         obj.TurbulenceModel = list(supported_turbulence_models)
         obj.TurbulenceModel = "laminar"
 
+        # CfdPhysicsSelection
+        obj.addProperty("App::PropertyBool", "Porous", "CFD",
+                        "Porous material model enabled or not", True)  # outdated,  using PorousRegion object
         obj.addProperty("App::PropertyBool", "Compressible", "CFD",
                         "Compressible air or Incompressible like liquid, including temperature field", True)
-        # DynanicMeshing, MultiPhaseModel, Combustion will not be implemented for model setup complexity
-        obj.addProperty("App::PropertyBool", "DynamicMeshing", "CFD",
-                        "mobile/moving meshing function", True)
         obj.addProperty("App::PropertyBool", "Transonic", "CFD",
                         "to support supersonic compressible flow which has specail boundary condition", True)
         obj.addProperty("App::PropertyBool", "NonNewtonian", "CFD",
                         "fluid property, strain-rate and stress constition, water and air are Newtonion", True)
+        # DynanicMeshing, MultiPhaseModel, Combustion will not be implemented for model setup complexity
+        obj.addProperty("App::PropertyBool", "DynamicMeshing", "CFD",
+                        "mobile/moving meshing function", True)
         '''
         obj.addProperty("App::PropertyEnumeration", "MultiPhaseModel", "CFD",
                         "Mixing, VoF, DiscreteParticleModel")

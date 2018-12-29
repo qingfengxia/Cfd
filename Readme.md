@@ -38,14 +38,16 @@ missing features:
 - dropped PyFoam dependency (I have a plan and it is half done)
 - porous model, multiphase model (I will not implement it)
 - support windows platforms by BlueCFD  ( I support windows 10 only with WSL)
-- see also the CfdOF github
+- see more at CfdOF github
 
 added features:   
 
 - windows 10 WSL platform support
-- import external mesh (e.g. mesh generated from Salome)
-- Fenincs FEM solver
+- create new analysis from mesh file generated from external meshing tool (e.g. mesh generated from Salome)
+  see ![video demo](http://www.iesensor.com/blog/wp-content/uploads/2018/12/FreeCAD_CFD_using_external_mesh.webm)
+- Fenincs FEM solver, initial demonstration of support other 
 - boundary layer supported via gmsh
+- FoamBoundaryWidget class to provide raw dict to override "CFdFluidBoundary" setting
 
 
 ### Limitation:

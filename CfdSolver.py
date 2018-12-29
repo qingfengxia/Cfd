@@ -41,9 +41,6 @@ class CfdSolver(object):
         if "SolverName" not in obj.PropertiesList:
             obj.addProperty("App::PropertyString", "SolverName", "Solver",
                             "unique solver name to identify the solver", True)
-            obj.addProperty("App::PropertyEnumeration", "PhysicalDomain", "Solver",
-                            "unique solver name to identify the solver")
-            obj.PhysicalDomain = supported_physical_domains
             # solver independent setup in solver control task panel
             obj.addProperty("App::PropertyPath", "WorkingDir", "Solver",
                             "Solver process is run in this directory")
@@ -54,24 +51,35 @@ class CfdSolver(object):
             obj.addProperty("App::PropertyBool", "ResultObtained", "Solver",
                             "result of analysis has been obtained, i.e. case setup is fine", True)
 
-            obj.PhysicalDomain = 'Fluidic'
             import CfdTools
             obj.WorkingDir = CfdTools.getTempWorkingDir()
             obj.InputCaseName = 'TestCase'
 
-        # other properties, supported by any CFD solver
+        # other properties, supported by any CFD solver, corresponding to physical_model of CfdOF fork
+        obj.addProperty("App::PropertyEnumeration", "PhysicalDomain", "Solver",
+                        "unique solver name to identify the solver")
+        obj.PhysicalDomain = supported_physical_domains
+        obj.PhysicalDomain = 'Fluidic'
+
+        # TODO: this should be treated as a body source
         obj.addProperty("App::PropertyVector", "Gravity", "CFD",
                             "gravity and other body accel")  # outdated, using FemConstraintSelfWeight object
-        obj.addProperty("App::PropertyBool", "Porous", "CFD",
-                        "Porous material model enabled or not", True)  # outdated,  using PorousRegion object
 
         # API: addProperty(self,type,name='',group='',doc='',attr=0,readonly=False,hidden=False)
+        # CfdOF: split this property into TurbulenceModel(RANSModel) and Turbulence
+        if 'Turbulence' not in obj.PropertiesList:
+            obj.addProperty("App::PropertyEnumeration", "Turbulence", "Physics modelling",
+                        "Type of major turbulence modelling group")
+            obj.Turbulence = ['Inviscid', 'Laminar', 'RANS', 'LES', 'DNS']
+            obj.Turbulence = 'Laminar'
+        # todo: builder and write are not adapted to use this 
         if "TurbulenceModel" not in obj.PropertiesList:
             obj.addProperty("App::PropertyEnumeration", "TurbulenceModel", "CFD",
-                            "Laminar,KE,KW,LES,etc")
+                            "specific turbulence model group,etc")
             obj.TurbulenceModel = ['laminar', 'invisic', 'kEpsilon', 'kOmega']
             obj.TurbulenceModel = "laminar"
 
+        # CfdOF: 'Thermal'  [None, Buoyant, ...]
         if "HeatTransfering" not in obj.PropertiesList:
             # heat transfer group, conjudate and radition is not activated yet
             obj.addProperty("App::PropertyBool", "HeatTransfering", "HeatTransfer",
@@ -88,15 +96,15 @@ class CfdSolver(object):
 
         if "Transient" not in obj.PropertiesList:
             # Transient solver related: CurrentTime TimeStep StartTime, StopTime, not activated yet!
-            obj.addProperty("App::PropertyBool", "Transient", "Transient",
+            obj.addProperty("App::PropertyBool", "Transient", "Time",
                             "Static or transient analysis", True)
-            obj.addProperty("App::PropertyFloat", "StartTime", "Transient",
+            obj.addProperty("App::PropertyFloat", "StartTime", "Time",
                             "Time settings for transient analysis", True)
-            obj.addProperty("App::PropertyFloat", "EndTime", "Transient",
+            obj.addProperty("App::PropertyFloat", "EndTime", "Time",
                             "Time settings for transient analysis", True)
-            obj.addProperty("App::PropertyFloat", "TimeStep", "Transient",
+            obj.addProperty("App::PropertyFloat", "TimeStep", "Time",
                             "Time step (second) for transient analysis", True)
-            obj.addProperty("App::PropertyFloat", "WriteInterval", "Transient",
+            obj.addProperty("App::PropertyFloat", "WriteInterval", "Time",
                             "WriteInterval (second) for transient analysis", True)
 
     ############ standard FeutureT methods ##########

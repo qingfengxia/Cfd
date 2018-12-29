@@ -109,10 +109,13 @@ see more at <https://github.com/jaheyns/CfdFoam>
 - installation guide and tutorial on Win10 (output from WSL can be piped to Windows process in 1803)
 - check if case path with space and utf8 char works in FoamCaseBuilder
 - make runFoamCommand() work in Bash on windows 10 (WSL)
-
 - 2 freecad std test files with CFD case setup, put into Cfd/Example/ or std path of freecad
 - matplotlib for residual plot
 
+#### my progress in Phase VI (2018)
+- create new analysis from mesh file generated from external meshing tool
+- ChoiceDialog to select solver
+- TaskPanel to provide raw dict to override "CFdFluidBoundary" setting
 
 ======================================
 
@@ -129,7 +132,7 @@ I enter maintain stage for this Cfd module, I will not develop new features, but
 #### FEM workbench
 
 - 2D meshing support: unv currently only deal with 3D, but possible to support 2D
-- general initalizer class, added into solver object
+- general initalizer bodysource class, added into solver object
 - refactor FemSelfWeight as a general body force constraint
 
 #### turbulence and heat transfering

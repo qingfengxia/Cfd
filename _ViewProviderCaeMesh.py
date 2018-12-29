@@ -167,7 +167,10 @@ class _ViewProviderCaeMesh:
         return None
 
     def claimChildren(self):
-        return (self.Object.MeshRegionList + self.Object.MeshGroupList + self.Object.MeshBoundaryLayerList)
+        if self.ViewObject.Object.Proxy.Type == "FemMeshGmsh": 
+            return (self.Object.MeshRegionList + self.Object.MeshGroupList + self.Object.MeshBoundaryLayerList)
+        else:
+            return []
 
     def onDelete(self, feature, subelements):
         try:

@@ -142,7 +142,6 @@ class _TaskPanelCfdFluidBoundary:
         # geometry selection widget, only face is needed as boundary
         self.selectionWidget = FemSelectionWidgets.BoundarySelector()
         self.selectionWidget.setReferences(obj.References)
-        GeometryElementsSelection(obj.References, ['Face'], False)
         # check references, has to be after initialisation of selectionWidget
         try:
             self.selectionWidget.has_equal_references_shape_types()
