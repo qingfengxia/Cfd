@@ -101,8 +101,23 @@ def getModulePath():
     else:
         return app_mod_path
 
-def get_module_path():
+"""
+def get_module_path():  # just for compatible
     return getModulePath()
+
+"""
+
+def isPlanar(shape):
+    """ Return whether the shape is a planar face """
+    n = shape.normalAt(0.5, 0.5)
+    if len(shape.Vertexes) <= 3:
+        return True
+    for v in shape.Vertexes[1:]:
+        t = v.Point - shape.Vertexes[0].Point
+        c = t.dot(n)
+        if c / t.Length > 1e-8:
+            return False
+    return True
 
 ################################################
 
@@ -336,7 +351,7 @@ def getPartDimension(part_obj):
         FreeCAD.Console.PrintError('Could not retrive Dimension from shape type. Please choose dimension.')
     return dimension
 
-def isSolidMesh(fem_mesh):
+def isSolidMesh(fem_mesh):  # it is not a good name -> hasSolidMesh
     if fem_mesh.VolumeCount > 0:  # solid mesh
         return True
 

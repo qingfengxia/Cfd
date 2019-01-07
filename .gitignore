@@ -3,4 +3,5 @@ FoamCaseBuilder/*.pyc
 FoamCaseBuilder/__pycache__
 FoamCaseBuilder/PlyParse*
 .hidden
+*.fcstd1
 

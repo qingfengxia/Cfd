@@ -59,33 +59,12 @@ class _CfdFluidBoundary(PartFeature):
 
         # Default settings, should be consistant to FemFluidBoundaryConstraint, and also CfdOF's CfdFluidBoundary class
         obj.References = []
-        obj.BoundarySettings = {'BoundaryType': '',
-                                'BoundarySubtype': '',
-                                'VelocityIsCartesian': True,
-                                'Ux': 0.0,
-                                'Uy': 0.0,
-                                'Uz': 0.0,
-                                'VelocityMag': 0.0,
-                                'DirectionFace': '',
-                                'ReverseNormal': False,
-                                'Pressure': 0.0,
-                                'SlipRatio': 0.0,
-                                'VolFlowRate': 0.0,
-                                'MassFlowRate': 0.0,
-                                'PorousBaffleMethod': 0,
-                                'PressureDropCoeff': 0.0,
-                                'ScreenWireDiameter': 0.0,
-                                'ScreenSpacing': 0.0,
-                                'ThermalBoundaryType': 'zeroGradient',
-                                'Temperature': 293,
-                                'HeatFlux': 0,
-                                'HeatTransferCoeff': 0,
-                                'TurbulenceInletSpecification': 'intensityAndLengthScale',
-                                'TurbulentKineticEnergy': 0.01,
-                                'SpecificDissipationRate': 1,
-                                'TurbulenceIntensity': 0.1,
-                                'TurbulenceLengthScale': 0.1,
-                                'alphas': {}}
+        obj.BoundarySettings = { 'BoundaryType': 'wall',
+                                                'BoundarySubtype': 'fixed',
+                                                'BoundaryValue': '',
+                                                'ThermalBoundarySettings': {},
+                                                'TurbulenceSettings': {},
+                        }
         # new feature
         obj.FoamBoundarySettings = {}
 
@@ -95,8 +74,9 @@ class _CfdFluidBoundary(PartFeature):
         doc = FreeCAD.getDocument(docName)
         listOfFaces = []
         for i in range(len(obj.References)):
-            ref = obj.References[i]
-            selection_object = doc.getObject(ref[0])
+            ref = obj.References[i]  # tuple of (type, subtypeNamesTuple)
+            #selection_object = doc.getObject(ref[0])
+            selection_object = ref[0]
             if selection_object is not None:  # May have been deleted
                 try:
                     listOfFaces.append(selection_object.Shape.getElement(ref[1]))
@@ -121,7 +101,7 @@ class _CfdFluidBoundary(PartFeature):
                 vobj.ShapeColor = (1.0, 0.0, 0.0)  # Red
             elif obj.BoundarySettings['BoundaryType'] == 'open' or obj.BoundarySettings['BoundaryType'] == 'farField':
                 vobj.ShapeColor = (0.0, 1.0, 1.0)  # Cyan
-            elif (obj.BoundarySettings['BoundaryType'] == 'constraint') or \
+            elif (obj.BoundarySettings['BoundaryType'] == 'interface') or \
                  (obj.BoundarySettings['BoundaryType'] == 'baffle'):
                 vobj.ShapeColor = (0.5, 0.0, 1.0)  # Purple
             else:

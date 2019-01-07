@@ -53,7 +53,7 @@ class _CommandCfdFluidBoundary(CfdCommand):
         FreeCADGui.ActiveDocument.setEdit(FreeCAD.ActiveDocument.ActiveObject.Name)
 
     def GetResources(self):
-        icon_path = os.path.join(CfdTools.get_module_path(), "Resources", "icons", "cfd-foam-boundary.svg")
+        icon_path = os.path.join(CfdTools.getModulePath(), "Resources", "icons", "cfd-foam-boundary.svg")
         return {
             'Pixmap': icon_path,
             'MenuText': QtCore.QT_TRANSLATE_NOOP("Cfd_FluidBoundary", "fluid boundary"),

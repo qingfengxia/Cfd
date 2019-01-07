@@ -59,7 +59,7 @@ class _ViewProviderCfdFluidBoundary:
         vobj.Proxy = self
 
     def getIcon(self):
-        icon_path = os.path.join(CfdTools.get_module_path(), "Resources", "icons", "cfd-foam-boundary.svg")
+        icon_path = os.path.join(CfdTools.getModulePath(), "Resources", "icons", "cfd-foam-boundary.svg")
         return icon_path
 
     def attach(self, vobj):
@@ -139,12 +139,12 @@ class _TaskPanelCfdFluidBoundary:
         self.boundaryWidget = CfdBoundaryWidget(obj, None, solver_obj, material_objs)
         # fill the table in each variable tab, saved from the previous setup, existing case if BC name, done in each widget
 
-        # geometry selection widget, only face is needed as boundary
-        self.selectionWidget = FemSelectionWidgets.BoundarySelector()
-        self.selectionWidget.setReferences(obj.References)
+        # geometry selection widget, only face is needed as boundary for CFD
+        # GeometryElementsSelection(ref, eltypes=[], multigeom=True)
+        self.selectionWidget = FemSelectionWidgets.GeometryElementsSelection(obj.References, ['Face'], False)
         # check references, has to be after initialisation of selectionWidget
         try:
-            self.selectionWidget.has_equal_references_shape_types()
+            self.selectionWidget.has_equal_references_shape_types() # boundarySelector has no such method
         except:
             RuntimeError('this function only works for FreeCAD 0.18')
 
@@ -155,12 +155,13 @@ class _TaskPanelCfdFluidBoundary:
             solverSettings = CfdTools.getSolverSettings(solver_obj)  # physical_model
             variable_list = getVariableList(solverSettings)
 
-            # build a parameterTabWidget, with each tab has a tableView
             # TODO: if boundary_settings is empty dict, default setting for each variable could be provided
-            if not self.obj.FoamBoundarySettings:
-                self.foam_boundary_conditions = {'U': {"key": "value"}, 'p':{"key": "value"}}  # {varible: bc_dict, ...}
-            else:
+            if "FoamBoundarySettings" in self.obj.PropertiesList and self.obj.FoamBoundarySettings:
                 self.foam_boundary_conditions = self.obj.FoamBoundarySettings
+            else:
+                print("debug print: variable_list", variable_list)
+                self.foam_boundary_conditions = {var : {} for var in variable_list}  # {varible: bc_dict, ...}
+
             from FoamCaseBuilder.FoamBoundaryWidget import FoamBoundaryWidget
             self.foamWidget = FoamBoundaryWidget(self.foam_boundary_conditions)
             self.form.append(self.foamWidget)
@@ -170,7 +171,6 @@ class _TaskPanelCfdFluidBoundary:
         if self.selectionWidget.has_equal_references_shape_types():
             self.obj.BoundarySettings = self.boundaryWidget.boundarySettings()
             self.obj.FoamBoundarySettings = self.foamWidget.boundarySettings()
-            print(self.obj.FoamBoundarySettings)
             self.obj.References = self.selectionWidget.references
             self.recompute_and_set_back_all()
             return True
@@ -183,7 +183,7 @@ class _TaskPanelCfdFluidBoundary:
     def recompute_and_set_back_all(self):
         doc = FreeCADGui.getDocument(self.obj.Document)
         doc.Document.recompute()
-        self.selectionWidget.setback_listobj_visibility()
+        self.selectionWidget.setback_listobj_visibility()  # BoundarySelector has no such method
         if self.selectionWidget.sel_server:
             FreeCADGui.Selection.removeObserver(self.selectionWidget.sel_server)
         doc.resetEdit()

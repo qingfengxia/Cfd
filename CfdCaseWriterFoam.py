@@ -21,8 +21,7 @@
 # ***************************************************************************
 
 """
-After playback macro, Mesh object need to build up in taskpanel
-2D meshing is hard to converted to OpenFOAM, but possible to export UNV mesh
+To provided the extra widget to overwrite boundary patch setting by raw OpenFOAM dict
 """
 
 __title__ = "FoamCaseWriter"
@@ -160,7 +159,7 @@ class CfdCaseWriterFoam:
         for bc in self.bc_group:
             #FreeCAD.Console.PrintMessage("write boundary condition: {}\n".format(bc.Label))
             if bc.isDerivedFrom("Fem::ConstraintFluidBoundary"):
-                # bc.Name is used, instead of bc.Label (shown to users in GUI) to match unvMeshConversion by FemGmshTool.py
+                # bc.Name is used, instead of bc.Label (shown to users in GUI, i18n) to match unvMeshConversion by FemGmshTool.py
                 bc_dict = {'name': bc.Name, "type": bc.BoundaryType, "subtype": bc.Subtype, "value": bc.BoundaryValue}
                 #
                 if bc_dict['type'] == 'inlet' and bc_dict['subtype'] == 'uniformVelocity':
@@ -179,12 +178,22 @@ class CfdCaseWriterFoam:
                                                     "intensityValue": bc.TurbulentIntensityValue,
                                                     "lengthValue": bc.TurbulentLengthValue
                                                     }
-            elif bc.Proxy.Type == "CfdFluidBoundary":  # raw dict is provided as customised boundary patch
-                #bc_dict  = bc.BoundarySettings
-                #bc_dict[] = bc.FoamBoundarySettings
-                #only basic variable UpT must be provided as raw dict, while turbulent setup may be derived from BoundaryType and SubType
-                pass
-                # CfdOF's function is almost same, but organization is different
+            elif bc.Proxy.Type == "CfdFluidBoundary":
+                # CfdOF's function is almost same, but organization is different, # raw dict is provided as customised boundary patch
+                bc_dict  = bc.BoundarySettings.copy()
+                bc_dict['name'] =  bc.Name  # References
+                bc_dict['value'] = bc.BoundarySettings['BoundaryValue']
+                bc_dict['type'] = bc.BoundarySettings['BoundaryType']
+                bc_dict['subtype'] = bc.BoundarySettings['Subtype']
+                bc_dict['unit'] = bc.BoundarySettings['Unit']
+                if self.solver_obj.HeatTransfering:
+                    bc_dict['thermalSettings'] = bc.BoundarySettings['ThermalBoundarySettings']
+                if self.solver_obj.TurbulenceModel not in set(["laminar", "invisid", "DNS"]):
+                    bc_dict['turbulenceSettings'] = bc.TurbulenceSettings['ThermalBoundarySettings']
+                if 'FoamBoundarySettings' in self.solver_obj.PropertyList:
+                    bc_dict['FoamBoundarySettings'] = bc.FoamBoundarySettings
+                    #only basic variable UpT must be provided as raw dict
+
             else:
                 FreeCAD.Console.PrintError("boundary condition object '{}' is not supported\n".format(bc.Label))
             bc_settings.append(bc_dict)

@@ -1,9 +1,6 @@
 # ***************************************************************************
 # *                                                                         *
-# *   Copyright (c) 2013-2015 - Juergen Riegel <FreeCAD@juergen-riegel.net> *
-# *   Copyright (c) 2017 - Oliver Oxtoby <ooxtoby@csir.co.za>               *
-# *   Copyright (c) 2017 - Johan Heyns <jheyns@csir.co.za>                  *
-# *   Copyright (c) 2017 - Alfred Bogaers <abogaers@csir.co.za>             *
+# *   Copyright (c) 2019 Qingfeng Xia <qingfeng.xia    iesensor.com>        *
 # *                                                                         *
 # *   This program is free software; you can redistribute it and/or modify  *
 # *   it under the terms of the GNU Lesser General Public License (LGPL)    *
@@ -24,333 +21,447 @@
 # ***************************************************************************
 
 __title__ = "_TaskPanelCfdFluidBoundary"
-__author__ = "AB, JH, OO"
+__author__ = "Qingfeng Xia"
 __url__ = "http://www.freecadweb.org"
 
 """
-It is not possible to make this widget FreeCADGui independent,  QuantityUI, FaceColorChange
-this may be replaced by my taskpanel later, current in Fem using C++ 
+This is a Python version of C++ version FemConstraintFluidBoundary,
+single big taskpanel is split into 3 and 5 widgets. 
+A new widget can provide the extra widget to overwrite boundary patch setting by raw OpenFOAM dict
+Function in this Python class might be translated into C++ code in FemWorkbench
+It is possible to make these widget FreeCADGui independent, except `MagnitudeNormalWidget`
+
+
+Change from C++
+1) form GUI value widget rename: spin->input
+2) thermal properties, remove suffix Value, thurbulence values renamed
+3) uints[]
+4) Vector input widget
+
+
+Todo:
+1) tr() i18n
+2) Pyside2 and Qt5
 """
 
-import FreeCAD
+"""
+obj = FreeCAD.getDocument("test_salome_mesh_2019").getObject("CfdFluidBoundary")
+import CfdBoundaryWidget
+w = CfdBoundaryWidget.MagnitudeNormalWidget([0,1,0], obj)
+w.show()
+"""
+
+import sys
+sys.path.append('/usr/lib/freecad/lib')  # just for testing
+
 import os
 import sys
 import os.path
-import CfdTools
 
-#these utility function could be moved to this script
-from CfdTools import inputCheckAndStore, setInputFieldQuantity, indexOrDefault
-#import CfdFaceSelectWidget  # using FemSelectionWidgets instead
+from PySide import QtCore
+from PySide import QtCore
+from PySide import QtGui
+from PySide.QtCore import Qt, QTimer
+try:  # Qt5
+    from PySide2 import QtUiTools
+except ImportError:
+    from PySide import QtUiTools
+from PySide.QtGui import QApplication
+from PySide.QtGui import QWidget, QFrame,QFormLayout, QVBoxLayout, QGridLayout, QHBoxLayout, QLabel,\
+                            QButtonGroup, QRadioButton, QPushButton, QCheckBox, QComboBox, QTextEdit, QLineEdit, QDoubleSpinBox, QTabWidget
 
-if FreeCAD.GuiUp:
-    import FreeCADGui
-    from PySide import QtCore
-    from PySide import QtCore
-    from PySide import QtGui
-    from PySide.QtCore import Qt, QTimer
-    from PySide.QtGui import QApplication, QWidget
-    try:  # Qt5
-        from PySide2 import QtUiTools
-    except ImportError:
-        from PySide import QtUiTools
-    from PySide.QtGui import QFormLayout
+try:
+    import FreeCAD
+    import CfdTools
+    #these utility function could be moved to this script
+    #from CfdTools import inputCheckAndStore, setInputFieldQuantity
+    if FreeCAD.GuiUp:
+        import FreeCADGui
+        import FreeCADGui as Gui
+        within_FreeCADGui = True
+    else:
+        within_FreeCADGui = False
+except:
+    within_FreeCADGui = False
+
+def indexOrDefault(list, findItem, defaultIndex):
+    """ Look for findItem in list of itemType, and return defaultIndex if not found """
+    try:
+        return list.index(findItem)
+    except ValueError:
+        return defaultIndex
+
+def _createChoiceGroup(valueTypes, valueTypeTips):
+        _buttonGroupLayout = QHBoxLayout()
+        buttonGroupValueType = QButtonGroup()
+        buttonGroupValueType.setExclusive(True)
+
+        for id, choice in enumerate(valueTypes):
+            rb = QRadioButton(choice)
+            rb.setToolTip(valueTypeTips[id])
+            buttonGroupValueType.addButton(rb, id)
+            _buttonGroupLayout.addWidget(rb)
+            if id == 0:
+                rb.setChecked(True)
+        return buttonGroupValueType, _buttonGroupLayout
+
+def _createInputField(unit = None):
+    if within_FreeCADGui:
+        Value = QDoubleSpinBox()  # Gui.InputField()  # widget = ui.createWidget("Gui::InputField")
+    else:
+        Value = QDoubleSpinBox()  #
+        Value.setValue(0.0)
+    return Value
+
+def _setInputField(inputWidget, value, unit=None):
+    if within_FreeCADGui:
+        inputWidget.setValue(value) #Gui.InputField()
+    else:
+        inputWidget.setValue(value) #QSpinBox()
+
+def _getInputField(inputWidget, unit = None):
+    if within_FreeCADGui:
+        return inputWidget.value()
+    else:
+        Value = inputWidget.value()
+
 
 # Constants, dict could be better, i18n,  open and baffle is not yet supported in qingfeng's Cfd module
-# TODO: open and farField is quite similar,  Baffle is kind of inlet and outlet?
-BOUNDARY_NAMES = ["Wall", "Inlet", "Outlet", "Opening", "Far-field", "Constraint", "Baffle"]
-BOUNDARY_TYPES = ["wall", "inlet", "outlet", "open", "farField", "constraint", "baffle"]
+# TODO: open and freestrea farField is quite similar,  Baffle is kind of inlet and outlet?   interface -> constraint
+BOUNDARY_TYPES = ["wall", "inlet", "outlet", "farField", "interface"]  # freestream -> farField
+BOUNDARY_NAMES = ["Wall", "Inlet", "Outlet",  "Farfield", "interface"]  #shown in GUI, prepared for i18n
 
-SUBNAMES = [["No-slip (viscous)", "Slip (inviscid)", "Partial slip", "Translating", "Rough"],
-            ["Uniform velocity", "Volumetric flow rate", "Mass flow rate", "Total pressure", "Static pressure"],
-            ["Static pressure", "Uniform velocity", "Outflow"],
-            ["Ambient pressure"],
-            ["Characteristic-based"],
-            ["Symmetry", "2D bounding plane"],
-            ["Porous Baffle"]]
+"""
+OpenFOAM boundary patch type name is used as possible, with exception to be translated by CaseWriter or CaseBuilder
+see
+general boundary type name -> OpenFOAM specific name
+symmetry -> symmetryPlane;
+outFlow -> inletOulet
 
-SUBTYPES = [["fixed", "slip", "partialSlip", "translating", "rough"],
-            ["uniformVelocity", "volumetricFlowRate", "massFlowRate", "totalPressure", "staticPressure"],
-            ["staticPressure", "uniformVelocity", "outFlow"],
-            ["totalPressureOpening"],
-            ["characteristic"], # farField
-            ["symmetry", "twoDBoundingPlane"],  # backAndFront
-            ["porousBaffle"]]
+freestream has freestreamVelocity and freestreamPressure subtypes, 
+It is an inlet-outlet condition that uses the velocity orientation
+to continuously blend between fixed value for normal inlet and zero gradient for normal outlet flow.
+===========================
 
-SUBTYPES_HELPTEXT = [["Zero velocity relative to wall",
-                      "Frictionless wall; zero normal velocity",
-                      "Blended fixed/slip",
-                      "Fixed velocity tangential to wall; zero normal velocity",
+fanPressure is not supported yet, need a file input of `Foam::InterpolationTable`
+other advanced input type is `Foam::Function1` and `CodeStream`
+could be implemented by adding another input value widget or in FoamBoundaryWidget
+"""
+SUBTYPES = {'wall': ["fixed", "slip", "partialSlip", "moving", "rough"],  # 
+            'inlet': ["uniformVelocity", "volumetricFlowRate", "massFlowRate", "totalPressure", "staticPressure"],
+            'outlet': ["staticPressure", "uniformVelocity", "outFlow"],
+            'freestream': ["freestreamPressure", "freestreamVelocity", "characteristic"],
+            'interface': ["symmetry", "wedge","cyclic","empty", "coupled"],  # backAndFront -> "twoDBoundingPlane", but that means  type translation is needed
+            'baffle': ["porousBaffle"]} # baffle is not supported in UI, it is fine to leave here
+
+SUBTYPE_NAMES = {'wall': ["No-slip (viscous)", "Slip (inviscid)", "Partial slip", "Moving wall", "Rough surface"],
+            'inlet': ["Uniform velocity", "Volumetric flow rate", "Mass flow rate", "Total pressure", "Static pressure"],
+            'outlet': ["Static pressure", "Uniform velocity", "Outflow"],
+            'farField': ["Ambient pressure", "Ambient velocity", "Characteristic-based"],
+            'interface': ["cartesian symmetry plane", "axisysmmetry axis line", "periodic (must in pair)", "front and back for 2D", "interface for external solvers"],
+            'baffle': ["Porous Baffle"] }
+
+SUBTYPE_VALUE_NAMES = {'wall': ["", "", "Slip ratio", "Wall velocity", "Roughness"],  # todo: rough boundary value and unit
+            'inlet': ["Flow veloicty", "Volumetric flow rate", "mass flow rate", "Total pressure", "Static pressure"],
+            'outlet': ["Static pressure", "Flow velocity", ""],
+            'farField': ["Farfield pressure", "farfield velocity", 'not yet implemented type'], # todo: Characteristic-based type unit?
+            'interface': ["", "", "", "", ""],
+            'baffle': [""] }
+
+# "" means hide BoundaryValue inputUI, 'm/s' means frameVelocity will show up, "m/m" for nondimensional value
+SUBTYPE_UNITS = {'wall': ["", "", "1", "m/s", "m"],  # todo: rough boundary value and unit
+            'inlet': ["m/s", "m^3/s", "kg/s", "Pa", "Pa"],
+            'outlet': ["Pa", "m/s", "1"],
+            'farField': ["Pa", "m/s", ""], # todo: Characteristic-based type unit?
+            'interface': ["", "", "", "", ""],
+            'baffle': [""] }
+
+SUBTYPES_HELPTEXTS = {
+            'wall': ["Zero velocity relative to wall (slip ration = 0)",
+                      "Frictionless wall (slip ration = 1)",
+                      "Blended fixed/slip (slip ration 0~1)",
+                      "wall velocity (Cartisan coordination) in dynamic meshing",
                       "Wall roughness function"],
-                     ["Velocity specified; normal component imposed for reverse flow",
+            'inlet': ["Velocity specified; \n normal component imposed for reverse flow",
                       "Uniform volume flow rate specified",
                       "Uniform mass flow rate specified",
-                      "Total pressure specified; treated as static pressure for reverse flow",
+                      "Total pressure specified; treated \n as static pressure for reverse flow",
                       "Static pressure specified"],
-                     ["Static pressure specified for outflow and reverse flow",
-                      "Normal component imposed for outflow; velocity fixed for reverse flow",
+            'outlet': ["Static pressure specified \n for outflow and reverse flow",
+                      "Normal component imposed for outflow; \n velocity fixed for reverse flow",
                       "All fields extrapolated; use with care!"],
-                     ["Boundary open to surrounding with total pressure specified"],
-                     ["Sub-/supersonic inlet/outlet with prescribed far-field values"],
-                     ["Symmetry of flow quantities about boundary face",
-                      "Bounding planes for 2D meshing and simulation"],
-                     ["Permeable screen"]]
+            'farField': ["Boundary open to surrounding \n with total pressure specified",
+                        "Boundary open to surrounding \n with uniform velocity specified",
+                        "Sub-/supersonic inlet/outlet \n with prescribed far-field values"],
+            'interface': ["cartesian symmetry plane \n for a cartesian coordiation", 
+                                "axisysmmetry axis line for \n a cylindrical coordination",
+                                "periodic (must in pair) \n ", 
+                                "front and back boundary planes \n for a 2D case",
+                                "interface for boundary value exchange \n with external solvers"],
+            'baffle': ["Permeable screen"] 
+            }
 
-# For each sub-type, whether the basic tab is enabled, the panel numbers to show (ignored if false), whether
-# direction reversal is checked by default (only used for panel 0), whether turbulent inlet panel is shown,
-# whether volume fraction panel is shown, whether thermal GUI is shown,
-# rows of thermal UI to show (all shown if None)
-BOUNDARY_UI = [[[False, [], False, False, False, True, None],  # No slip
-                [False, [], False, False, False, True, None],  # Slip
-                [True, [2], False, False, False, True, None],  # Partial slip
-                [True, [0], False, False, False, True, None],  # Translating wall
-                [True, [0], False, False, False, True, None]],  # Rough
-               [[True, [0], True, True, True, True, [2]],  # Velocity
-                [True, [3], False, True, True, True, [2]],  # Vol flow rate
-                [True, [4], False, True, True, True, [2]],  # Mass Flow rate
-                [True, [1], False, True, True, True, [2]],  # Total pressure
-                [True, [1], False, True, True, True, [2]]],  # Static pressure
-               [[True, [1], False, False, True, False, None],  # Static pressure
-                [True, [0], False, False, True, False, None],  # Uniform velocity
-                [False, [], False, False, False, False, None]],  # Outflow
-               [[True, [1], False, True, True, True, [2]]],  # Opening
-               [[True, [0, 1], False, True, False, True, [2]]],  # Far-field
-               [[False, [], False, False, False, False, None],  # Symmetry plane
-                [False, [], False, False, False, False, None]],  # 2D plane
-               [[True, [5], False, False, False, False, None]]]  # Permeable screen
 
-# For each turbulence model: Name, label, help text, displayed rows
-TURBULENT_INLET_SPEC = {"kOmegaSST":
-                        [["Kinetic Energy & Specific Dissipation Rate",
-                          "Intensity & Length Scale"],
-                         ["TKEAndSpecDissipationRate",
-                          "intensityAndLengthScale"],
-                         ["k and omega specified",
-                          "Turbulence intensity and eddy length scale"],
-                         [[0, 1],  # k, omega
-                          [2, 3]]]}  # I, l
+"""'
+# see Ansys fluent's user manual on "Determining Turbulence Parameters"
+# either TurbulenceKineticEnergy(k) or TurbulenceIntensity(I) can be specified, but intensity (0.01-0.12) are commonly used and implemented here
+TurbulenceSpecification, mainly for inlet, how about freestream?
+#also search online for "Turbulence Calculator"
+"""
+TURBULENCE_SPEC_TYPES = ["intensity&DissipationRate", "intensity&SpecificDissipationRate", "intensity&ViscosityRatio",
+                        "intensity&LengthScale", "intensity&HydraulicDiameter"]
+TURBULENCE_SPEC_NAMES = TURBULENCE_SPEC_TYPES
+TURBULENCE_SPEC_HELPTEXTS = ["intensity & DissipationRate (epsilon) \n for k-e models", 
+                                                "intensity k & SpecificDissipationRate (omega) \n for k-omega models", 
+                                            "intensity /kinetic energy ratio I (0.05 ~ 0.15) \n and turbulent viscosity ratio for Spalart-Allmaras/LES models",
+                                            "intensity/kinetic energy ratio (0.05 ~ 0.15) \n and characteristic length scale of max eddy [m]",
+                                            "typical turbulence intensity ratio 0.05, \n for fully developed internal flow "]
 
+TURBULENCE_QUANTITY_NAMES = ["TurbulenceKineticEnergy", "TurbulenceIntensity", "DissipationRate", "SpecificDissipationRate",
+"ViscosityRatio", "TurbulenceLength",  "HydraulicDiameter"]
+TURBULENCE_QUANTITY_UNITS = ["m^2/s^2", "m/m", "rad/s", "m/m",  "m/m", "m", "m/m", 'm']
+TURBULENCE_QUANTITY_VISIBILITY = [
+[False,True, True,False, False, False, False],
+[False,True,  False, True, False, False, False],
+[False,True, False, False, True, False, False],
+[False,True, False, False, False, True, False],
+[False,True,  False, False, False, False, True],
+]
+
+TURBULENCE_CONFIG = [TURBULENCE_SPEC_TYPES, TURBULENCE_SPEC_NAMES, TURBULENCE_SPEC_HELPTEXTS, \
+                                TURBULENCE_QUANTITY_NAMES, TURBULENCE_QUANTITY_UNITS, TURBULENCE_QUANTITY_VISIBILITY]
+
+
+
+THERMAL_BOUNDARY_TYPES = ["fixedValue","zeroGradient", "fixedGradient", "mixed", "heatFlux", "HTC","coupled"]
 THERMAL_BOUNDARY_NAMES = ["Fixed temperature",
                           "Adiabatic",
-                          "Fixed conductive heat flux"]
+                          "fixedGradient",
+                          "mixed", 
+                          "Heat transfer coeff",
+                          "Fixed conductive heat flux"
+                          "conjugate heat transfer"]
+THERMAL_BOUNDARY_HELPTEXTS = ["fixed Temperature (Dirichlet)",
+            "no heat transfer on boundary",
+            "fixed thermal gradient (Riemann)",
+            "mixed fixedGradient and fixedValue",
+            "uniform heat flux",
+            "Heat transfer coeff",
+            "interface for conjugate heat transfer"]
 
-# diff: less type
-THERMAL_BOUNDARY_TYPES = ["fixedValue", "zeroGradient", "fixedGradient"]
+THERMAL_QUANTITY_NAMES = ["TemperatureValue", "GradientValue", "HeatFlux", "HeatTransferCoeff"]  # corresponding to Qt widget
+THERMAL_QUANTITY_UNITS = ["K", "K/m", "W/m2", "W/m^2/K"]
+THERMAL_QUANTITY_VISIBILITY = [
+[True, False, False, False],
+[False, False, False, False],
+[False,False,  True,  False],
+[True, False, True, False],
+[True, False, False, True],
+[False, False, False, False],
+]
 
-THERMAL_HELPTEXT = ["Fixed Temperature", "No conductive heat transfer", "Fixed conductive heat flux"]
-
-# For each thermal BC, the input rows presented to the user
-BOUNDARY_THERMALTAB = [[0], [], [1]]
+THERMAL_CONFIG = [THERMAL_BOUNDARY_TYPES, THERMAL_BOUNDARY_NAMES, THERMAL_BOUNDARY_HELPTEXTS, \
+                                THERMAL_QUANTITY_NAMES, THERMAL_QUANTITY_UNITS, THERMAL_QUANTITY_VISIBILITY]
 
 
-class CfdBoundaryWidget(QWidget):
-    """ QWidget for adding fluid boundary """
-    def __init__(self, object, boundarySettings, physics_model, material_objs, parent=None):
-        super(CfdBoundaryWidget, self).__init__(parent)  # for QWidget
+class InputWidget(QWidget):
+    """ QWidget for selet type and values """
+    def __init__(self, settings, config, parent=None):
+        super(InputWidget, self).__init__(parent)  # for both py2 and py3
+        
+        if settings:
+            self.settings = settings
+        else:
+            self.settings = {}
 
-        self.selecting_direction = False  # why this is needed?
-        self.obj = object
-        if self.obj:
-            self.BoundarySettings = self.obj.BoundarySettings
-        else:  # None, if it is not used in FreeCADGui mode
-            self.BoundarySettings = boundarySettings
+        self.INPUT_TYPES, self.INPUT_NAMES, self.INPUT_HELPTEXTS, self.QUANTITY_NAMES, self.QUANTITY_UNITS, self.QUANTITY_VISIBILITY = config
 
-        self.physics_model = physics_model  # approx solver_object, but slightly different
-        if 'Turbulence' not in self.obj.PropertiesList:  # Qingfeng Xia's Cfd module
-            self.turbModel = 'kOmegaSST' # physics_model.TurbulenceModel
-        else: # CfdOF fork
-            self.turbModel =  (physics_model.TurbulenceModel
-                              if physics_model.Turbulence == 'RANS' or physics_model.Turbulence == 'LES'
-                              else None)
+        self.form = self  # compatible with loadUi from *ui file
+        self.comboInputType = QComboBox()
+        self.form.comboInputType.addItems(self.INPUT_NAMES)
+        self.form.comboInputType.currentIndexChanged.connect(self.comboInputTypeChanged)
 
-        self.material_objs = material_objs  # volume faction of multiphase flow, should accept None
+        self.valueTypes = ['Quantity', 'Expression']  # it is also possible to generalise this 
+        valueTypeTips = [self.tr(u'float value for each component'), self.tr(u'math expressiong using xyz coord')]
+        self.buttonGroupValueType, _buttonGroupLayout = _createChoiceGroup(self.valueTypes, valueTypeTips)
+        self.buttonGroupValueType.buttonClicked.connect(self.valueTypeChanged)  # diff conect syntax
 
-        self.BoundarySettingsOrig = self.BoundarySettings.copy()  # NOT used in Widget mode, remove
+        _gridLayout = QGridLayout()
+        self.NumberOfInputs = len(self.QUANTITY_NAMES)
+        #self.componentLabels = [l + u'({})'.format(unicode(unit)) for l in self.componentLabels]
+        self.quantityInputs = []
+        self.expressionInputs = []
+        self.quantityLabels = []
+        for i in range(self.NumberOfInputs):
+            _inputLabel = unicode("{}[{}]".format(self.QUANTITY_NAMES[i],self.QUANTITY_UNITS[i]))
 
-        ui_path = os.path.join(os.path.dirname(__file__), "TaskPanelCfdFluidBoundary.ui")
-        #self.form = QtUiTools.QUiLoader().load(ui_path)
-        self.form = FreeCADGui.PySideUic.loadUi(ui_path)
+            input = _createInputField(unit = self.QUANTITY_UNITS[i])
+            #input.setRange(1e10, -1e10)  # give a range big enough
+            expr = QLineEdit()  # QTextEdit is too big
+            _label = QLabel(_inputLabel)
+            self.quantityLabels.append(_label)
+            _gridLayout.addWidget(_label,i, 0)
+            _gridLayout.addWidget(input,i, 1)
+            _gridLayout.addWidget(expr,i, 2)
+            self.quantityInputs.append(input)
+            self.expressionInputs.append(expr)
+        self.inputWidgetCollections = [self.quantityInputs, self.expressionInputs]  # must has same id with valueTypes
+        #self.quantityGridLayout = _gridLayout
 
-        self.form.comboBoundaryType.currentIndexChanged.connect(self.comboBoundaryTypeChanged)
-        self.form.comboSubtype.currentIndexChanged.connect(self.comboSubtypeChanged)
-        self.form.radioButtonCart.toggled.connect(self.radioButtonVelocityToggled)
-        self.form.radioButtonMagNormal.toggled.connect(self.radioButtonVelocityToggled)
-        self.form.inputCartX.valueChanged.connect(self.inputCartXChanged)
-        self.form.inputCartY.valueChanged.connect(self.inputCartYChanged)
-        self.form.inputCartZ.valueChanged.connect(self.inputCartZChanged)
-        self.form.inputVelocityMag.valueChanged.connect(self.inputVelocityMagChanged)
+        _layout = QVBoxLayout()
+        _layout.addWidget(self.comboInputType)
+        self.labelHelpText = QLabel(self.tr('set physical quantity by float or expression'), self)
+        self.labelHelpText.setWordWrap(True)
+        _layout.addWidget(self.labelHelpText)
+        #_layout.addWidget(self.labelHelpText)
+        _layout.addLayout(_buttonGroupLayout)
+        _layout.addLayout(_gridLayout)
+        self.setLayout(_layout)
+
+        self.setInputSettings(self.settings)
+        """
+        if within_FreeCADGui:
+            for i,var in enumerate(INPUT_QUANTITIES):
+                _variableUnit = INPUT_UINTS[i]
+                _func = lambda value: inputCheckAndStore(value, _variableUnit, self.settings, var)
+                self.quantityInputs.valueChanged.connect(_func)
+        """
+
+    def setInputSettings(self, settings):
+        # fill setting data into UI, possibibly value is empty
+        vtype = settings['ValueType']  if ('ValueType' in settings) else "Quantity"
+        try:
+            index = self.valueTypes.index(vtype)
+        except ValueError:
+            index = 0
+        for button in self.buttonGroupValueType.buttons():
+            if self.buttonGroupValueType.id(button) == index:
+                button.setChecked(True)
+        self.valueTypeChanged()
+
+        for i, var in enumerate(self.QUANTITY_NAMES):
+            if var in settings:
+                if vtype == 'Expression':
+                    self.expressionInputs[i].setText(unicode(settings[var]))
+                else:
+                    self.quantityInputs[i].setValue(settings[var])
+
+    def valueChanged(self):
+        pass # if quantity value changed, no UI is needed to update
+
+    def valueTypeChanged(self):
+        #print(self.buttonGroupValueType.checkedId())
+        self.currentValueType = self.valueTypes[self.buttonGroupValueType.checkedId()]
+        self.updateUi()
+
+    def comboInputTypeChanged(self):
+        self.updateUi()
+
+    def updateUi(self):
+        _vindex = self.buttonGroupValueType.checkedId()
+        _typeIndex = self.form.comboInputType.currentIndex()
+        self.form.labelHelpText.setText(self.INPUT_HELPTEXTS[_typeIndex])
+        _inputVisibility = self.QUANTITY_VISIBILITY[_typeIndex]
+        if not any(_inputVisibility):
+            pass
+        else:
+            pass
+
+        #print('debug:', _vindex, _typeIndex, _inputVisibility)
+        for _ic in range(len(self.inputWidgetCollections)):
+            _inputs = self.inputWidgetCollections[_ic]
+            if _ic == _vindex:
+                for _ir,w in enumerate(_inputs):
+                    w.setVisible(_inputVisibility[_ir])
+                    self.quantityLabels[_ir].setVisible(_inputVisibility[_ir])
+            else:
+                for w in _inputs:
+                    w.setVisible(False)
+
+    def inputSettings(self):
+        # collect settings
+        _vindex = self.buttonGroupValueType.checkedId()
+
+        index = self.form.comboInputType.currentIndex()
+        currentInputType = self.INPUT_TYPES[index]
+        _inputVisibility = self.QUANTITY_VISIBILITY[index]
+        _settings = self.settings
+        _settings['InputType'] = currentInputType
+        for i,v in enumerate(_inputVisibility):
+            if v:
+                if currentInputType == 'expression':
+                    _settings[self.QUANTITY_NAMES[i]] = self.inputWidgetCollections[_vindex][i].text()
+                else:
+                    _settings[self.QUANTITY_NAMES[i]] = self.inputWidgetCollections[_vindex][i].value()
+        return _settings
+
+
+class MagnitudeNormalWidget(QWidget):
+    """ QWidget for specifying vector by magnitude and Normal
+    previous selected object is not loaded"""
+    def __init__(self, vector, obj, parent=None):
+        super(MagnitudeNormalWidget, self).__init__(parent)  # for both py2 and py3
+
+        """
+        ui_path = os.path.join(os.path.dirname(__file__), "MagnitudeNormalWidget.ui")
+        self.form = Gui.PySideUic.loadUi(ui_path)
+        print(self.form.layout)
+        print('type of self.form.inputVectorMag', type(self.form.inputVectorMag))
+        """
+        self.form = self
+        self.inputVectorMag = _createInputField()
+        self.labelMagnitude = QLabel('Magnitude')
+        _magLayout = QHBoxLayout()
+        _magLayout.addWidget(self.labelMagnitude)
+        _magLayout.addWidget(self.inputVectorMag)
+        self.buttonDirection = QPushButton("select face or edge to add direction")
+        self.buttonDirection.setCheckable(True)
+        self.lineDirection = QLineEdit("Direction Shape Ref")
+        self.checkReverse = QCheckBox("Reserve direction")
+        self.labelVector = QLabel("Preview of vector value")
+
+        _layout = QVBoxLayout()
+        _layout.addLayout(_magLayout)
+        _layout.addWidget(self.buttonDirection)
+        _layout.addWidget(self.lineDirection)
+        _layout.addWidget(self.checkReverse)
+        _layout.addWidget(self.labelVector)
+        self.setLayout(_layout)
+
+        self.selecting_direction = False  # add direction button status
+        self.setVector(vector)
+
+        if obj:
+            self.obj = obj
+        else:
+            FreeCAD.Console.PrintError("A FreeCAD DocumentObject derived object must provided for MagnitudeNormalWidget\n")
+
+        self.form.inputVectorMag.valueChanged.connect(self.inputVectorMagChanged)
         self.form.lineDirection.textChanged.connect(self.lineDirectionChanged)
         self.form.buttonDirection.clicked.connect(self.buttonDirectionClicked)
-        self.form.buttonDirection.setCheckable(True)
         self.form.checkReverse.toggled.connect(self.checkReverseToggled)
-        self.form.inputPressure.valueChanged.connect(self.inputPressureChanged)
-        self.form.inputSlipRatio.valueChanged.connect(self.inputSlipRatioChanged)
-        self.form.inputVolFlowRate.valueChanged.connect(self.inputVolFlowRateChanged)
-        self.form.inputMassFlowRate.valueChanged.connect(self.inputMassFlowRateChanged)
-        self.form.buttonGroupPorous.buttonClicked.connect(self.buttonGroupPorousClicked)
-        # Annoyingly can't find a way to set ID's for button group from .ui file...
-        self.form.buttonGroupPorous.setId(self.form.radioButtonPorousCoeff, 0)
-        self.form.buttonGroupPorous.setId(self.form.radioButtonPorousScreen, 1)
-        self.form.inputPressureDropCoeff.valueChanged.connect(self.inputPressureDropCoeffChanged)
-        self.form.inputWireDiameter.valueChanged.connect(self.inputWireDiameterChanged)
-        self.form.inputSpacing.valueChanged.connect(self.inputSpacingChanged)
 
-        self.form.inputTemperature.valueChanged.connect(self.inputTemperatureChanged)
-        self.form.inputHeatFlux.valueChanged.connect(self.inputHeatFluxChanged)
-        self.form.inputHeatTransferCoeff.valueChanged.connect(self.inputHeatTransferCoeffChanged)
+    def updateUi(self):
+        # set mag and preview label
+        _m = self._magnitude*-1.0 if self._reversedDirection else self._magnitude
+        self._vector = [v*_m for v in self._directionVector]
+        self.form.labelVector.setText("Vector: " + str(self._vector))
+        pass
 
-        self.form.comboTurbulenceSpecification.currentIndexChanged.connect(self.comboTurbulenceSpecificationChanged)
-        self.form.inputKineticEnergy.valueChanged.connect(self.inputKineticEnergyChanged)
-        self.form.inputSpecificDissipationRate.valueChanged.connect(self.inputSpecificDissipationRateChanged)
-        self.form.inputIntensity.valueChanged.connect(self.inputIntensityChanged)
-        self.form.inputLengthScale.valueChanged.connect(self.inputLengthScaleChanged)
-
-        self.form.comboFluid.currentIndexChanged.connect(self.comboFluidChanged)
-        self.form.inputVolumeFraction.valueChanged.connect(self.inputVolumeFractionChanged)
-
-        self.form.comboThermalBoundaryType.currentIndexChanged.connect(self.comboThermalBoundaryTypeChanged)
-
-        self.setInitialValues()
-
-
-    def setInitialValues(self):
-        """ Populate UI, update view from settings"""
-        self.form.comboBoundaryType.addItems(BOUNDARY_NAMES)
-        bi = indexOrDefault(BOUNDARY_TYPES, self.BoundarySettingsOrig.get('BoundaryType'), 0)
-        self.form.comboBoundaryType.setCurrentIndex(bi)
-        si = indexOrDefault(SUBTYPES[bi], self.BoundarySettingsOrig.get('BoundarySubtype'), 0)
-        self.form.comboSubtype.setCurrentIndex(si)
-
-        cart = self.BoundarySettings.get('VelocityIsCartesian', False)
-        self.form.radioButtonCart.setChecked(cart)
-        self.form.radioButtonMagNormal.setChecked(not cart)
-        setInputFieldQuantity(self.form.inputCartX, str(self.BoundarySettings.get('Ux'))+"m/s")
-        setInputFieldQuantity(self.form.inputCartY, str(self.BoundarySettings.get('Uy'))+"m/s")
-        setInputFieldQuantity(self.form.inputCartZ, str(self.BoundarySettings.get('Uz'))+"m/s")
-        setInputFieldQuantity(self.form.inputVelocityMag, str(self.BoundarySettings.get('VelocityMag'))+"m/s")
-        self.form.lineDirection.setText(self.BoundarySettings.get('DirectionFace'))
-        self.form.checkReverse.setChecked(bool(self.BoundarySettings.get('ReverseNormal')))
-        setInputFieldQuantity(self.form.inputPressure, str(self.BoundarySettings.get('Pressure'))+"kg/m/s^2")
-        setInputFieldQuantity(self.form.inputSlipRatio, str(self.BoundarySettings.get('SlipRatio')))
-        setInputFieldQuantity(self.form.inputVolFlowRate, str(self.BoundarySettings.get('VolFlowRate'))+"m^3/s")
-        setInputFieldQuantity(self.form.inputMassFlowRate, str(self.BoundarySettings.get('MassFlowRate'))+"kg/s")
-
-        buttonId = self.BoundarySettings.get('PorousBaffleMethod', 0)
-        selButton = self.form.buttonGroupPorous.button(buttonId)
-        if selButton is not None:
-            selButton.setChecked(True)
-            self.buttonGroupPorousClicked(selButton)  # Signal is not generated on setChecked above
-        setInputFieldQuantity(self.form.inputPressureDropCoeff, str(self.BoundarySettings.get('PressureDropCoeff')))
-        setInputFieldQuantity(self.form.inputWireDiameter, str(self.BoundarySettings.get('ScreenWireDiameter'))+"m")
-        setInputFieldQuantity(self.form.inputSpacing, str(self.BoundarySettings.get('ScreenSpacing'))+"m")
-
-        self.form.comboThermalBoundaryType.addItems(THERMAL_BOUNDARY_NAMES)
-        thi = indexOrDefault(THERMAL_BOUNDARY_TYPES, self.BoundarySettingsOrig.get('ThermalBoundaryType'), 0)
-        self.form.comboThermalBoundaryType.setCurrentIndex(thi)
-        setInputFieldQuantity(self.form.inputTemperature, str(self.BoundarySettings.get('Temperature', 273.0))+"K")
-        setInputFieldQuantity(self.form.inputHeatFlux, str(self.BoundarySettings.get('HeatFlux', 0.0))+"W/m^2")
-        setInputFieldQuantity(self.form.inputHeatTransferCoeff, str(self.BoundarySettings.get('HeatTransferCoeff', 0.0))+"W/m^2/K")
-
-        if self.turbModel is not None:
-            self.form.comboTurbulenceSpecification.addItems(TURBULENT_INLET_SPEC[self.turbModel][0])
-            ti = indexOrDefault(TURBULENT_INLET_SPEC[self.turbModel][1],
-                                self.BoundarySettingsOrig.get('TurbulenceInletSpecification'), 0)
-            self.form.comboTurbulenceSpecification.setCurrentIndex(ti)
-
-        # Add volume fraction fields
-        if len(self.material_objs) > 1:
-            mat_names = []
-            for m in self.material_objs:
-                mat_names.append(m.Label)
-            self.form.comboFluid.clear()
-            self.form.comboFluid.addItems(mat_names[:-1])
+    def setVector(self, vector):
+        self._vector = vector
+        self._reversedDirection = False
+        self._magnitude = (sum(v*v for v in vector)**0.5)
+        if self._magnitude != 0:
+            self._directionVector = [v/self._magnitude for v in vector]
         else:
-            self.form.comboFluid.clear()
+            self._directionVector = [ 0, 0, 0]
+        self.updateUi()
 
-        setInputFieldQuantity(self.form.inputKineticEnergy,
-                              str(self.BoundarySettings.get('TurbulentKineticEnergy'))+"m^2/s^2")
-        setInputFieldQuantity(self.form.inputSpecificDissipationRate,
-                              str(self.BoundarySettings.get('SpecificDissipationRate'))+"rad/s")
-        setInputFieldQuantity(self.form.inputIntensity, str(self.BoundarySettings.get('TurbulenceIntensity')))
-        setInputFieldQuantity(self.form.inputLengthScale, str(self.BoundarySettings.get('TurbulenceLengthScale'))+"m")
+    def vector(self):
+        _m = self._magnitude*-1.0 if self._reversedDirection else self._magnitude
+        return [_m* v for v in self._directionVector]
 
-    def comboBoundaryTypeChanged(self):
-        index = self.form.comboBoundaryType.currentIndex()
-        self.form.comboSubtype.clear()
-        self.form.comboSubtype.addItems(SUBNAMES[index])
-        self.form.comboSubtype.setCurrentIndex(0)
-        self.BoundarySettings['BoundaryType'] = BOUNDARY_TYPES[self.form.comboBoundaryType.currentIndex()]
-
-        if self.obj:
-            # Change the color of the boundary condition as the selection is made
-            self.obj.BoundarySettings = self.BoundarySettings.copy()
-            doc_name = str(self.obj.Document.Name)
-            FreeCAD.getDocument(doc_name).recompute()
-
-    def comboSubtypeChanged(self):
-        type_index = self.form.comboBoundaryType.currentIndex()
-        subtype_index = self.form.comboSubtype.currentIndex()
-        self.form.labelBoundaryDescription.setText(SUBTYPES_HELPTEXT[type_index][subtype_index])
-        self.BoundarySettings['BoundarySubtype'] = SUBTYPES[type_index][self.form.comboSubtype.currentIndex()]
-        self.updateBoundaryTypeUi()
-
-    def updateBoundaryTypeUi(self):
-        type_index = self.form.comboBoundaryType.currentIndex()
-        subtype_index = self.form.comboSubtype.currentIndex()
-        tab_enabled = BOUNDARY_UI[type_index][subtype_index][0]
-        self.form.basicFrame.setVisible(tab_enabled)
-        for paneli in range(self.form.layoutBasicValues.count()):
-            if isinstance(self.form.layoutBasicValues.itemAt(paneli), QtGui.QWidgetItem):
-                self.form.layoutBasicValues.itemAt(paneli).widget().setVisible(False)
-        if tab_enabled:
-            panel_numbers = BOUNDARY_UI[type_index][subtype_index][1]
-            for panel_number in panel_numbers:
-                self.form.layoutBasicValues.itemAt(panel_number).widget().setVisible(True)
-                if panel_number == 0:
-                    reverse = BOUNDARY_UI[type_index][subtype_index][2]
-                    # If user hasn't set a patch yet, initialise 'reverse' to default
-                    if self.form.lineDirection.text() == "":
-                        self.form.checkReverse.setChecked(reverse)
-        turb_enabled = BOUNDARY_UI[type_index][subtype_index][3]
-        self.form.turbulenceFrame.setVisible(turb_enabled and self.turbModel is not None)
-        alpha_enabled = BOUNDARY_UI[type_index][subtype_index][4]
-        self.form.volumeFractionsFrame.setVisible(alpha_enabled and len(self.material_objs) > 1)
-
-        # compatibility workaround
-        if 'Thermal' in self.physics_model.PropertiesList:
-            _hasHeatTransfer = self.physics_model.Thermal != 'None'
-        else:  # Qingfeng's Cfd
-            if 'HeatTransfering' in self.physics_model.PropertiesList:
-                _hasHeatTransfer = self.physics_model.HeatTransfering
-            else:
-                _hasHeatTransfer = True
-
-        if _hasHeatTransfer and BOUNDARY_UI[type_index][subtype_index][5]:
-            self.form.thermalFrame.setVisible(True)
-            selected_rows = BOUNDARY_UI[type_index][subtype_index][6]
-            if selected_rows:
-                for rowi in range(self.form.layoutThermal.count()):
-                    for role in [QFormLayout.LabelRole, QFormLayout.FieldRole, QFormLayout.SpanningRole]:
-                        item = self.form.layoutThermal.itemAt(rowi, role)
-                        if item:
-                            if isinstance(item, QtGui.QWidgetItem):
-                                item.widget().setVisible(False)
-                for row_enabled in selected_rows:
-                    for role in [QFormLayout.LabelRole, QFormLayout.FieldRole, QFormLayout.SpanningRole]:
-                        item = self.form.layoutThermal.itemAt(row_enabled, role)
-                        if item:
-                            item.widget().setVisible(True)
-        else:
-            self.form.thermalFrame.setVisible(False)
-
-    def updateSelectionbuttonUI(self):
-        self.form.buttonDirection.setChecked(self.selecting_direction)
-
-    def radioButtonVelocityToggled(self, checked):
-        self.BoundarySettings['VelocityIsCartesian'] = self.form.radioButtonCart.isChecked()
-        self.form.frameCart.setVisible(self.form.radioButtonCart.isChecked())
-        self.form.frameMagNormal.setVisible(self.form.radioButtonMagNormal.isChecked())
-
-    ########################### FreeCADGui only ######################
     def buttonDirectionClicked(self):
         self.selecting_direction = not self.selecting_direction
         if self.selecting_direction:
@@ -361,7 +472,7 @@ class CfdBoundaryWidget(QWidget):
                 if sel.HasSubObjects:
                     if len(sel.SubElementNames) == 1:
                         sub = sel.SubElementNames[0]
-                        self.directionSelection(sel.DocumentName, sel.ObjectName, sub)
+                        self.selectDirection(sel.DocumentName, sel.ObjectName, sub)
         FreeCADGui.Selection.clearSelection()
         # start SelectionObserver and parse the function to add the References to the widget
         if self.selecting_direction:
@@ -371,7 +482,7 @@ class CfdBoundaryWidget(QWidget):
             FreeCADGui.Selection.removeObserver(self)
         self.updateSelectionbuttonUI()
 
-    def addSelection(self, doc_name, obj_name, sub, selectedPoint=None):
+    def selectDirection(self, doc_name, obj_name, sub, selectedPoint=None):
         # This is the direction selection
         if not self.selecting_direction:
             # Shouldn't be here
@@ -382,233 +493,317 @@ class CfdBoundaryWidget(QWidget):
         # On double click on a vertex of a solid sub is None and obj is the solid
         print('Selection: ' +
               selected_object.Shape.ShapeType + '  ' +
-              selected_object.Name + ':' +
+              selected_object.Name + GEOMETRY_REFERENCE_SEP +
               sub + " @ " + str(selectedPoint))
         if hasattr(selected_object, "Shape") and sub:
             elt = selected_object.Shape.getElement(sub)
-            if elt.ShapeType == 'Face':
-                selection = (selected_object.Name, sub)
-                if self.selecting_direction:
-                    if CfdTools.is_planar(elt):
-                        self.selecting_direction = False
-                        self.form.lineDirection.setText(selection[0] + ':' + selection[1])  # TODO: Display label, not name
+            if self.selecting_direction:
+                if elt.ShapeType == 'Face':
+                    if CfdTools.isPlanar(elt):
+                        selection = (selected_object.Name, sub)
+                        self.form.lineDirection.setText(selection[0] + GEOMETRY_REFERENCE_SEP + selection[1])  # TODO: Display label, not name
+                        self._directionVector = elt.normalAt(0.5, 0.5)
                     else:
                         FreeCAD.Console.PrintMessage('Face must be planar\n')
+                elif elt.ShapeType == 'Edge':
+                    self.form.lineDirection.setText(selected_object.Name + GEOMETRY_REFERENCE_SEP + sub) 
+                    self._directionVector = self._getEdgeDirection(elt)
+                else:
+                    FreeCAD.Console.PrintMessage('Only planar face and straight edge are supported as direction\n')
+                self.selecting_direction = False  # completed
+                self.updateUi()
+
+    def _getEdgeDirection(self, elt):
+        v = elt.lastVertex().Point - elt.firstVertex().Point
+        v_mag = sum([q*q for q in v])**0.5
+        if v_mag != 0:
+            v = [q/v_mag for q in v]
+        return v
+
+    def updateSelectionbuttonUI(self):
+        self.form.buttonDirection.setChecked(self.selecting_direction)
 
     def lineDirectionChanged(self, value):
-        selection = value.split(':')
+        # soecify direc by directly setting QLineEdit with obj and subobj name
+        selection = value.split(GEOMETRY_REFERENCE_SEP)
         # See if entered face actually exists and is planar
         try:
             selected_object = self.obj.Document.getObject(selection[0])
             if hasattr(selected_object, "Shape"):
                 elt = selected_object.Shape.getElement(selection[1])
-                if elt.ShapeType == 'Face' and CfdTools.is_planar(elt):
-                    self.BoundarySettings['DirectionFace'] = value
+                if elt.ShapeType == 'Face':
+                    if CfdTools.isPlanar(elt):
+                        self._directionVector = elt.normalAt(0.5, 0.5)
+                    else:
+                        FreeCAD.Console.PrintMessage(value + " is not a valid, planar face\n")
+                elif elt.ShapeType == 'Edge':
+                    self._directionVector = self._getEdgeDirection(elt)
+                else:
                     return
+                self.updateUi()
         except SystemError:
             pass
-        FreeCAD.Console.PrintMessage(value + " is not a valid, planar face\n")
-    ######################################
 
-    def inputCartXChanged(self, value):
-        inputCheckAndStore(value, "m/s", self.BoundarySettings, 'Ux')
-
-    def inputCartYChanged(self, value):
-        inputCheckAndStore(value, "m/s", self.BoundarySettings, 'Uy')
-
-    def inputCartZChanged(self, value):
-        inputCheckAndStore(value, "m/s", self.BoundarySettings, 'Uz')
-
-    def inputVelocityMagChanged(self, value):
-        inputCheckAndStore(value, "m/s", self.BoundarySettings, 'VelocityMag')
+    def inputVectorMagChanged(self, value):
+        self._magnitude = value
 
     def checkReverseToggled(self, checked):
-        self.BoundarySettings['ReverseNormal'] = checked
+        self._reversedDirection = checked
 
-    def inputPressureChanged(self, value):
-        inputCheckAndStore(value, "kg/m/s^2", self.BoundarySettings, 'Pressure')
 
-    def inputSlipRatioChanged(self, value):
-        inputCheckAndStore(value, "m/m", self.BoundarySettings, 'SlipRatio')
+GEOMETRY_REFERENCE_SEP = ':'
+class VectorInputWidget(QWidget):
+    """ QWidget for adding fluid boundary """
+    def __init__(self, velocity, obj= None, parent=None):
+        super(VectorInputWidget, self).__init__(parent)  # for both py2 and py3
 
-    def inputVolFlowRateChanged(self, value):
-        inputCheckAndStore(value, "m^3/s", self.BoundarySettings, 'VolFlowRate')
+        self.valueTypes = ['Cartisan components']
 
-    def inputMassFlowRateChanged(self, value):
-        inputCheckAndStore(value, "kg/s", self.BoundarySettings, 'MassFlowRate')
+        NumberOfComponents = 3
+        vector_config = [  ['vector'], ['vector'], ['vector'],
+                                ['Vx', 'Vy', 'Vz'],
+                                ['m/s']*NumberOfComponents,
+                                [[True]*NumberOfComponents]
+                                ]
+        self.componentWidget = InputWidget(None, vector_config)
 
-    def buttonGroupPorousClicked(self, button):
-        method = self.form.buttonGroupPorous.checkedId()
-        self.BoundarySettings['PorousBaffleMethod'] = method
-        self.form.stackedWidgetPorous.setCurrentIndex(method)
+        self.forms = [self.componentWidget]
+        if within_FreeCADGui:
+            self.valueTypes += ['Magnitude and normal']
+            self.magNormalWidget = MagnitudeNormalWidget(velocity, obj, self)
+            self.forms += [self.magNormalWidget.form]
+        #create 2 widgets and select diff way
+        valueTypeTips = self.valueTypes
+        self.buttonGroupValueType, _buttonGroupLayout = _createChoiceGroup(self.valueTypes, valueTypeTips)
+        self.buttonGroupValueType.buttonClicked.connect(self.valueTypeChanged)  # diff conect syntax
+        self.currentValueType = self.valueTypes[0]
 
-    def inputPressureDropCoeffChanged(self, value):
-        inputCheckAndStore(value, "m/m", self.BoundarySettings, 'PressureDropCoeff')
+        _layout = QVBoxLayout()
+        #_layout.addWidget(self.labelHelpText)
+        _layout.addLayout(_buttonGroupLayout)
+        for w in self.forms:
+            _layout.addWidget(w)
+        self.setLayout(_layout)
 
-    def inputWireDiameterChanged(self, value):
-        inputCheckAndStore(value, "m", self.BoundarySettings, 'ScreenWireDiameter')
+        self.setVector(velocity)
 
-    def inputSpacingChanged(self, value):
-        inputCheckAndStore(value, "m", self.BoundarySettings, 'ScreenSpacing')
+    def valueTypeChanged(self):
+        #print(self.buttonGroupValueType.checkedId())
+        self.currentValueType = self.valueTypes[self.buttonGroupValueType.checkedId()]
+        self.updateUi()
 
-    def inputTemperatureChanged(self, value):
-        inputCheckAndStore(value, "K", self.BoundarySettings, 'Temperature')
+    def vectorChanged(self):
+        #todo: update other form, preview vector
+        _vector = self.vector()
+        self.setVector(vector)  # will call each widget's self.updateUi()
 
-    def inputHeatFluxChanged(self, value):
-        inputCheckAndStore(value, "W/m^2", self.BoundarySettings, 'HeatFlux')
+    def updateUi(self):
+        for i, form in enumerate(self.forms):
+            if i == self.buttonGroupValueType.checkedId():
+                form.setVisible(True)
+                form.updateUi()
+            else:
+                form.setVisible(False)
 
-    def inputHeatTransferCoeffChanged(self, value):
-        inputCheckAndStore(value, "W/m^2/K", self.BoundarySettings, 'HeatTransferCoeff')
+    def vector(self):
+        if self.buttonGroupValueType.checkedId() == 0:
+            _inputs = self.componentWidget.inputSettings()
+            vector = [_inputs[k] for k in ['Vx', 'Vy', 'Vz']]
+        else:
+            if within_FreeCADGui:
+                vector = self.magNormalWidget.vector()
+        return vector
 
-    def comboTurbulenceSpecificationChanged(self, index):
-        self.form.labelTurbulenceDescription.setText(TURBULENT_INLET_SPEC[self.turbModel][2][index])
-        self.BoundarySettings['TurbulenceInletSpecification'] = TURBULENT_INLET_SPEC[self.turbModel][1][index]
-        self.updateTurbulenceUi()
+    def setVector(self, vector):
+        #set vector for both widget
+        _inputs = self.componentWidget.inputSettings()
+        for i,k in enumerate(['Vx', 'Vy', 'Vz']):
+            _inputs[k] = vector[i]
+        self.componentWidget.setInputSettings(_inputs)
+        if within_FreeCADGui:
+            self.magNormalWidget.setVector(vector)
+        self.updateUi()
 
-    def inputKineticEnergyChanged(self, value):
-        inputCheckAndStore(value, "m^2/s^2", self.BoundarySettings, 'TurbulentKineticEnergy')
 
-    def inputSpecificDissipationRateChanged(self, value):
-        inputCheckAndStore(value, "rad/s", self.BoundarySettings, 'SpecificDissipationRate')
+class CfdBoundaryWidget(QWidget):
+    """ QWidget for adding fluid boundary """
+    def __init__(self, object, boundarySettings, physics_model, material_objs, parent=None):
+        super(CfdBoundaryWidget, self).__init__(parent)  # for both py2 and py3
 
-    def inputIntensityChanged(self, value):
-        inputCheckAndStore(value, "m/m", self.BoundarySettings, 'TurbulenceIntensity')
+        self.obj = object
+        if self.obj:
+            self.BoundarySettings = self.obj.BoundarySettings
+        else:  # None, if it is not used in FreeCADGui mode
+            self.BoundarySettings = boundarySettings
+        # todo
+        thermalSettings = {}
+        turbulenceSettings = {}
 
-    def inputLengthScaleChanged(self, value):
-        inputCheckAndStore(value, "m", self.BoundarySettings, 'TurbulenceLengthScale')
+        if within_FreeCADGui:
+            self.physics_model = physics_model  # approx solver_object, but slightly different
+            if 'Turbulence' not in self.obj.PropertiesList:  # Qingfeng Xia's Cfd module
+                self.turbModel = 'kOmegaSST' # physics_model.TurbulenceModel
+            else: # CfdOF fork
+                self.turbModel =  (physics_model.TurbulenceModel
+                                  if physics_model.Turbulence == 'RANS' or physics_model.Turbulence == 'LES'
+                                  else None)
 
-    def updateTurbulenceUi(self):
-        index = self.form.comboTurbulenceSpecification.currentIndex()
-        panel_numbers = TURBULENT_INLET_SPEC[self.turbModel][3][index]
-        # Enables specified rows of a QFormLayout
-        for rowi in range(self.form.layoutTurbulenceValues.count()):
-            for role in [QFormLayout.LabelRole, QFormLayout.FieldRole, QFormLayout.SpanningRole]:
-                item = self.form.layoutTurbulenceValues.itemAt(rowi, role)
-                if isinstance(item, QtGui.QWidgetItem):
-                    item.widget().setVisible(rowi in panel_numbers)
+            # compatibility workaround
+            if 'Thermal' in self.physics_model.PropertiesList:
+                self.hasHeatTransfer = self.physics_model.Thermal != 'None'
+            else:  # Qingfeng's Cfd
+                if 'HeatTransfering' in self.physics_model.PropertiesList:
+                    self.hasHeatTransfer = self.physics_model.HeatTransfering
+                else:
+                    self.hasHeatTransfer = True
 
-    #def getMaterialName(self, index):
-    #    return self.material_objs[index].Label
+        self.material_objs = material_objs  # volume faction of multiphase flow, should accept None
 
-    def comboFluidChanged(self, index):
-        if 'alphas' not in self.BoundarySettings:
-            self.BoundarySettings['alphas'] = {}
-        setInputFieldQuantity(self.form.inputVolumeFraction,
-                              str(self.BoundarySettings['alphas'].get(self.getMaterialName(index), 0.0)))
+        """
+        ui_path = os.path.join(os.path.dirname(__file__), "TaskPanelCfdFluidBoundary.ui")
+        ui_path = os.path.join(os.path.dirname(__file__), "TaskPanelFemConstraintFluidBoundary.ui")
+        #self.form = QtUiTools.QUiLoader().load(ui_path)
+        self.form = FreeCADGui.PySideUic.loadUi(ui_path)
+        """
 
-    def inputVolumeFractionChanged(self, value):
-        inputCheckAndStore(value, "m/m", self.BoundarySettings['alphas'], self.form.comboFluid.currentText())
+        self.comboBoundaryType = QComboBox()
+        self.comboSubtype = QComboBox()
+        self.form = self
 
-    def comboThermalBoundaryTypeChanged(self, index):
-        self.form.labelThermalDescription.setText(THERMAL_HELPTEXT[index])
-        self.BoundarySettings['ThermalBoundaryType'] = THERMAL_BOUNDARY_TYPES[index]
-        self.updateThermalUi()
+        _layout = QVBoxLayout()
+        _layout.addWidget(self.comboBoundaryType)
+        _layout.addWidget(self.comboSubtype)
+        self.labelHelpText = QLabel(self.tr('select a proper subtype and input a value'), self)
+        self.labelHelpText.setWordWrap(True)
+        _layout.addWidget(self.labelHelpText)
 
-    def updateThermalUi(self):
-        index = self.form.comboThermalBoundaryType.currentIndex()
-        panel_numbers = BOUNDARY_THERMALTAB[index]
-        # Enables specified rows of a QFormLayout
-        for rowi in range(2, self.form.layoutThermal.count()):  # Input values only start at row 2 of this form
-            for role in [QFormLayout.LabelRole, QFormLayout.FieldRole, QFormLayout.SpanningRole]:
-                item = self.form.layoutThermal.itemAt(rowi, role)
-                if isinstance(item, QtGui.QWidgetItem):
-                    item.widget().setVisible(rowi-2 in panel_numbers)
+        self.tabWidget = QTabWidget()
+        self.tabBasicBoundary = QWidget()
+        self.tabWidget.addTab(self.tabBasicBoundary, "Basic")
+        self.tabTurbulenceBoundary = InputWidget(turbulenceSettings, TURBULENCE_CONFIG)
+        self.tabWidget.addTab(self.tabTurbulenceBoundary, "Turbulence")
+        self.tabThermalBoundary = InputWidget(thermalSettings, THERMAL_CONFIG)
+        self.tabWidget.addTab(self.tabThermalBoundary, "Thermal")
 
-    #######################################################
+        # these 2 are value widgets
+        _valueLayout = QHBoxLayout()
+        self.inputBoundaryValue = _createInputField()
+        self.labelBoundaryValue = QLabel()
+        _valueLayout.addWidget(self.labelBoundaryValue)
+        _valueLayout.addWidget(self.inputBoundaryValue)
+        self.vectorInputWidget = VectorInputWidget([0, 0, 0], self.obj)
+        _widgetLayout = QVBoxLayout()
+        _widgetLayout .addLayout(_valueLayout)
+        _widgetLayout .addWidget(self.vectorInputWidget)
+        self.tabBasicBoundary.setLayout(_widgetLayout)
+
+        _layout.addWidget(self.tabWidget)
+        self.setLayout(_layout)
+    
+        self.form.comboBoundaryType.currentIndexChanged.connect(self.comboBoundaryTypeChanged)
+        self.form.comboSubtype.currentIndexChanged.connect(self.comboSubtypeChanged)
+
+        self.setBoundarySettings(self.BoundarySettings)
+
+    def _getCurrentValueUnit(self):
+        bType = BOUNDARY_TYPES[self.form.comboBoundaryType.currentIndex()]
+        si = self.form.comboSubtype.currentIndex()
+        return SUBTYPE_UNITS[bType][si]
+
     def boundarySettings(self):
-        bc = self.BoundarySettings
+        self.onValueChange()  # currently value change signal has no slot connected
+        bc = self.BoundarySettings.copy()
         return bc
-        pass  # todo, collect data
 
-    def accept(self):
-        if "CfdFluidBoundary" in self.obj.Label:  # using type check
-            self.obj.Label = self.obj.BoundarySettings['BoundaryType']
-        #FreeCADGui.Selection.removeObserver(self)
-        self.obj.BoundarySettings = self.BoundarySettings.copy()
-        doc = FreeCADGui.getDocument(self.obj.Document)
-        doc_name = str(self.obj.Document.Name)
-        FreeCAD.getDocument(doc_name).recompute()
-        doc.resetEdit()
+    def onValueChange(self):
+        if not self.vectorInputWidget.isVisible():
+            self.BoundarySettings['BoundaryValue'] = _getInputField(self.inputBoundaryValue, self.BoundarySettings['Unit'])
+        else:
+            self.BoundarySettings['BoundaryValue'] = self.vectorInputWidget.vector()
 
-        FreeCADGui.doCommand("\n# Values are converted to SI units and stored (eg. m/s)")
-        FreeCADGui.doCommand("bc = FreeCAD.ActiveDocument.{}.BoundarySettings".format(self.obj.Name))
-        # Type
-        FreeCADGui.doCommand("bc['BoundaryType'] "
-                             "= '{}'".format(self.BoundarySettings['BoundaryType']))
-        FreeCADGui.doCommand("bc['BoundarySubtype'] "
-                             "= '{}'".format(self.BoundarySettings['BoundarySubtype']))
-        FreeCADGui.doCommand("bc['ThermalBoundaryType'] "
-                             "= '{}'".format(self.BoundarySettings['ThermalBoundaryType']))
-        # Velocity
-        FreeCADGui.doCommand("bc['VelocityIsCartesian'] "
-                             "= {}".format(self.BoundarySettings['VelocityIsCartesian']))
-        FreeCADGui.doCommand("bc['Ux'] "
-                             "= {}".format(self.BoundarySettings['Ux']))
-        FreeCADGui.doCommand("bc['Uy'] "
-                             "= {}".format(self.BoundarySettings['Uy']))
-        FreeCADGui.doCommand("bc['Uz'] "
-                             "= {}".format(self.BoundarySettings['Uz']))
-        FreeCADGui.doCommand("bc['VelocityMag'] "
-                             "= {}".format(self.BoundarySettings['VelocityMag']))
-        FreeCADGui.doCommand("bc['DirectionFace'] "
-                             "= '{}'".format(self.BoundarySettings['DirectionFace']))
-        FreeCADGui.doCommand("bc['ReverseNormal'] "
-                             "= {}".format(self.BoundarySettings['ReverseNormal']))
-        FreeCADGui.doCommand("bc['MassFlowRate'] "
-                             "= {}".format(self.BoundarySettings['MassFlowRate']))
-        FreeCADGui.doCommand("bc['VolFlowRate'] "
-                             "= {}".format(self.BoundarySettings['VolFlowRate']))
-        # Presure
-        FreeCADGui.doCommand("bc['Pressure'] "
-                             "= {}".format(self.BoundarySettings['Pressure']))
-        # Wall
-        FreeCADGui.doCommand("bc['SlipRatio'] "
-                             "= {}".format(self.BoundarySettings['SlipRatio']))
-        # Thermal
-        FreeCADGui.doCommand("bc['Temperature'] "
-                             "= {}".format(self.BoundarySettings['Temperature']))
-        FreeCADGui.doCommand("bc['HeatFlux'] "
-                             "= {}".format(self.BoundarySettings['HeatFlux']))
-        FreeCADGui.doCommand("bc['HeatTransferCoeff'] "
-                             "= {}".format(self.BoundarySettings['HeatTransferCoeff']))
+    def setBoundarySettings(self, settings):
+        """ Populate UI, update view from settings"""
+        self.form.comboBoundaryType.addItems(BOUNDARY_NAMES)
+        _boundaryType = settings['BoundaryType']
+        bi = indexOrDefault(BOUNDARY_TYPES, _boundaryType, 0)
+        self.form.comboBoundaryType.setCurrentIndex(bi)
 
-        # Turbulence
-        FreeCADGui.doCommand("bc['TurbulenceInletSpecification'] "
-                             "= '{}'".format(self.BoundarySettings['TurbulenceInletSpecification']))
-        FreeCADGui.doCommand("bc['TurbulentKineticEnergy'] "
-                             "= {}".format(self.BoundarySettings['TurbulentKineticEnergy']))
-        FreeCADGui.doCommand("bc['SpecificDissipationRate'] "
-                             "= {}".format(self.BoundarySettings['SpecificDissipationRate']))
-        FreeCADGui.doCommand("bc['TurbulenceIntensity'] "
-                             "= {}".format(self.BoundarySettings['TurbulenceIntensity']))
-        FreeCADGui.doCommand("bc['TurbulenceLengthScale'] "
-                             "= {}".format(self.BoundarySettings['TurbulenceLengthScale']))
-        # Volume fraction
-        if len(self.material_objs) > 1:
-            for i in range(len(self.material_objs)-1):
-                alphaName = self.getMaterialName(i)
-                FreeCADGui.doCommand("bc['alphas']['{}'] = {}".format(
-                    alphaName, self.BoundarySettings['alphas'].get(alphaName, 0.0)))
+        si = indexOrDefault(SUBTYPES[_boundaryType], settings['BoundarySubtype'], 0)
+        self.form.comboSubtype.setCurrentIndex(si)
 
-        # Porous
-        FreeCADGui.doCommand("bc['PressureDropCoeff'] "
-                             "= {}".format(self.BoundarySettings['PressureDropCoeff']))
-        FreeCADGui.doCommand("bc['ScreenWireDiameter'] "
-                             "= {}".format(self.BoundarySettings['ScreenWireDiameter']))
-        FreeCADGui.doCommand("bc['ScreenSpacing'] "
-                             "= {}".format(self.BoundarySettings['ScreenSpacing']))
-        FreeCADGui.doCommand("bc['PorousBaffleMethod'] "
-                             "= {}".format(self.BoundarySettings['PorousBaffleMethod']))
-        FreeCADGui.doCommand("FreeCAD.ActiveDocument.{}.BoundarySettings = bc".format(self.obj.Name))
-        FreeCADGui.doCommand("FreeCAD.ActiveDocument.{}.Label = '{}'".format(self.obj.Name, self.obj.Label))
-        """
-        faces = []
-        for ref in self.obj.References:
-            faces.append(ref)
-        self.obj.References = []
-        FreeCADGui.doCommand("FreeCAD.ActiveDocument.{}.References = []".format(self.obj.Name))
-        for f in faces:
-            FreeCADGui.doCommand("FreeCAD.ActiveDocument.{}.References.append({})".format(self.obj.Name, f))
-        FreeCADGui.doCommand("FreeCAD.ActiveDocument.recompute()")
-        """
+        if 'BoundaryValue' in settings:
+            if not hasattr(settings['BoundaryValue'], "__len__"):  # support numpy.array, array, list, tuple, but also string
+                self.inputBoundaryValue.setValue(settings['BoundaryValue'])
+        else:
+            if 'ValueVector' in settings:  # DirectionVector + BoundaryValue
+                self.vectorInputWidget.setVector(settings['ValueVector'])
+            else:
+                self.vectorInputWidget.setVector(settings['BoundaryValue'])
 
+        self.updateValueUi()
+
+    def updateValueUi(self):
+        #set value label and unit
+        self.labelBoundaryValue.setVisible(False)
+        self.inputBoundaryValue.setVisible(False)
+        self.vectorInputWidget.setVisible(False)
+        unit = self._getCurrentValueUnit()
+        bType = BOUNDARY_TYPES[self.form.comboBoundaryType.currentIndex()]
+        si = self.form.comboSubtype.currentIndex()
+        unit = SUBTYPE_UNITS[bType][si]
+        valueName = SUBTYPE_VALUE_NAMES[bType][si]
+        if unit == '':
+            pass
+        elif unit == 'm/s':
+            self.vectorInputWidget.setVisible(True)
+        else:  # any scalar
+            self.labelBoundaryValue.setText("{} [{}]".format(valueName, unit))
+            self.inputBoundaryValue.setVisible(True)
+
+    def comboBoundaryTypeChanged(self):
+        index = self.form.comboBoundaryType.currentIndex()
+        _bType = BOUNDARY_TYPES[index]
+        self.form.comboSubtype.clear()
+        self.form.comboSubtype.addItems(SUBTYPE_NAMES[_bType])
+        self.form.comboSubtype.setCurrentIndex(0)
+        self.BoundarySettings['BoundaryType'] = _bType
+
+        if self.obj:
+            # Change the color of the boundary condition as the selection is made
+            self.obj.BoundarySettings = self.BoundarySettings.copy()
+            doc_name = str(self.obj.Document.Name)
+            FreeCAD.getDocument(doc_name).recompute()
+
+    def comboSubtypeChanged(self):
+        index = self.form.comboBoundaryType.currentIndex()
+        _bType = BOUNDARY_TYPES[index]
+        subtype_index = self.form.comboSubtype.currentIndex()
+        self.form.labelHelpText.setText(SUBTYPES_HELPTEXTS[_bType][subtype_index])
+        self.BoundarySettings['BoundarySubtype'] = SUBTYPES[_bType][subtype_index]
+        self.BoundarySettings['Unit'] = self._getCurrentValueUnit()
+        #self.BoundarySettings['QuantityName'] = SUBTYPE_NAMES[_bType][subtype_index]
+        self.updateValueUi()
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    thermalSettings = {""}
+    #dialog = InputWidget(thermalSettings, THERMAL_CONFIG)
+    turbulenceSettings = {}
+    #dialog = InputWidget(turbulenceSettings, TURBULENCE_CONFIG)
+    
+    #dialog = VectorInputWidget([0,0,0])
+    object = None
+    boundarySettings = {'BoundaryType': 'inlet',
+                                    'BoundarySubtype': 'totalPressure',
+                                    'BoundaryValue': 1e5,  # can hold a vector value
+                                    #'ValueUnit': "", # new property
+                                    'ThermalBoundarySettings': {},
+                                    'TurbulenceSettings': {}
+                                    }
+    physics_model = {}
+    material_objs = []
+    
+    dialog = CfdBoundaryWidget(object, boundarySettings, physics_model, material_objs)
+    dialog. show()
+    app.exec_()
