@@ -1171,19 +1171,33 @@ class BasicBuilder(object):
         print('internalField must be set for each var in 0/ folder')
         bcName = bcDict['name']
         value = bcDict['value']
-        #
-        f = ParsedParameterFile(self._casePath + "/0/p")
-        f["boundaryField"][bcName] = {}
-        f["boundaryField"][bcName]["type"] = "freestreamPressure"
-        f.writeFile()
-        #
-        f = ParsedParameterFile(self._casePath + "/0/U")
-        f["boundaryField"][bcName] = {}
-        f["boundaryField"][bcName]["type"] = "freestream"
-        f["boundaryField"][bcName]["value"] = formatValue(value)
-        f.writeFile()
+        
+        if bcDict['type'] == "freestreamPressure" or bcDict['type'] == "freestream":
+            f = ParsedParameterFile(self._casePath + "/0/p")
+            f["boundaryField"][bcName] = {}
+            f["boundaryField"][bcName]["type"] = "freestreamPressure"
+            f.writeFile()
+            #
+            f = ParsedParameterFile(self._casePath + "/0/U")
+            f["boundaryField"][bcName] = {}
+            f["boundaryField"][bcName]["type"] = "freestream"
+            f["boundaryField"][bcName]["value"] = formatValue(value)
+            f.writeFile()
+        elif bcDict['type'] == "freestreamVelocity":
+            f = ParsedParameterFile(self._casePath + "/0/p")
+            f["boundaryField"][bcName] = {}
+            f["boundaryField"][bcName]["type"] = "freestream"
+            f.writeFile()
+            #
+            f = ParsedParameterFile(self._casePath + "/0/U")
+            f["boundaryField"][bcName] = {}
+            f["boundaryField"][bcName]["type"] = "freestreamVelocity"
+            f["boundaryField"][bcName]["value"] = formatValue(value)
+            f.writeFile()
+        else:
+            print( bcDict['type'] + "is not yet supported")
 
-        #turbulence inlet may need extra setting up
+        # todo: freestream turbulence may need extra setting up
         if 'turbulenceSettings' in bcDict:
             turbulenceSettings = bcDict['turbulenceSettings']
         else:

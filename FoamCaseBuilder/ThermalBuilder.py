@@ -39,7 +39,7 @@ supported_thermal_value_types = set([
 'totalTemperature', # only for inlet
 ])
 
-supported_radiation_models = ['noRadiation', 'P1' , 'viewFactor']
+supported_radiation_models = ['noRadiation', 'P1' , 'viewFactor', 'fvDOM']  #noRadiation, setup is too complicated
 def setupRadiationProperties(case, radiationModel):
     """ $FOAM_DIR/tutorials/heatTransfer/
     """
@@ -126,7 +126,7 @@ class ThermalBuilder(BasicBuilder):
             self.setupTransportProperties()
 
     def setupTransportProperties(self):
-        #
+        # incompressible
         case = self._casePath
         solver_settings = self._solverSettings
 
@@ -146,7 +146,7 @@ class ThermalBuilder(BasicBuilder):
         #todo: viscosity or other properties should be settable
 
     def setupThermophysicalProperties(self):
-        #
+        # compressible flow
         case = self._casePath
         solver_settings = self._solverSettings
 
@@ -157,7 +157,7 @@ class ThermalBuilder(BasicBuilder):
                 if solver_settings['compressible'] and not solver_settings['heatTransfering']: 
                     type = 'hePsiThermo'  # transport: sutherland or const, default to const
                 else:
-                    type = 'heRhoThermo'
+                    type = 'heRhoThermo'  # density-based method
                 lines = air_thermophysicalProperties % type
             else:
                 print("Error: unrecoginsed fluid name: {}".format(self.fluidProperties['name']))
@@ -166,37 +166,7 @@ class ThermalBuilder(BasicBuilder):
                 print(lines)
         createRawFoamFile(case, "constant", "thermophysicalProperties", lines)
 
-    ###############################################################################################
-    """
-    /opt/openfoam4/tutorials/heatTransfer/buoyantPimpleFoam/hotRoom
-    For compressible flow without heat transfer (mainly with wall), zeroGradient is used, buoyant flow is not considered
-    """
-    def getSolverCreatedVariables(self):
-        # density variable/field 'rho' will be automatically created if not present
-        return super(ThermalBuilder, self).getSolverCreatedVariables() | self.getThermalVariables()
-
-    def getThermalVariables(self):
-        """ incompressible air flow must calc var 'T' and 'alphat' for turbulence flow
-        heatTransfer should consider buoyant effect, adding var 'p_rgh', even for buoyantBoussinesqSimpleFoam
-        radiationModel: G for P1 and fvDOM, IDefault for fvDOM, 
-        alphat = turbulence->nut()/Prt; // turbulent Prantl number is in general randomly chosen between 0.75 and 0.95
-        """
-        solverSettings = self._solverSettings
-        radiationModel = solverSettings['radiationModel']
-        vars = []
-        print(solverSettings)
-        if solverSettings['heatTransfering']:
-            if radiationModel == "noRadiation":
-                vars += ['T', 'p_rgh'] # p_rgh for buoyant solver far field pressure field
-            else:
-                print("Error: radiation is not implemented yet")
-                raise NotImplementedError()
-        else:
-            if solverSettings['compressible']:
-                vars += ['T']
-        if solverSettings['turbulenceModel'] not in set(['DNS', 'laminar', 'invisid']):
-            vars += ['alphat']
-        return set(vars)
+    ######################################
 
     '''
     def _createInitVarables(self):
@@ -243,15 +213,17 @@ class ThermalBuilder(BasicBuilder):
         self.initThermalBoundaryAsWall(bc_names)
 
     def initThermalBoundaryAsWall(self, bc_names):
-        """ defaultFaces is wall, no heat flux on wall, except for explicitly define
+        """ defaultFaces is wall, no heat flux on wall, except for explicitly definition
         reference to $FOAM_DIR/tutorials/heatTransfer/buoyantBoussinesqSimpleFoam/hotRoom/0
+        /opt/openfoam4/tutorials/heatTransfer/buoyantPimpleFoam/hotRoom
+        For compressible flow without heat transfer (mainly with wall), zeroGradient is used, buoyant flow is not considered
         """
         f = ParsedParameterFile(self._casePath + "/0/T")
         for bc in bc_names:
             f["boundaryField"][bc]={}
             f["boundaryField"][bc]["type"]="zeroGradient"
         f.writeFile()
-            
+
         if 'alphat' in self._solverCreatedVariables:
             self.initThermalTurbulenceBoundaryAsWall(bc_names)
 
@@ -306,7 +278,7 @@ class ThermalBuilder(BasicBuilder):
                 f["boundaryField"][bc]["gradient"] = formatValue(s['heatFlux'])
             elif vType == "mixed":
                 f["boundaryField"][bc]["value"] = formatValue(s['temperature'])
-                f["boundaryField"][bc]["gradient"] = formatValue(s['heatFlux'])
+                f["boundaryField"][bc]["gradient"] = formatValue(s['heatFlux'])  # here flux mean gradient
             elif vType == "coupled":
                     # type = 'externalCoupledTemperatureMixed'
                     print("{} wall boundary value type is not supproted".format(vType))
@@ -317,24 +289,26 @@ class ThermalBuilder(BasicBuilder):
                         # externalWallHeatFluxTemperature seems only for compressible flow
                         if self._solver_settings['compressible']:
                             f["boundaryField"][bc]["type"] = "compressible::externalWallHeatFluxTemperature"
-                            f["boundaryField"][bc]["kappa"]= "fluidThermo"
-                            f["boundaryField"][bc]["kappaName"]= "none"
-                            f["boundaryField"][bc]["q"] = formatValue(s['heatFlux'])
-                            f["boundaryField"][bc]["relaxation"] = "1"
                         else:
-                            pass
+                            f["boundaryField"][bc]["type"] = "externalWallHeatFluxTemperature"
+                        f["boundaryField"][bc]["mode"]= "flux"
+                        f["boundaryField"][bc]["q"] = formatValue(s['heatFlux'])
+                        f["boundaryField"][bc]["kappaMethod"]= "fluidThermo"
+                        #f["boundaryField"][bc]["kappa"]= "none"
+                        f["boundaryField"][bc]["relaxation"] = "1"       
                     elif vType == "HTC":
                         if self._solver_settings['compressible']:
                             f["boundaryField"][bc]["type"] = "compressible::externalWallHeatFluxTemperature"
-                            f["boundaryField"][bc]["kappa"]= "fluidThermo"
-                            f["boundaryField"][bc]["kappaName"]= "none"
-                            f["boundaryField"][bc]["Ta"] = formatValue(s['temperature'])
-                            f["boundaryField"][bc]["h"] = formatValue(s['HTC'])
-                            f["boundaryField"][bc]["relaxation"] = "1"
                         else:
-                            pass
-                            #f["boundaryField"][bc]["type"] = "convectiveHeatFlux"
-                            #f["boundaryField"][bc]["L"] = 0.1
+                            #rhoCpRef should have been defiend in createIcompressibleRadiation
+                            # kappa constant can be defiend in transportProperties dict
+                            f["boundaryField"][bc]["type"] = "externalWallHeatFluxTemperature"
+                        f["boundaryField"][bc]["mode"]= "coefficient"  # lookup  solidThermo
+                        f["boundaryField"][bc]["kappaMethod"]= "fluidThermo"  # lookup  solidThermo
+                        #f["boundaryField"][bc]["kappaName"]= "none"  # 'kappa' or 'kappaEff' depends on turbulence model
+                        f["boundaryField"][bc]["Ta"] = formatValue(s['temperature'])
+                        f["boundaryField"][bc]["h"] = formatValue(s['HTC'])
+                        f["boundaryField"][bc]["relaxation"] = "1"
                     else:
                         print("wall thermal boundary value type: {}    is not defined".format(vType))
                 elif bType == 'inlet' and vType == 'totalTemperature':
@@ -344,7 +318,8 @@ class ThermalBuilder(BasicBuilder):
                     assert vType == 'fixedValue' #check: outFlow only?
                     f["boundaryField"][bc]={'type':'inletOutlet', 'inletValue': formatValue(s['temperature']), 'value': formatValue(s['temperature'])}
                 elif bType == 'freestream':
-                    pass #todo: find the example and code here
+                    f["boundaryField"][bc]={'type':'zeroGradient'}
+                    #todo: find the example and code here
                 elif bType == 'interface':
                     #todo: find the example and check code here
                     f["boundaryField"][bc]={'type': boundary['subtype']}

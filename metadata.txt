@@ -13,7 +13,7 @@ about=Simple workflow to get started with CFD analysis by OpenFOAM and possible 
 version=
 
 ; tracker can either link to a bugtracker or a forum thread link
-tracker=https://github.com/qingfengxia/Cfd
+tracker=https://github.com/qingfengxia/Cfd/issues
 repository=https://github.com/qingfengxia/Cfd
 license=LGPL
 

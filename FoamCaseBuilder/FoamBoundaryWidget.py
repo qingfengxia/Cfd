@@ -30,27 +30,28 @@ qtpy should be used to import QtObjects for the better compatibility
 """
 
 import sys
+import pprint
 from collections import OrderedDict
 try:
     from PySide.QtGui import QMainWindow, QApplication, QPushButton, QLabel, QWidget, QAction, \
-            QTabWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QHBoxLayout
+            QTabWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QHBoxLayout, QTextEdit
     from PySide.QtGui import QIcon
     from PySide import QtCore
 except:
     from PySide2.QtWidgets import QMainWindow, QApplication, QPushButton, QLabel, QWidget, QAction, \
-            QTabWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QHBoxLayout
+            QTabWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QHBoxLayout, QTextEdit
     from PySide2.QtGui import QIcon
     from PySide2 import QtCore
 
 
-# maybe import from FoamCaseBuilder
-#from .BasicBuilder import _VARIABLE_NAMES
+
 _VARIABLE_NAMES = {'U': "Velocity", "p": "Pressure",
 "T": "Temperature", 
 'alphat': "Thermal turbulence",
 'alphas': "phase fraction",
 'k': "Turbulence Intensity(k)", 'omega': "Turbulence omega", 'epsilon': "Turbulence epsilon",
 'p_rgh': "Pressure-rgh"}
+
 
 class FoamBoundaryWidget(QWidget):
     """boundary_settings is a python dict with varible as key and OrderedDictionary as value"""
@@ -59,6 +60,7 @@ class FoamBoundaryWidget(QWidget):
 
         assert (boundary_settings)  # each variable could have empty dict
 
+        self.setWindowTitle("Add raw dict as boundary settings")
         self.tabWidget = QTabWidget()
         self.tabs = OrderedDict()
         for variable in boundary_settings.keys():
@@ -69,13 +71,15 @@ class FoamBoundaryWidget(QWidget):
             else:
                 variable_name = variable
             self.tabWidget.addTab(vtab, variable_name)
-        self.tabWidget.resize(300,300)
+        self.tabWidget.resize(300,300)  # todo: sizeHint()
 
         self.myLayout = QVBoxLayout()
-        help_text = """keys and values are raw string (without ;) e.g. 'uniform (1 0 0)'
-        leave the table empty if do not want to overwrite setting by raw dict in this table
-        """
-        self.myLayout.addWidget(QLabel(help_text))
+        help_text = """keys and values are raw string (without ;) 
+e.g. 'uniform (1 0 0)', add all necessary key-value pairs
+to overwrite automatically generated boundary settings"""
+        self.labelHelpText = QLabel(help_text)
+        self.labelHelpText.setWordWrap(True)
+        self.myLayout.addWidget(self.labelHelpText)
         self.myLayout.addWidget(self.tabWidget)
         self.setLayout(self.myLayout)
 
@@ -84,6 +88,7 @@ class FoamBoundaryWidget(QWidget):
         for variable in self.tabs:
             _bcs[variable] = self.tabs[variable].dict()
         return _bcs
+
 
 class FoamDictWidget(QWidget):
     "QWidget to view and edit simple Foam Dictionary"
@@ -100,10 +105,10 @@ class FoamDictWidget(QWidget):
         self.buttonLayout.addWidget(self.pushButtonRestore)
         self.buttonLayout.addWidget(self.pushButtonClear)
 
-        #PySide has different name other than @QtCore.pyqtSlot, but PySide.QtCore.SLOT
-        QtCore.QObject.connect(self.pushButtonInsert, QtCore.SIGNAL("clicked()"), self.insertRow)
-        QtCore.QObject.connect(self.pushButtonRestore, QtCore.SIGNAL("clicked()"), self.restoreDict)
-        QtCore.QObject.connect(self.pushButtonClear, QtCore.SIGNAL("clicked()"), self.clearDict)
+        self.buttonPreview = QPushButton('Preview FoamFile write-out')
+        self.textPreview = QTextEdit('')
+        self.textPreview.setVisible(False)
+        self.textPreview.setEnabled(False)
 
         self.tableWidget = QTableWidget()
         #header, should not sort, has vertical scrollbar
@@ -114,14 +119,23 @@ class FoamDictWidget(QWidget):
         # set a default row count, insert as needed
         self.tableWidget.setRowCount(0)
 
-        self.initialDict = variable_setting
+        #PySide has different name other than @QtCore.pyqtSlot, but PySide.QtCore.SLOT
+        QtCore.QObject.connect(self.pushButtonInsert, QtCore.SIGNAL("clicked()"), self.insertRow)
+        QtCore.QObject.connect(self.pushButtonRestore, QtCore.SIGNAL("clicked()"), self.restoreDict)
+        QtCore.QObject.connect(self.pushButtonClear, QtCore.SIGNAL("clicked()"), self.clearDict)
+        #
+        QtCore.QObject.connect(self.tableWidget, QtCore.SIGNAL("doubleClicked()"), self.showPreview)  # does not work for PySide
+        QtCore.QObject.connect(self.buttonPreview, QtCore.SIGNAL("clicked()"), self.showPreview)
+        self._previewing = False
+
+        self.settings = variable_setting
         self.restoreDict()
-        # debug print to console# does not work for PySide
-        QtCore.QObject.connect(self.tableWidget, QtCore.SIGNAL("doubleClicked()"), self.printDict)
 
         self.myLayout = QVBoxLayout()
-        self.myLayout.addWidget(self.tableWidget)
         self.myLayout.addLayout(self.buttonLayout)
+        self.myLayout.addWidget(self.tableWidget)
+        self.myLayout.addWidget(self.buttonPreview)
+        self.myLayout.addWidget(self.textPreview)
         self.setLayout(self.myLayout)
 
     def dict(self):
@@ -134,6 +148,13 @@ class FoamDictWidget(QWidget):
                 _settings[k] = v
         return _settings
 
+    def setDict(self, settings):
+        self.settings = settings
+        self.updateDictView(self.settings)
+
+    def restoreDict(self):
+        self.updateDictView(self.settings)
+
     def updateDictView(self, varible_settings):
         i = 0
         self.clearDict()  # will clear contents, but leave row text empty
@@ -142,15 +163,11 @@ class FoamDictWidget(QWidget):
             # translate seq into unicode
             if i>=N:
                 self.tableWidget.insertRow(i)
-            kitem = QTableWidgetItem(unicode(k))  # also set flags and state, type
-            vitem = QTableWidgetItem(unicode(v))
-            #print(i, self.tableWidget.item(i, 0)) # debug: None
+            kitem = QTableWidgetItem(k)  # also set flags and state, type
+            vitem = QTableWidgetItem(v)  # automaticall convert str to unicode to feed QWidget?
             self.tableWidget.setItem(i, 0, kitem)
-            self.tableWidget.setItem(i, 1, vitem)
+            self.tableWidget.setItem(i, 1, vitem)  # currently only works for string value !
             i += 1
-
-    def restoreDict(self):
-        self.updateDictView(self.initialDict)
 
     #@pyqtSlot()  # PySide use another name "QtCore.Slot()"
     def insertRow(self):
@@ -159,26 +176,47 @@ class FoamDictWidget(QWidget):
         kitem = QTableWidgetItem("")  # also set flags and state, type
         vitem = QTableWidgetItem("")
         self.tableWidget.setItem(nRows, 0, kitem)
-        #print(nRows, self.tableWidget.item(nRows, 0))
         self.tableWidget.setItem(nRows, 1, vitem)
 
     def clearDict(self):
         self.tableWidget.clearContents()  # keep the header, clear all items
 
-    def printDict(self):
-        print(self.dict())
+    def showPreview(self):
+        if self._previewing:
+            self._previewing = False
+            self.textPreview.setVisible(False)
+            self.buttonPreview.setText('click to preview write out')
+        else:
+            self._previewing = True
+            self.buttonPreview.setText('click on text to hide preview')
+            # enable scrollbar ?
+            self.textPreview.setText(self.printDict())
+            self.textPreview.setVisible(True)
 
     def loadDefault(self):
         pass
 
+    def printDict(self):
+        dictText = "{\n"
+        for k,v in self.dict().items():
+            dictText += "   {}  {};\n".format(str(k), str(v))
+        dictText += "}"
+        return dictText
 
-#############################################
-_test_bc = {'U': {"key": "value"}, 'p':{"key": "value"}}
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     #ex = App()
     mw = QMainWindow()
     mw.setWindowTitle('PyQt FoamBoundaryWidget test')
+    _test_bc = {'p': {"type": "codedFixedValue",
+                                "value": "uniform 0",
+                                "redirectType": "rampedFixedValue",  # Name of generated boundary condition
+                                "code": """
+    #{
+        const scalar t = this->db().time().value();
+        operator==(min(10, 0.1*t));
+    #}"""                    },
+                    'u':{}}
     mw.setCentralWidget(FoamBoundaryWidget(_test_bc))
     mw.show()
     sys.exit(app.exec_())
