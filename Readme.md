@@ -1,5 +1,9 @@
 # A computional fluid dynamics (CFD) module for FreeCAD
 
+**An advanced open source CAD integrated CFD preprocessing tool to enable automated one-stop CFD simulation**
+
+![Schematic of automated engineering design pipeline](https://forum.freecadweb.org/download/file.php?id=73587)
+
 by Qingfeng Xia, 2015 <http://www.iesensor.com/HTML5pptCV>
 
 the team from CSIR South Africa, 2016
@@ -16,6 +20,8 @@ changelog and roadmap at [Roadmap.md](./Roadmap.md)
 
 ## Features and limitation
 
+This CFD module now have a subforum in FreeCAD's official forum, see the link: <https://forum.freecadweb.org/viewforum.php?f=37>
+
 This module aims to accelerate CFD case build up. Limited by the long solving time and mesh quality sensitivity of CFD problem, this module will not as good as FEM module. For engineering application, please seek support from other commercial CFD software.
 
 ### Features
@@ -24,7 +30,9 @@ This module aims to accelerate CFD case build up. Limited by the long solving ti
 
 2. An independent python module, FoamCaseBuilder (LGPL), can work with and without FreeCAD to build up case for *OpenFOAM<https://www.openfoam.com/>*
 
-3. *FenicsSolver<https://github.com/qingfengxia/FenicsSolver>*, a multiphysics FEA solver set, has been demonstrated in early 2018.
+3. Coupling with *FenicsSolver<https://github.com/qingfengxia/FenicsSolver>*, a multiphysics FEA solver set, has been demonstrated in early 2018.
+
+4. Topology optimisation (meshing and boundary setup remain valid during geometry topology change)
 
 ![FreeCAD CFDworkbench screenshot](https://github.com/qingfengxia/qingfengxia.github.io/blob/master/images/FreeCAD_CFDworkbench_screenshot.png)
 
@@ -44,7 +52,7 @@ added features:
 
 - windows 10 WSL platform support
 - create new analysis from mesh file generated from external meshing tool (e.g. mesh generated from Salome)
-  see ![video demo](http://www.iesensor.com/blog/wp-content/uploads/2018/12/FreeCAD_CFD_using_external_mesh.webm)
+  link to [a video demo](http://www.iesensor.com/blog/wp-content/uploads/2018/12/FreeCAD_CFD_using_external_mesh.webm)
 - Fenincs FEM solver, initial demonstration of support other 
 - boundary layer supported via gmsh
 - FoamBoundaryWidget class to provide raw dict to override "CFdFluidBoundary" setting
