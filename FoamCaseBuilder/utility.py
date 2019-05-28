@@ -43,11 +43,14 @@ import subprocess
 ########################### FOAM file operation###########################
 _using_pyfoam = True  # using try to auto select?
 if _using_pyfoam:
-    from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
-    from PyFoam.RunDictionary.BoundaryDict import BoundaryDict
-    #from PyFoam.Applications.PlotRunner import PlotRunner
-    #from PyFoam.FoamInformation import foamVersionString, foamVersionNumber  # works only in console
-    from PyFoam.ThirdParty.six import string_types, iteritems
+    try:
+        from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
+        from PyFoam.RunDictionary.BoundaryDict import BoundaryDict
+        #from PyFoam.Applications.PlotRunner import PlotRunner
+        #from PyFoam.FoamInformation import foamVersionString, foamVersionNumber  # works only in console
+        from PyFoam.ThirdParty.six import string_types, iteritems
+    except ImportError:
+        print('Error, PyFoam is not installed, try pip3/pip install PyFoam')
 else:  # using adapted version from butterfly: <https://github.com/ladybug-tools/butterfly>
     from .foamfile import ParsedParameterFile
     from .foamfile import BoundaryDict   # used by changeBoundaryType(), and listBoundaryName()

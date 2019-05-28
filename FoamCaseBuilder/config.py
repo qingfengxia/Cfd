@@ -5,9 +5,9 @@ import os.path
 import platform
 import subprocess
 
-# ubuntu 14.04 defaullt to 3.x, while ubuntu 16.04 default to 4.x,  PPA has the lastest, windows 10 WSL simulate ubuntu 14.04/16.04
-#DEFAULT_FOAM_DIR = '/opt/openfoam30'
-#DEFAULT_FOAM_VERSION = (3,0,0)
+# ubuntu 14.04 defaullt to 3.x, while ubuntu 16.04 default to 4.x, ubuntu 18.04 defaullt to 4.1
+# PPA has the lastest, windows 10 WSL simulate ubuntu 14.04/16.04/18.04
+
 _DEFAULT_FOAM_DIR = '/opt/openfoam5'
 _DEFAULT_FOAM_VERSION = (5,0)
 
@@ -27,9 +27,8 @@ def _runCommandOnWSL(cmdstr):
 # Some standard install locations that are searched if an install directory is not specified
 FOAM_DIR_DEFAULTS = {"Windows": ["C:\\Program Files\\blueCFD-Core-2016\\OpenFOAM-4.x",
                                                             "C:\\Program Files\\blueCFD-Core-2017\\OpenFOAM-5.x"],
-                     "Linux": ["/opt/openfoam5", "/opt/openfoam4", "/opt/openfoam-dev",  #std position if installed from repo
-                               "~/OpenFOAM/OpenFOAM-5.x", "~/OpenFOAM/OpenFOAM-4.x", "~/OpenFOAM/OpenFOAM-4.0", "~/OpenFOAM/OpenFOAM-4.1",
-                               "~/OpenFOAM/OpenFOAM-dev"]
+                     "Linux": ["/opt/openfoam6", "/opt/openfoam5", "/opt/openfoam4", "/opt/openfoam-dev",  #std position if installed from repo
+                                "~/OpenFOAM/OpenFOAM-6.x","~/OpenFOAM/OpenFOAM-5.x", "~/OpenFOAM/OpenFOAM-4.x", "~/OpenFOAM/OpenFOAM-dev"]
                      }
 
 def _detectFoamDir():
@@ -42,7 +41,7 @@ def _detectFoamDir():
         foam_dir = _runCommandOnWSL('echo $WM_PROJECT_DIR')
     # Python 3 compatible, check_output() return type byte
     foam_dir = str(foam_dir)
-    if len(foam_dir) > 1:               # If env var is not defined, python 3 returns `b'\n'` and python 2`\n`
+    if len(foam_dir) > 1:               # If env var is not defined, python 3 returns `b'\n'` and python 2 return: `\n`
         if foam_dir[:2] == "b'":
             foam_dir = foam_dir[2:-3]   # Python3: Strip 'b' from front and EOL char
         else:
@@ -73,13 +72,15 @@ def _detectFoamVersion():
         cmdline = ['bash', '-i', '-c', 'source ~/.bashrc && echo $WM_PROJECT_VERSION']
         foam_ver = subprocess.check_output(cmdline, stderr=subprocess.PIPE)
     # there is warning for `-i` interative mode, but output is fine
+    print("detected openfoam version by Cfd module:", foam_ver, str(foam_ver))
     foam_ver = str(foam_ver)  # compatible for python3, check_output() return bytes type in python3
-    if len(foam_ver)>3:  # not empty string
+    if len(foam_ver)>3:  # not empty string in python3 which is b'\n'
         if foam_ver[:2] == "b'":
             foam_ver = foam_ver[2:-3] #strip 2 chars from front and tail `b'4.0\n'`
         else:  # for python 3 can set the encoding = 'utf_8'
             foam_ver = foam_ver.strip()  # strip the EOL char
-        return tuple([int(s) if s.isdigit() else 0 for s in foam_ver.split('.')])  # version string 4.x should be parsed as 4.0
+        if len(foam_ver.split('.'))>=2:
+            return tuple([int(s) if s.isdigit() else 0 for s in foam_ver.split('.')])  # version string 4.x should be parsed as 4.0
     else:
         print("""environment var 'WM_PROJECT_VERSION' is not defined\n,
               fallback to default {}""".format(_DEFAULT_FOAM_VERSION))
