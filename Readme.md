@@ -50,7 +50,7 @@ missing features:
 
 added features:   
 
-- windows 10 WSL platform support
+- windows 10 WSL platform support, assuming Ubuntu LTS distro is used
 - create new analysis from mesh file generated from external meshing tool (e.g. mesh generated from Salome)
   link to [a video demo](http://www.iesensor.com/blog/wp-content/uploads/2018/12/FreeCAD_CFD_using_external_mesh.webm)
 - Fenincs FEM solver, initial demonstration of support other 
@@ -66,7 +66,7 @@ added features:
 ### Platform support status
 - Linux:  
 
-        Ubuntu 16.04 as a baseline implementation, but should works for other linux distribution.
+        Ubuntu 16.04/18.04 as a baseline implementation, but should works for other linux distribution.
 
 -  Windows 10 with Bash on Windows (WSL ubuntu 16.04) support (tested on windows 10 v1803):
 
@@ -90,19 +90,25 @@ CFD is a pure Python wokbench based on FEM workbench. Code for meshing, material
 ### Prerequisites OpenFOAM related software
 
 #### Debian/Ubuntu
+Cfd module are now tested with Python3 on FreeCAD 0.19dev (official PPA has python3 build), pip command should be replaced with 'pip3'
 see more details of Prerequisites installation in *Readme.md* in *FoamCaseBuilder* folder
 
 - OpenFOAM (3.0+)  `sudo apt-get install openfoam` once repo is added/imported
 
 > see more [OpenFOAM official installation guide](http://openfoamwiki.net/index.php/Installation), make sure openfoam/etc/bashrc is sourced into ~/.bashrc
 
-- PyFoam (0.6.6+) `sudo pip install PyFoam` (see platform notes for Windows). In the future, this dependency will be removed.
+- PyFoam (0.6.6+) `sudo pip install PyFoam` (see platform notes for Windows). In the future, this dependency will be removed. This module is Python3 compatible
 
 - matplotlib for residual plot (it is bundled with FreeCAD on Windows), gnuplot is not needed any longer. On ubuntu/debian, `sudo apt-get install python-matplotlib`
 
 - paraFoam (paraview for OpenFOAM), usually installed with OpenFoam.
 
 RHEL/Scientific Linux/Centos/Fedora: should work Installation tutorial/guide is welcomed from testers
+
+#### Qt5 and Python3 supportted
+
+There should be a FreeCAD 0.19 will release a Python3 support, since python for Qt5 (PySide2) is generally available and Python 2 will be not maintained since 2020.
+There should be little work on this Cfd module to support Python3, initial python3 has been tested since May 2019 with the official PPA 0.19-python3 dev on Ubuntu 18.04.
 
 ### Install freecad v0.17 stable
 After Oct 2016, Cfd boundary condition C++ code (FemConstraintFluidBoundary) has been merged into official master in stable v0.17
@@ -120,10 +126,6 @@ symbolic link or copy the folder into `<freecad installation folder>/Mod`,
 e.g, on POSIX system:
 
 `sudo ln -s (path_to_CFD)  (path_to_freecad)/Mod`
-
-### Qt5 and Python3 support will follow with FreeCAD's official release
-
-There is a possibibilty that FreeCAD 0.18 will release a Python3 support, since python for Qt5 (pyside2) is generally available. There should be little work on this Cfd module to support Python3.
 
 
 ## Testing
