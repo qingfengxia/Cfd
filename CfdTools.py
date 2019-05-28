@@ -95,9 +95,12 @@ def getModulePath():
     """returns the current Cfd module path."""
     import os
     user_mod_path = os.path.join(FreeCAD.ConfigGet("UserAppData"), "Mod/Cfd")
+    dev_mod_path = os.path.join(FreeCAD.ConfigGet("UserAppData"), "Mod/Cfd_dev")
     app_mod_path = os.path.join(FreeCAD.ConfigGet("AppHomePath"), "Mod/Cfd")
     if os.path.exists(user_mod_path): # user's app data folder (the second overrides the first).
         return user_mod_path
+    elif os.path.exists(dev_mod_path):  # dev module and module installed from addonManager may coexist
+        return dev_mod_path
     else:
         return app_mod_path
 

@@ -83,7 +83,7 @@ class CfdWorkbench(Workbench):
                         'FEM_ConstraintFluidBoundary', 'Cfd_FluidBoundary', 'Separator', 
                         #'FEM_BodyAcceleration', 'FEM_InitialTemperature', 'Separator', 
                         'Cfd_MeshGmshFromShape', # add parameter adjustment for 'FEM_MeshGmshFromShape',
-                        'FEM_MeshBoundaryLayer', 'FEM_MeshRegion', 'FEM_MeshGroup', mesh_info_cmd_name 'FEM_MeshClear', "Separator",
+                        'FEM_MeshBoundaryLayer', 'FEM_MeshRegion', 'FEM_MeshGroup', mesh_info_cmd_name, 'FEM_MeshClear', "Separator",
                         'Cfd_SolverControl']
         self.appendToolbar(str(QtCore.QT_TRANSLATE_NOOP("Cfd", "CFD")), cmdlst)
         self.appendMenu(str(QtCore.QT_TRANSLATE_NOOP("Cfd", "CFD")), cmdlst)
