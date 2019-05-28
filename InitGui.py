@@ -68,10 +68,13 @@ class CfdWorkbench(Workbench):
         # these will be replaced by new FemBodyConstraint 
         #from femcommands.commands import _CommandFemInitialTemperature
         #from femcommands.commands import _CommandFemBodyAcceleration
+
         try:  # to deal with different class name in recent versions, should be cleaned once v0.18 release, cmdlist is also affected
             from femcommands.commands import _CommandFemMeshPrintInfo # name in v0.17 release
+            mesh_info_cmd_name = 'FEM_MeshPrintInfo'
         except ImportError:
             from femcommands.commands import _CommandFemMeshDisplayInfo  # renamed in v0.18dev
+            mesh_info_cmd_name = 'FEM_MeshDisplayInfo'
         from femcommands.commands import _CommandFemMeshClear
         # vtk pipeline commands  are not imported but can be imported
 
@@ -80,7 +83,7 @@ class CfdWorkbench(Workbench):
                         'FEM_ConstraintFluidBoundary', 'Cfd_FluidBoundary', 'Separator', 
                         #'FEM_BodyAcceleration', 'FEM_InitialTemperature', 'Separator', 
                         'Cfd_MeshGmshFromShape', # add parameter adjustment for 'FEM_MeshGmshFromShape',
-                        'FEM_MeshBoundaryLayer', 'FEM_MeshRegion', 'FEM_MeshGroup','FEM_MeshPrintInfo', 'FEM_MeshDisplayInfo', 'FEM_MeshClear', "Separator",
+                        'FEM_MeshBoundaryLayer', 'FEM_MeshRegion', 'FEM_MeshGroup', mesh_info_cmd_name 'FEM_MeshClear', "Separator",
                         'Cfd_SolverControl']
         self.appendToolbar(str(QtCore.QT_TRANSLATE_NOOP("Cfd", "CFD")), cmdlst)
         self.appendMenu(str(QtCore.QT_TRANSLATE_NOOP("Cfd", "CFD")), cmdlst)
