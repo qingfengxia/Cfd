@@ -40,7 +40,7 @@ import CfdConsoleProcess
 
 import FreeCAD
 import Fem
-import Units
+from FreeCAD import Units
 import subprocess
 
 from PySide import QtCore
