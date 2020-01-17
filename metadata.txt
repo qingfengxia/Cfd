@@ -3,35 +3,35 @@
 
 [general]
 name=Cfd
-email=qingfeng.xia@iesensor.com
-author=Qingfeng Xia, CfdOF team
+email=qingfeng.xia@gmail_hotmail
+author=Qingfeng Xia
 FreeCADMinimumVersion=0.17.11832
-description=Computational Fluid Dynamics (CFD) Workbench (OpenFOAM...)
+description=Computational Fluid Dynamics (CFD) Workbench (OpenFOAM, Fenics...)
 about=Simple workflow to get started with CFD analysis by OpenFOAM and possible other solver
       Supports incompressible laminar and turbulent flow, basic thermal solvers,
-      meshing by integrated gmsh, any external meshing tool.
-version=
+      meshing by integrated gmsh, any external meshing tool like Salome
+version=0.3
 
 ; tracker can either link to a bugtracker or a forum thread link
 tracker=https://github.com/qingfengxia/Cfd/issues
 repository=https://github.com/qingfengxia/Cfd
 license=LGPL
+icon="Resources/icons/CfdWorkbench.svg"
 
 ; end of mandatory metadata
 
 ; start of dependency section
-
 [dependencies]
-workbenches=Fem
+workbenches=Fem, Plot
 
 ; specific python version we need to work with?
 python=
 
 ; add 3rd party python libs
-pylibs=
+pylibs=PyFoam
 
 ; add 3rd party optional python libs
-optionalpylibs=
+optionalpylibs=numpy
 
 ; add 3rd party applications
 3rdparty=gmsh
