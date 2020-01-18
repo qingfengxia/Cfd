@@ -13,7 +13,7 @@
    height="64px"
    id="svg2816"
    version="1.1"
-   inkscape:version="0.91 r13725"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
    sodipodi:docname="CfdWorkbench.svg">
   <defs
      id="defs2818" />
@@ -34,7 +34,7 @@
      inkscape:window-width="1379"
      inkscape:window-height="923"
      inkscape:window-x="290"
-     inkscape:window-y="129"
+     inkscape:window-y="72"
      inkscape:window-maximized="0" />
   <metadata
      id="metadata2821">
@@ -60,16 +60,16 @@
        sodipodi:nodetypes="cscsc" />
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:22.61990929px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="14.050274"
        y="52.024002"
        id="text3659"
-       sodipodi:linespacing="125%"
        transform="scale(0.8882201,1.1258471)"><tspan
          sodipodi:role="line"
          id="tspan3661"
          x="14.050274"
-         y="52.024002">CFD</tspan></text>
+         y="52.024002"
+         style="font-size:22.61990929px;line-height:1.25">CFD</tspan></text>
     <path
        style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="M 3.4177846,24.926408 C 28.635493,28.436565 34.177847,26.404369 52.37524,29.545036"
