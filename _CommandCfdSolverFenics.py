@@ -35,7 +35,7 @@ class _CommandCfdSolverFenics(CfdCommand):
     "Command to create OpenFOAM solver for CFD anlysis"
     def __init__(self):
         super(_CommandCfdSolverFenics, self).__init__()
-        self.resources = {'Pixmap': 'cfd-solver-standard',  # FIXME: change icon to Fenics, or using Dialog to select solver
+        self.resources = {'Pixmap': 'cfd-solver-fenics',  # FIXME: change icon to Fenics, or using Dialog to select solver
                           'MenuText': QtCore.QT_TRANSLATE_NOOP("Cfd_SolverFenics", "Create a Fenics CFD solver"),
                           'Accel': "C, S",
                           'ToolTip': QtCore.QT_TRANSLATE_NOOP("Cfd_SolverFenics", "Create a Fenics solver object for CFD anlysis")}

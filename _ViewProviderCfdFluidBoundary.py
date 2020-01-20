@@ -53,7 +53,7 @@ import pivy
 from pivy import coin
 
 class _ViewProviderCfdFluidBoundary:
-    "A View Provider for the CfdFoamBoundary object (advanced boundary condition for OpenFOAM)"
+    "A View Provider for the CfdFoamBoundary object (advanced boundary condition for OpenFOAM in Python)"
 
     def __init__(self, vobj):
         vobj.Proxy = self

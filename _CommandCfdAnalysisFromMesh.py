@@ -50,6 +50,7 @@ class _CommandCfdAnalysisFromMesh(CfdCommand):
 
     def Activated(self):
         filters = u"IDES mesh (*.unv);;Med mesh(*.med);;VTK mesh (*.vtk *.vtu)"
+        #;;GMSH mesh (*.msh) not supported, converted  to unv or vtk
         mesh_file = QFileDialog.getOpenFileName(None, u"Open mesh files", u"./", filters)
         mesh_file = mesh_file[0]
         # why return a tuple of filename and selectedfilter

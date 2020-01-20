@@ -25,6 +25,13 @@ __title__ = "Cfd Command base class"
 __author__ = "Przemo Firszt"
 __url__ = "http://www.freecadweb.org"
 
+"""TODO: consider reused Fem's CommandManager
+try:
+    from femcommands.manager import CommandManager
+except ImportError:  # Backward compatibility v0.17 stable
+    from PyGui.FemCommands import FemCommands as CommandManager
+"""
+
 ## \addtogroup FEM
 #  @{
 

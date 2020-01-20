@@ -24,6 +24,8 @@ __title__ = "Classes for New CFD solver"
 __author__ = "Qingfeng Xia"
 __url__ = "http://www.freecadweb.org"
 
+import os.path
+
 import FreeCAD
 import FreeCADGui
 import FemGui
@@ -38,7 +40,8 @@ class _ViewProviderCfdSolverFoam:
 
     def getIcon(self):
         """after load from FCStd file, self.icon does not exist, return constant path instead"""
-        return ":/icons/fem-solver.svg"
+        icon_path = os.path.join(CfdTools.getModulePath(), "Resources", "icons", "cfd-solver-standard.svg")
+        return icon_path
 
     def attach(self, vobj):
         self.ViewObject = vobj

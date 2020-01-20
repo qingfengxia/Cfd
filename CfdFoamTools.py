@@ -349,6 +349,7 @@ def checkCfdDependencies(term_print=True):
             if term_print:
                 print(gnuplotpy_msg)
 
+        ''' # gnuplot is deprecated
         gnuplot_cmd = "gnuplot"
         # For blueCFD, use the supplied Gnuplot
         if getFoamRuntime() == 'BlueCFD':
@@ -360,7 +361,7 @@ def checkCfdDependencies(term_print=True):
             message += gnuplot_msg + '\n'
             if term_print:
                 print(gnuplot_msg)
-
+        '''
         if term_print:
             print("Checking for gmsh:")
         # check that gmsh version 2.13 or greater is installed

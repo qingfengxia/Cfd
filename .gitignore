@@ -1,3 +1,5 @@
+stage_OF/*
+
 *.pyc
 FoamCaseBuilder/*.pyc
 FoamCaseBuilder/__pycache__
