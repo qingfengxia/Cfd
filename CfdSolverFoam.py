@@ -37,7 +37,7 @@ def makeCfdSolverFoam(name="OpenFOAM"):
     obj = FreeCAD.ActiveDocument.addObject("Fem::FemSolverObjectPython", name)
     CfdSolverFoam(obj)
     if FreeCAD.GuiUp:
-        from _ViewProviderCfdSolverFoam import _ViewProviderCfdSolverFoam
+        from cfdguiobjects._ViewProviderCfdSolverFoam import _ViewProviderCfdSolverFoam
         _ViewProviderCfdSolverFoam(obj.ViewObject)
     return obj
 

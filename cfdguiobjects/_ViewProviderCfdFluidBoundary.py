@@ -95,7 +95,7 @@ class _ViewProviderCfdFluidBoundary:
         for o in FreeCAD.ActiveDocument.Objects:
             if o.isDerivedFrom("Fem::FemMeshObject"):
                 o.ViewObject.hide()
-        # show task panel
+        # show task panel, currently defined in this file
         taskd = _TaskPanelCfdFluidBoundary(self.Object)
         taskd.obj = vobj.Object
         FreeCADGui.Control.showDialog(taskd)

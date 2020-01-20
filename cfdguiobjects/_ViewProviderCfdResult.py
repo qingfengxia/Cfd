@@ -61,7 +61,7 @@ class _ViewProviderCfdResult:
         
     def setEdit(self, vobj, mode):
         #if FemGui.getActiveAnalysis():
-        from _TaskPanelCfdResult import _TaskPanelCfdResult
+        from cfdguiobjects._TaskPanelCfdResult import _TaskPanelCfdResult
         taskd = _TaskPanelCfdResult()
         taskd.obj = vobj.Object
         FreeCADGui.Control.showDialog(taskd)

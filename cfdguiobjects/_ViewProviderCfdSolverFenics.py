@@ -81,7 +81,7 @@ class _ViewProviderCfdSolverFenics:
             CfdTools.setupWorkingDir(self.Object)  # WorkingDir must existent and writable
             from CfdRunnableFenics import CfdRunnableFenics
             fenicsRunnable = CfdRunnableFenics(self.Object)
-            from _TaskPanelCfdSolverControl import _TaskPanelCfdSolverControl
+            from cfdguiobjects._TaskPanelCfdSolverControl import _TaskPanelCfdSolverControl
             taskd = _TaskPanelCfdSolverControl(fenicsRunnable)
             taskd.obj = vobj.Object
             

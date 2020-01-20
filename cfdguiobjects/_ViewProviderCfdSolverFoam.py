@@ -81,7 +81,7 @@ class _ViewProviderCfdSolverFoam:
             CfdTools.setupWorkingDir(self.Object)  # WorkingDir must existent and writable
             from CfdRunnableFoam import CfdRunnableFoam
             foamRunnable = CfdRunnableFoam(self.Object)
-            from _TaskPanelCfdSolverControl import _TaskPanelCfdSolverControl
+            from cfdguiobjects._TaskPanelCfdSolverControl import _TaskPanelCfdSolverControl
             taskd = _TaskPanelCfdSolverControl(foamRunnable)
             taskd.obj = vobj.Object
             

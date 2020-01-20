@@ -30,7 +30,7 @@ def makeCfdAnalysis(name):
     '''makeCfdAnalysis(name): makes a Cfd Analysis object based on Fem::FemAnalysisPython'''
     obj = FreeCAD.ActiveDocument.addObject("Fem::FemAnalysisPython", name)
     if FreeCAD.GuiUp:
-        from _ViewProviderCfdAnalysis import _ViewProviderCfdAnalysis
+        from cfdguiobjects._ViewProviderCfdAnalysis import _ViewProviderCfdAnalysis
         _ViewProviderCfdAnalysis(obj.ViewObject)
     return obj
 
@@ -53,7 +53,7 @@ def makeCfdMeshGmsh(name="CFDMeshGMSH"):
     from _CaeMeshGmsh import _CaeMeshGmsh
     _CaeMeshGmsh(obj)
     if FreeCAD.GuiUp:
-        from _ViewProviderCaeMesh import _ViewProviderCaeMesh
+        from cfdguiobjects._ViewProviderCaeMesh import _ViewProviderCaeMesh
         _ViewProviderCaeMesh(obj.ViewObject)
 
     obj.ElementOrder = '1st'
@@ -70,7 +70,7 @@ def makeCfdMeshImported(name="ImportedCFDMesh"):
     _CaeMeshImported(obj)
 
     if FreeCAD.GuiUp:
-        from _ViewProviderCaeMesh import _ViewProviderCaeMesh
+        from cfdguiobjects._ViewProviderCaeMesh import _ViewProviderCaeMesh
         _ViewProviderCaeMesh(obj.ViewObject)
     return obj
 
@@ -87,8 +87,8 @@ def makeCfdFluidBoundary(name="CfdFluidBoundary"):
     import _CfdFluidBoundary
     _CfdFluidBoundary._CfdFluidBoundary(obj)
     if FreeCAD.GuiUp:
-        import _ViewProviderCfdFluidBoundary
-        _ViewProviderCfdFluidBoundary._ViewProviderCfdFluidBoundary(obj.ViewObject)
+        from cfdguiobjects._ViewProviderCfdFluidBoundary import _ViewProviderCfdFluidBoundary
+        _ViewProviderCfdFluidBoundary(obj.ViewObject)
     return obj
 
 def makeCfdResult(result_obj_name = "CfdResult"):
@@ -97,6 +97,6 @@ def makeCfdResult(result_obj_name = "CfdResult"):
     from _CfdResult import _CfdResult
     _CfdResult(obj)
     if FreeCAD.GuiUp:
-        from _ViewProviderCfdResult import _ViewProviderCfdResult
+        from cfdguiobjects._ViewProviderCfdResult import _ViewProviderCfdResult
         _ViewProviderCfdResult(obj.ViewObject)
     return obj
