@@ -47,16 +47,15 @@ class CfdWorkbench(Workbench):
         import FemGui
         FreeCADGui.addModule("FemGui")  # FemCommandFluidMaterial need import FemGui first
 
-        import _CommandCfdAnalysis
-        import _CommandCfdAnalysisFromMesh
-        import _CommandCfdSolver  # all solvers should be registered and selected in GUI fired by _CommandCfdSolver
-        import _CommandCfdSolverFenics
-        import _CommandCfdSolverControl
-        import _CommandCfdFluidBoundary
-        #import _CommandCfdResult  # this function is implemented in File->Open Instead, or solver control task panel push button
-
-        import _CommandCfdMeshGmshFromShape
-        #import _CommandCfdMeshCartFromShape  # not yet finish porting
+        from cfdcommands import _CommandCfdAnalysis
+        from cfdcommands import _CommandCfdAnalysisFromMesh
+        from cfdcommands import _CommandCfdSolver  # all solvers should be registered and selected in GUI fired by _CommandCfdSolver
+        from cfdcommands import _CommandCfdSolverFenics
+        from cfdcommands import _CommandCfdSolverControl
+        from cfdcommands import _CommandCfdFluidBoundary
+        #from cfdcommands import _CommandCfdResult  # this function is implemented in File->Open Instead, or solver control task panel push button
+        from cfdcommands import _CommandCfdMeshGmshFromShape
+        #from cfdcommands import _CommandCfdMeshCartFromShape  # not yet finish porting
 
         #detect FreeCAD version
         ver = [float(s) for s in FreeCAD.Version()[:2]]
