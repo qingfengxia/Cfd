@@ -58,8 +58,8 @@ branch: foambuilder_pre2
 - tweaks (29/12/2016):
   + feature: add Gmsh function, meshinfo, clearmesh toolbar items into CfdWorkbench
   + feature: add double click CfdSolver to bring up CfdWorkbench and FemGui.setActiveAnalysis() automatically
-  + bugfix: can not load _TaskPanelCfdSolverControl if WorkingDir does not exist or not writable
-  + bugfix: double click CfdAnalysis will activate CfdWorkbench instead of FemWorkbench, via adding _ViewProviderCfdAnalysis.py
+  + bugfix: can not load `_TaskPanelCfdSolverControl` if WorkingDir does not exist or not writable
+  + bugfix: double click CfdAnalysis will activate CfdWorkbench instead of FemWorkbench, via adding `_ViewProviderCfdAnalysis.py`
   + feature: remove the limiation that freecad-daily  must be started in terminal command, pyFoam need write access to current dir
   + bugfix: boundary mesh is not appended to unv volume mesh in CfdTools.py, due to recent femmesh code refactoring from Oct 2016 to Dec 2016. Bugfix from <https://github.com/jaheyns/FreeCAD/blob/master/src/Mod/Cfd/CfdTools.py> works! And it is merged
   + bugfix can not run runFoamCommand() immediately after another runFoamCommand, which makes freecad-daily stopped/abort,
@@ -112,22 +112,26 @@ see more at <https://github.com/jaheyns/CfdFoam>
 - 2 freecad std test files with CFD case setup, put into Cfd/Example/ or std path of freecad
 - matplotlib for residual plot
 
-#### my progress in Phase VI (2018)
+#### my progress in Phase VI (end of 2018)
 - create new analysis from mesh file generated from external meshing tool
 - ChoiceDialog to select solver
 - TaskPanel to provide raw dict to override "CFdFluidBoundary" setting
 
+#### maintanance (2019~2020):  Qt5 and Python3 support for Cfd workbench
+- bugfix for FreeCAD 0.19
+
+
 ======================================
 
 ## Roadmap
-
 I enter maintain stage for this Cfd module, I will not develop new features, but fix bug.
-
-### Qt5 and Python3 support for Cfd workbench
-
-
-
 ### todo (delayed until I have time or have project related with OpenFOAM)
+
+#### Topology independent boundary grouping
+
++ boundary faces selection will survive geometry redesign (topology change)
+
+
 
 #### FEM workbench
 
