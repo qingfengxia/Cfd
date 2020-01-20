@@ -34,9 +34,9 @@ try:
 except:
     withinFreeCAD = False
     import matplotlib
-    print(plt.get_backend())  #TkAgg
     matplotlib.use("svg")
     import matplotlib.pyplot as plt
+    print(plt.get_backend())  #TkAgg
     import matplotlib.animation as animation
 
 

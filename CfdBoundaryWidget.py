@@ -26,7 +26,7 @@ __url__ = "http://www.freecadweb.org"
 
 """
 This is a Python version of C++ version FemConstraintFluidBoundary,
-single big taskpanel is split into 3 and 5 widgets. 
+single big taskpanel is split into 3 and 5 widgets.
 A new widget can provide the extra widget to overwrite boundary patch setting by raw OpenFOAM dict
 Function in this Python class might be translated into C++ code in FemWorkbench
 It is possible to make these widget FreeCADGui independent, except `MagnitudeNormalWidget`
@@ -38,6 +38,10 @@ Change from C++
 3) uints[]
 4) Vector input widget
 
+
+remained bugs:
+1) FemSelectionWidgets
+2) QDoubleSpinBox seems readonly, showing a big number that can not been edit
 
 Todo:
 1) tr() i18n
@@ -52,16 +56,13 @@ w.show()
 """
 
 import sys
-sys.path.append('/usr/lib/freecad/lib')  # just for testing
+#sys.path.append('/usr/lib/freecad/lib')  # just for testing
 
-import os
 import sys
 import os.path
 
-from PySide import QtCore
-from PySide import QtCore
+# from PySide import QtCore
 from PySide import QtGui
-from PySide.QtCore import Qt, QTimer
 try:  # Qt5
     from PySide2 import QtUiTools
 except ImportError:
@@ -70,11 +71,12 @@ from PySide.QtGui import QApplication
 from PySide.QtGui import QWidget, QFrame,QFormLayout, QVBoxLayout, QGridLayout, QHBoxLayout, QLabel,\
                             QButtonGroup, QRadioButton, QPushButton, QCheckBox, QComboBox, QTextEdit, QLineEdit, QDoubleSpinBox, QTabWidget
 
+if sys.version_info.major >=3:  # to be compatible wtih python2
+    unicode = str
+
 try:
     import FreeCAD
     import CfdTools
-    #these utility function could be moved to this script
-    #from CfdTools import inputCheckAndStore, setInputFieldQuantity
     if FreeCAD.GuiUp:
         import FreeCADGui
         import FreeCADGui as Gui
@@ -84,12 +86,14 @@ try:
 except:
     within_FreeCADGui = False
 
+
 def indexOrDefault(list, findItem, defaultIndex):
     """ Look for findItem in list of itemType, and return defaultIndex if not found """
     try:
         return list.index(findItem)
     except ValueError:
         return defaultIndex
+
 
 def _createChoiceGroup(valueTypes, valueTypeTips):
         _buttonGroupLayout = QHBoxLayout()
@@ -105,19 +109,23 @@ def _createChoiceGroup(valueTypes, valueTypeTips):
                 rb.setChecked(True)
         return buttonGroupValueType, _buttonGroupLayout
 
+
 def _createInputField(unit = None):
     if within_FreeCADGui:
         Value = QDoubleSpinBox()  # Gui.InputField()  # widget = ui.createWidget("Gui::InputField")
     else:
         Value = QDoubleSpinBox()  #
         Value.setValue(0.0)
+        Value.setRange(-1e10, 1e10)  # give a range big enough
     return Value
+
 
 def _setInputField(inputWidget, value, unit=None):
     if within_FreeCADGui:
         inputWidget.setValue(value) #Gui.InputField()
     else:
         inputWidget.setValue(value) #QSpinBox()
+
 
 def _getInputField(inputWidget, unit = None):
     if within_FreeCADGui:
@@ -169,37 +177,39 @@ SUBTYPE_VALUE_NAMES = {'wall': ["", "", "Slip ratio", "Wall velocity", "Roughnes
             'baffle': [""] }
 
 # "" means hide BoundaryValue inputUI, 'm/s' means frameVelocity will show up, "m/m" for nondimensional value
-SUBTYPE_UNITS = {'wall': ["", "", "1", "m/s", "m"],  # todo: rough boundary value and unit
-            'inlet': ["m/s", "m^3/s", "kg/s", "Pa", "Pa"],
-            'outlet': ["Pa", "m/s", "1"],
-            'farField': ["Pa", "m/s", ""], # todo: Characteristic-based type unit?
-            'interface': ["", "", "", "", ""],
-            'baffle': [""] }
+SUBTYPE_UNITS = {
+    'wall': ["", "", "1", "m/s", "m"],  # todo: rough boundary value and unit
+    'inlet': ["m/s", "m^3/s", "kg/s", "Pa", "Pa"],
+    'outlet': ["Pa", "m/s", "1"],
+    'farField': ["Pa", "m/s", ""], # todo: Characteristic-based type unit?
+    'interface': ["", "", "", "", ""],
+    'baffle': [""] 
+    }
 
 SUBTYPES_HELPTEXTS = {
-            'wall': ["Zero velocity relative to wall (slip ration = 0)",
-                      "Frictionless wall (slip ration = 1)",
-                      "Blended fixed/slip (slip ration 0~1)",
-                      "wall velocity (Cartisan coordination) in dynamic meshing",
-                      "Wall roughness function"],
-            'inlet': ["Velocity specified; \n normal component imposed for reverse flow",
-                      "Uniform volume flow rate specified",
-                      "Uniform mass flow rate specified",
-                      "Total pressure specified; treated \n as static pressure for reverse flow",
-                      "Static pressure specified"],
-            'outlet': ["Static pressure specified \n for outflow and reverse flow",
-                      "Normal component imposed for outflow; \n velocity fixed for reverse flow",
-                      "All fields extrapolated; use with care!"],
-            'farField': ["Boundary open to surrounding \n with total pressure specified",
-                        "Boundary open to surrounding \n with uniform velocity specified",
-                        "Sub-/supersonic inlet/outlet \n with prescribed far-field values"],
-            'interface': ["cartesian symmetry plane \n for a cartesian coordiation", 
-                                "axisysmmetry axis line for \n a cylindrical coordination",
-                                "periodic (must in pair) \n ", 
-                                "front and back boundary planes \n for a 2D case",
-                                "interface for boundary value exchange \n with external solvers"],
-            'baffle': ["Permeable screen"] 
-            }
+    'wall': ["Zero velocity relative to wall (slip ration = 0)",
+              "Frictionless wall (slip ration = 1)",
+              "Blended fixed/slip (slip ration 0~1)",
+              "wall velocity (Cartisan coordination) in dynamic meshing",
+              "Wall roughness function"],
+    'inlet': ["Velocity specified; \n normal component imposed for reverse flow",
+              "Uniform volume flow rate specified",
+              "Uniform mass flow rate specified",
+              "Total pressure specified; treated \n as static pressure for reverse flow",
+              "Static pressure specified"],
+    'outlet': ["Static pressure specified \n for outflow and reverse flow",
+              "Normal component imposed for outflow; \n velocity fixed for reverse flow",
+              "All fields extrapolated; use with care!"],
+    'farField': ["Boundary open to surrounding \n with total pressure specified",
+                "Boundary open to surrounding \n with uniform velocity specified",
+                "Sub-/supersonic inlet/outlet \n with prescribed far-field values"],
+    'interface': ["cartesian symmetry plane \n for a cartesian coordiation", 
+                "axisysmmetry axis line for \n a cylindrical coordination",
+                "periodic (must in pair) \n ", 
+                "front and back boundary planes \n for a 2D case",
+                "interface for boundary value exchange \n with external solvers"],
+    'baffle': ["Permeable screen"] 
+    }
 
 
 """'
@@ -268,7 +278,7 @@ class InputWidget(QWidget):
     """ QWidget for selet type and values """
     def __init__(self, settings, config, parent=None):
         super(InputWidget, self).__init__(parent)  # for both py2 and py3
-        
+
         if settings:
             self.settings = settings
         else:
@@ -743,7 +753,7 @@ class CfdBoundaryWidget(QWidget):
         self.updateValueUi()
 
     def updateValueUi(self):
-        #set value label and unit
+        # set value label and unit
         self.labelBoundaryValue.setVisible(False)
         self.inputBoundaryValue.setVisible(False)
         self.vectorInputWidget.setVisible(False)
@@ -788,19 +798,20 @@ class CfdBoundaryWidget(QWidget):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     thermalSettings = {""}
-    #dialog = InputWidget(thermalSettings, THERMAL_CONFIG)
+    #vdialog = InputWidget(thermalSettings, THERMAL_CONFIG)
     turbulenceSettings = {}
-    #dialog = InputWidget(turbulenceSettings, TURBULENCE_CONFIG)
-    
+    #vdialog = InputWidget(turbulenceSettings, TURBULENCE_CONFIG)
+
     #dialog = VectorInputWidget([0,0,0])
     object = None
-    boundarySettings = {'BoundaryType': 'inlet',
-                                    'BoundarySubtype': 'totalPressure',
-                                    'BoundaryValue': 1e5,  # can hold a vector value
-                                    #'ValueUnit': "", # new property
-                                    'ThermalBoundarySettings': {},
-                                    'TurbulenceSettings': {}
-                                    }
+    boundarySettings = {
+        'BoundaryType': 'inlet',
+        'BoundarySubtype': 'totalPressure',
+        'BoundaryValue': 1e5,  # can hold a vector value
+        #'ValueUnit': "", # new property
+        'ThermalBoundarySettings': {},
+        'TurbulenceSettings': {}
+        }
     physics_model = {}
     material_objs = []
     
