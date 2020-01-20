@@ -58,25 +58,42 @@ class CfdWorkbench(Workbench):
         import _CommandCfdMeshGmshFromShape
         #import _CommandCfdMeshCartFromShape  # not yet finish porting
 
-        from femcommands.commands import _CommandFemMeshBoundaryLayer
-        from femcommands.commands import _CommandFemMaterialFluid
-        from femcommands.commands import _CommandFemMeshRegion
-        #from femcommands.commands import _CommandFemMeshNetgenFromShape  # not needed, also netgen may not compiled
-        #from femcommands.commands import _CommandFemMeshGroup  # not necessary for the time being
-
-        # python classes developed in FemWorkbench, filename and commands changed March 2017, 2018, disappeared in 0.18
-        # these will be replaced by new FemBodyConstraint 
-        #from femcommands.commands import _CommandFemInitialTemperature
-        #from femcommands.commands import _CommandFemBodyAcceleration
-
-        try:  # to deal with different class name in recent versions, should be cleaned once v0.18 release, cmdlist is also affected
-            from femcommands.commands import _CommandFemMeshPrintInfo # name in v0.17 release
-            mesh_info_cmd_name = 'FEM_MeshPrintInfo'
-        except ImportError:
-            from femcommands.commands import _CommandFemMeshDisplayInfo  # renamed in v0.18dev
+        #detect FreeCAD version
+        ver = [float(s) for s in FreeCAD.Version()[:2]]
+        if (ver[0]==0 and (ver[1] ==19)):  # FEM module rename commands again!  Jan 20, 2019
+            from femcommands.commands import _MeshBoundaryLayer
+            from femcommands.commands import _MaterialFluid
+            from femcommands.commands import _MeshRegion
+            from femcommands.commands import _MeshDisplayInfo
             mesh_info_cmd_name = 'FEM_MeshDisplayInfo'
-        from femcommands.commands import _CommandFemMeshClear
-        # vtk pipeline commands  are not imported but can be imported
+
+            FreeCADGui.addCommand("FEM_MeshBoundaryLayer",  _MeshBoundaryLayer())
+            FreeCADGui.addCommand("FEM_MaterialFluid",  _MaterialFluid())
+            FreeCADGui.addCommand("FEM_MeshRegion",  _MeshRegion())
+            FreeCADGui.addCommand("mesh_info_cmd_name",  _MeshDisplayInfo())
+
+        elif (ver[0]==0 and (ver[1]<=18 or ver[1]>=17)):
+            from femcommands.commands import _CommandFemMeshBoundaryLayer
+            from femcommands.commands import _CommandFemMaterialFluid
+            from femcommands.commands import _CommandFemMeshRegion
+            #from femcommands.commands import _CommandFemMeshNetgenFromShape  # not needed, also netgen may not compiled
+            #from femcommands.commands import _CommandFemMeshGroup  # not necessary for the time being
+
+            # python classes developed in FemWorkbench, filename and commands changed March 2017, 2018, disappeared in 0.18
+            # these will be replaced by new FemBodyConstraint 
+            #from femcommands.commands import _CommandFemInitialTemperature
+            #from femcommands.commands import _CommandFemBodyAcceleration
+
+            try:  # to deal with different class name in recent versions, should be cleaned once v0.18 release, cmdlist is also affected
+                from femcommands.commands import _CommandFemMeshPrintInfo # name in v0.17 release
+                mesh_info_cmd_name = 'FEM_MeshPrintInfo'
+            except ImportError:
+                from femcommands.commands import _CommandFemMeshDisplayInfo  # renamed in v0.18 release
+                mesh_info_cmd_name = 'FEM_MeshDisplayInfo'
+            from femcommands.commands import _CommandFemMeshClear
+            # vtk pipeline commands  are not imported but can be imported
+        else:
+            print("FreeCAD version less than 0.17 is not support", ver)
 
         # Post Processing commands are located in FemWorkbench, implemented and imported in C++
         cmdlst = ['Cfd_Analysis',  'Cfd_AnalysisFromMesh', 'Cfd_Solver', 'Cfd_SolverFenics','FEM_MaterialFluid', 'Separator', # superseded 'Cfd_FluidMaterial',
@@ -94,3 +111,4 @@ class CfdWorkbench(Workbench):
         return "Gui::PythonWorkbench"
 
 FreeCADGui.addWorkbench(CfdWorkbench())
+# rename the CfdWorkbench class name, then it is possible to load both Cfd from addonManager and my local Cfd_dev
