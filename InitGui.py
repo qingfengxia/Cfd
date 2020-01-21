@@ -38,7 +38,7 @@ class CfdWorkbench(Workbench):
         from PySide import QtCore
         ICONS_PATH = CfdTools.getModulePath() + "/Resources/icons"
         QtCore.QDir.addSearchPath("icons", ICONS_PATH)
-        import CfdPreferencePage
+        from cfdguiobjects import CfdPreferencePage
         FreeCADGui.addPreferencePage(CfdPreferencePage.CfdPreferencePage, "CFD")
 
     def Initialize(self):
