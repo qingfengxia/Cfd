@@ -96,18 +96,18 @@ def indexOrDefault(list, findItem, defaultIndex):
 
 
 def _createChoiceGroup(valueTypes, valueTypeTips):
-        _buttonGroupLayout = QHBoxLayout()
-        buttonGroupValueType = QButtonGroup()
-        buttonGroupValueType.setExclusive(True)
+    _buttonGroupLayout = QHBoxLayout()
+    buttonGroupValueType = QButtonGroup()
+    buttonGroupValueType.setExclusive(True)
 
-        for id, choice in enumerate(valueTypes):
-            rb = QRadioButton(choice)
-            rb.setToolTip(valueTypeTips[id])
-            buttonGroupValueType.addButton(rb, id)
-            _buttonGroupLayout.addWidget(rb)
-            if id == 0:
-                rb.setChecked(True)
-        return buttonGroupValueType, _buttonGroupLayout
+    for id, choice in enumerate(valueTypes):
+        rb = QRadioButton(choice)
+        rb.setToolTip(valueTypeTips[id])
+        buttonGroupValueType.addButton(rb, id)
+        _buttonGroupLayout.addWidget(rb)
+        if id == 0:
+            rb.setChecked(True)
+    return buttonGroupValueType, _buttonGroupLayout
 
 
 def _createInputField(unit = None):
@@ -146,7 +146,7 @@ general boundary type name -> OpenFOAM specific name
 symmetry -> symmetryPlane;
 outFlow -> inletOulet
 
-freestream has freestreamVelocity and freestreamPressure subtypes, 
+freestream has freestreamVelocity and freestreamPressure subtypes,
 It is an inlet-outlet condition that uses the velocity orientation
 to continuously blend between fixed value for normal inlet and zero gradient for normal outlet flow.
 ===========================
@@ -155,7 +155,7 @@ fanPressure is not supported yet, need a file input of `Foam::InterpolationTable
 other advanced input type is `Foam::Function1` and `CodeStream`
 could be implemented by adding another input value widget or in FoamBoundaryWidget
 """
-SUBTYPES = {'wall': ["fixed", "slip", "partialSlip", "moving", "rough"],  # 
+SUBTYPES = {'wall': ["fixed", "slip", "partialSlip", "moving", "rough"],  #
             'inlet': ["uniformVelocity", "volumetricFlowRate", "massFlowRate", "totalPressure", "staticPressure"],
             'outlet': ["staticPressure", "uniformVelocity", "outFlow"],
             'freestream': ["freestreamPressure", "freestreamVelocity", "characteristic"],
@@ -183,7 +183,7 @@ SUBTYPE_UNITS = {
     'outlet': ["Pa", "m/s", "1"],
     'farField': ["Pa", "m/s", ""], # todo: Characteristic-based type unit?
     'interface': ["", "", "", "", ""],
-    'baffle': [""] 
+    'baffle': [""]
     }
 
 SUBTYPES_HELPTEXTS = {
@@ -203,12 +203,12 @@ SUBTYPES_HELPTEXTS = {
     'farField': ["Boundary open to surrounding \n with total pressure specified",
                 "Boundary open to surrounding \n with uniform velocity specified",
                 "Sub-/supersonic inlet/outlet \n with prescribed far-field values"],
-    'interface': ["cartesian symmetry plane \n for a cartesian coordiation", 
+    'interface': ["cartesian symmetry plane \n for a cartesian coordiation",
                 "axisysmmetry axis line for \n a cylindrical coordination",
-                "periodic (must in pair) \n ", 
+                "periodic (must in pair) \n ",
                 "front and back boundary planes \n for a 2D case",
                 "interface for boundary value exchange \n with external solvers"],
-    'baffle': ["Permeable screen"] 
+    'baffle': ["Permeable screen"]
     }
 
 
@@ -221,8 +221,8 @@ TurbulenceSpecification, mainly for inlet, how about freestream?
 TURBULENCE_SPEC_TYPES = ["intensity&DissipationRate", "intensity&SpecificDissipationRate", "intensity&ViscosityRatio",
                         "intensity&LengthScale", "intensity&HydraulicDiameter"]
 TURBULENCE_SPEC_NAMES = TURBULENCE_SPEC_TYPES
-TURBULENCE_SPEC_HELPTEXTS = ["intensity & DissipationRate (epsilon) \n for k-e models", 
-                                                "intensity k & SpecificDissipationRate (omega) \n for k-omega models", 
+TURBULENCE_SPEC_HELPTEXTS = ["intensity & DissipationRate (epsilon) \n for k-e models",
+                                                "intensity k & SpecificDissipationRate (omega) \n for k-omega models",
                                             "intensity /kinetic energy ratio I (0.05 ~ 0.15) \n and turbulent viscosity ratio for Spalart-Allmaras/LES models",
                                             "intensity/kinetic energy ratio (0.05 ~ 0.15) \n and characteristic length scale of max eddy [m]",
                                             "typical turbulence intensity ratio 0.05, \n for fully developed internal flow "]
@@ -247,7 +247,7 @@ THERMAL_BOUNDARY_TYPES = ["fixedValue","zeroGradient", "fixedGradient", "mixed",
 THERMAL_BOUNDARY_NAMES = ["Fixed temperature",
                           "Adiabatic",
                           "fixedGradient",
-                          "mixed", 
+                          "mixed",
                           "Heat transfer coeff",
                           "Fixed conductive heat flux"
                           "conjugate heat transfer"]
@@ -291,7 +291,7 @@ class InputWidget(QWidget):
         self.form.comboInputType.addItems(self.INPUT_NAMES)
         self.form.comboInputType.currentIndexChanged.connect(self.comboInputTypeChanged)
 
-        self.valueTypes = ['Quantity', 'Expression']  # it is also possible to generalise this 
+        self.valueTypes = ['Quantity', 'Expression']  # it is also possible to generalise this
         valueTypeTips = [self.tr(u'float value for each component'), self.tr(u'math expressiong using xyz coord')]
         self.buttonGroupValueType, _buttonGroupLayout = _createChoiceGroup(self.valueTypes, valueTypeTips)
         self.buttonGroupValueType.buttonClicked.connect(self.valueTypeChanged)  # diff conect syntax
@@ -516,7 +516,7 @@ class MagnitudeNormalWidget(QWidget):
                     else:
                         FreeCAD.Console.PrintMessage('Face must be planar\n')
                 elif elt.ShapeType == 'Edge':
-                    self.form.lineDirection.setText(selected_object.Name + GEOMETRY_REFERENCE_SEP + sub) 
+                    self.form.lineDirection.setText(selected_object.Name + GEOMETRY_REFERENCE_SEP + sub)
                     self._directionVector = self._getEdgeDirection(elt)
                 else:
                     FreeCAD.Console.PrintMessage('Only planar face and straight edge are supported as direction\n')
@@ -709,7 +709,7 @@ class CfdBoundaryWidget(QWidget):
 
         _layout.addWidget(self.tabWidget)
         self.setLayout(_layout)
-    
+
         self.form.comboBoundaryType.currentIndexChanged.connect(self.comboBoundaryTypeChanged)
         self.form.comboSubtype.currentIndexChanged.connect(self.comboSubtypeChanged)
 
@@ -814,7 +814,7 @@ if __name__ == "__main__":
         }
     physics_model = {}
     material_objs = []
-    
+
     dialog = CfdBoundaryWidget(object, boundarySettings, physics_model, material_objs)
-    dialog. show()
+    dialog.show()
     app.exec_()

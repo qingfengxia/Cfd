@@ -269,6 +269,9 @@ class CaeMesher(object):
 
 
 class CaeMesherGmsh(CaeMesher):
+    """ The super class CaeMesher collection information from analysis group object,
+    This class will write mesh config file for the specific mesher tool
+    """
     supported_mesh_output_formats = {'Gmsh MSH': 1, 'I-Deas universal': 2, 'Automatic': 10, 'STL surface': 27,
                                                             'INRIA medit': 30, 'CGNS': 32 , 'Salome mesh': 33, 'Abaqus INP': 39, 'Ploy surface': 42}
     output_format_suffix = {'Gmsh MSH': '.msh', 'I-Deas universal': '.unv', 'Automatic': '.msh', 'STL surface': '.stl', 

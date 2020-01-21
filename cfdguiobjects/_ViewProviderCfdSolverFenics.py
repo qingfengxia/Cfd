@@ -31,6 +31,9 @@ import FreeCADGui
 import FemGui
 import CfdTools
 
+from CfdRunnableFenics import CfdRunnableFenics
+from cfdguiobjects._TaskPanelCfdSolverControl import _TaskPanelCfdSolverControl
+
 class _ViewProviderCfdSolverFenics:
     """A View Provider for the Solver object, base class for all derived solver
     derived solver should implement  a specific TaskPanel and set up solver and override setEdit()"""
@@ -79,9 +82,8 @@ class _ViewProviderCfdSolverFenics:
     def setEdit(self, vobj, mode):
         if FemGui.getActiveAnalysis():
             CfdTools.setupWorkingDir(self.Object)  # WorkingDir must existent and writable
-            from CfdRunnableFenics import CfdRunnableFenics
             fenicsRunnable = CfdRunnableFenics(self.Object)
-            from cfdguiobjects._TaskPanelCfdSolverControl import _TaskPanelCfdSolverControl
+
             taskd = _TaskPanelCfdSolverControl(fenicsRunnable)
             taskd.obj = vobj.Object
             

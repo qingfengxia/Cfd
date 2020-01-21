@@ -31,7 +31,7 @@ import FreeCAD
 import FreeCADGui
 import FemGui
 
-import _TaskPanelCaeMesherGmsh
+from cfdguiobjects._TaskPanelCaeMesherGmsh import _TaskPanelCaeMesherGmsh
 
 import PySide.QtGui as QtGui
 class _TaskPanelCaeMeshImported:
@@ -85,7 +85,7 @@ class _ViewProviderCaeMesh:
         self.ViewObject.show()  # show the mesh on edit if it is hided
 
         if vobj.Object.Proxy.Type == "FemMeshGmsh":  # must be of this type to hole meshgroup, boundarylayer
-            taskd = cfdguiobjects._TaskPanelCaeMesherGmsh._TaskPanelCaeMesherGmsh(self.Object)
+            taskd = _TaskPanelCaeMesherGmsh(self.Object)
         elif vobj.Object.Proxy.Type == "CaeMeshImported":  # taskpanel could be added to update mesh
             taskd = _TaskPanelCaeMeshImported(self.Object)
         else:

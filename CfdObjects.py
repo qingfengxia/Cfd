@@ -25,6 +25,7 @@ __author__ = "Bernd Hahnebach, Qingfeng Xia"
 __url__ = "http://www.freecadweb.org"
 
 import FreeCAD
+from cfdobjects import _CfdResult, CfdSolverFenics, CfdSolverFoam, _CaeMeshGmsh, _CaeMeshImported
 
 def makeCfdAnalysis(name):
     '''makeCfdAnalysis(name): makes a Cfd Analysis object based on Fem::FemAnalysisPython'''
@@ -84,8 +85,8 @@ def makeCfdFluidBoundary(name="CfdFluidBoundary"):
     ''' makeCfdFoamBoundary([name]): Creates a advaned/raw boundary condition setup dict for OpenFOAM'''
     # obj = FreeCAD.ActiveDocument.addObject("Fem::FeaturePython", name)
     obj = FreeCAD.ActiveDocument.addObject("Part::FeaturePython", name)
-    import _CfdFluidBoundary
-    _CfdFluidBoundary._CfdFluidBoundary(obj)
+    from _CfdFluidBoundary import _CfdFluidBoundary
+    _CfdFluidBoundary(obj)
     if FreeCAD.GuiUp:
         from cfdguiobjects._ViewProviderCfdFluidBoundary import _ViewProviderCfdFluidBoundary
         _ViewProviderCfdFluidBoundary(obj.ViewObject)

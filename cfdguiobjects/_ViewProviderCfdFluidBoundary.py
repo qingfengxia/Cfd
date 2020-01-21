@@ -38,6 +38,7 @@ import FreeCADGui
 import FemGui  # needed to display the icons in TreeView
 False if False else FemGui.__name__  # dummy usage of FemGui for flake8, just returns 'FemGui'
 from femguiobjects import FemSelectionWidgets
+from cfdguiobjects.CfdBoundaryWidget import CfdBoundaryWidget
 
 # for the panel
 from FreeCAD import Units
@@ -135,7 +136,6 @@ class _TaskPanelCfdFluidBoundary:
         solver_obj = CfdTools.getSolver(analysis_obj)
         material_objs = CfdTools.getMaterials(analysis_obj)
 
-        from CfdBoundaryWidget import CfdBoundaryWidget
         self.boundaryWidget = CfdBoundaryWidget(obj, None, solver_obj, material_objs)
         # fill the table in each variable tab, saved from the previous setup, existing case if BC name, done in each widget
 

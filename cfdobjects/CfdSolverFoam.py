@@ -31,7 +31,7 @@ if FreeCAD.GuiUp:
     import FreeCADGui
     from PySide import QtCore, QtGui
 
-import CfdSolver
+from . import CfdSolver
 
 def makeCfdSolverFoam(name="OpenFOAM"):
     obj = FreeCAD.ActiveDocument.addObject("Fem::FemSolverObjectPython", name)
