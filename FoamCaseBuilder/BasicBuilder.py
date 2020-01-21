@@ -121,10 +121,26 @@ def getDefaultSolverSettings():
             #'missible': False, # two species can be mixed perfectly if missible == True
             }  # containing all setting properties
 
+def _getMultiphaseSolverName(settings):
+    # solver list: https://github.com/OpenFOAM/OpenFOAM-5.x/tree/master/applications/solvers/multiphase
+    # interFoam: 2 incompressible, isothermal immiscible fluids using a VOF (volume of fluid)
+    # multiphaseModel: mapping to controldict of 
+    # interfaceTrackingMethod for different phases: VOF, Euler
+    # spcie count: 2, 3, n
+    # special, cavitity, film, phaseChange, twoLiquidMixingFoam
+    if 'compressible' in settings and settings['compressible']:
+        if settings['multiphaseModel'] == 'VOF':
+            #interMixingFoam  Solver for 3 incompressible fluids, two of which are miscible, using a VOF
+            pass  # todo
 
 def _getSolverName(settings):
-    """ LES model relies on the case template for wall functions and turbulenceProperties
+    """ user may also provide the solver exmplicitely
+    if case is builted from solver, solver should be extracted from ControlDict['solver']
     """
+    if settings['dynamicMeshing']:
+        assert settings['transient']
+
+    # LES model relies on the case template for wall functions and turbulenceProperties
     if settings['turbulenceModel'] in LES_turbulence_models:
         if settings['compressible']:
             return 'rhoPimpleFoam'
@@ -136,6 +152,7 @@ def _getSolverName(settings):
         return 'potentialFoam'
     #
     if 'heatTransfering' in settings and settings['heatTransfering']:
+        # for highly compressible flow, just use compressible flow solver which must solve temperature filed
         if settings['dynamicMeshing'] or settings['porous'] or settings['nonNewtonian']:
             print("Error: no matched solver for heat transfering, please develop such a solver")
             raise NotImplementedError()
@@ -154,22 +171,36 @@ def _getSolverName(settings):
             else:
                 return 'buoyantBoussinesqSimpleFoam'
     #
-    if 'multiphaseModel' in settings and settings['multiphaseModel'] != "singlePhase":
-        print("Error: multiphase model case builder is not implemented yet")
+    if 'multiphaseModel' in settings and settings['multiphaseModel']:
+        # this should be a python dict
+        print("Error: multiphase model case builder is not implemented yet in _getMultiphaseSolverName()")
         raise NotImplementedError()
 
     if 'compressible' in settings and settings['compressible']:
+        # selection of compressible flow solver also depends on Ma range,  liquid compressible is a special case
+        # Incomressibile (Ma < 0.3), high Sub-sonic ( 0.3 < Ma < 0.7 ), Trans-sonic ( 0.8 < Ma < 1.0) and super-sonic ( Ma > 1.0), hypersonic (Ma > 5)
+        if "compressibilityRegime" in settings:
+            print('compressibilityRegime: ', settings['compressibilityRegime'])
+
         if "transonic" in settings and settings["transonic"]:
-            print("Error: transonic/supersonic flow case builder is not implemented yet")
-            raise NotImplementedError()
-        if settings['transient']:
-            if settings['dynamicMeshing']:
-                return 'rhoPimpleDyMFoam'
-            return 'rhoPimpleFoam'
-        else:
-            if settings['porous']:
-                return 'rhoPorousSimpleFoam'
-            return 'rhoSimpleFoam'
+            if settings['transient']:
+                if settings['dynamicMeshing']:
+                    return 'rhoCentralDymFoam'   #  Ma>0.7
+                return 'rhoCentralFoam'  # this only density-based solver to deal with 
+                #  SonicFoam: supersonic and transonic solver using PISO pressure-based, it is transient only solver
+                # actually sonicFoam and rhoCentralFoam can deal with "transonic", set "transonic" in fvSolution simple/pimple algo
+            else:
+                print("Error: steady state transonic solver is not available")
+                raise NotImplementedError()
+        else:  #subsonic regimes
+            if settings['transient']:
+                if settings['dynamicMeshing']:
+                    return 'rhoPimpleDyMFoam'   # for low Ma: 0.3<Ma<0.7, pressure-based solver
+                return 'rhoPimpleFoam'
+            else:
+                if settings['porous']:
+                    return 'rhoPorousSimpleFoam'
+                return 'rhoSimpleFoam'
     else:  # incompressible:
         if settings['transient']:
             if settings['dynamicMeshing']:
@@ -188,7 +219,7 @@ def _getSolverName(settings):
     # finally, reached here
     print("Error: no matched solver, print solver setting and raise exception")
     print(settings)
-    raise Exception('No solver is deducted from solver settings')
+    raise Exception('No solver is deducted from solver settings due to conflicted settings or no such solver implemented')
 
 _VARIABLE_NAMES = {'U': "Velocity", "p": "Pressure",
 "T": "Temperature", 
@@ -271,6 +302,7 @@ _RAS_solver_templates = {
 
 _supported_algorithms = ["SIMPLE", "PISO", "PIMPLE"]
 
+_build_levels = ['scratch', 'template', 'previousCase', 'updatingMesh']
 
 class BasicBuilder(object):
     """ This class contains boundary condition setup for incompressible flow
@@ -294,6 +326,7 @@ class BasicBuilder(object):
         self._solverSettings = solverSettings
         self._solverName = self.getSolverName()
         if templatePath:
+            #shoud test existence first
             self._templatePath = templatePath
         else:
             self._templatePath = None # self.getFoamTemplate()
@@ -313,16 +346,16 @@ class BasicBuilder(object):
             createCaseFromTemplate(self._casePath, self._templatePath)
         else:
             createCaseFromScratch(self._casePath, self._solverName)
-        self._createInitVarables()
+        self._createInitVarables()  # some high build level leave existing variable files there, just updating boundary values
         createRunScript(self._casePath, self._solverSettings['potentialInit'], self._solverSettings['parallel'], self._solverName, self._paralleSettings['numberOfSubdomains']) # Specify init_potential (defaults to true)
 
     def build(self):
-
-        self.setupFluidProperties()  # materials properties
-        self.setupTurbulenceProperties()
-
+        # if case is built from clone/template, this function should not be called, or called with diff build_level
         self.setupBoundaryConditions()
         self.setupInternalFields()
+        # build_level 
+        self.setupFluidProperties()  # materials properties
+        self.setupTurbulenceProperties()
 
         if self._solverSettings['transient']:
             self.setupSolverControl()
@@ -339,15 +372,15 @@ class BasicBuilder(object):
         # Move mesh files, after being edited, to polyMesh.org
         #movePolyMesh(self._casePath)  # make trouble in WSL for ln -s command in Allrun script
 
-    def setupMesh(self, updated_mesh_path, scale):
-        if os.path.exists(updated_mesh_path):
-            convertMesh(self._casePath, updated_mesh_path, scale)
+    def setupMesh(self, mesh_path, scale):
+        if os.path.exists(mesh_path):
+            convertMesh(self._casePath, mesh_path, scale)
 
 
     def updateMesh(self, updated_mesh_path, scale):
         #runFoamCommand('foamCleanPolyMesh -case {}'.format(self._casePath)) #foamCleanPolyMesh v4.0+?
         casePath = self._casePath
-        shutil.remove(casePath + os.path.sep + "constant" + os.path.sep + 'polyMesh')
+        shutil.rmtree(casePath + os.path.sep + "constant" + os.path.sep + 'polyMesh') #  rm -rf dir
         self.setupMesh(updated_mesh_path, scale)
 
     def check(self):
