@@ -24,12 +24,36 @@
 # *                                                                         *
 # ***************************************************************************/
 
+
+"""
+In CI, run this test script in FreeCAD's command line mode
+manually test: run `freecadcmd-daily TestCFD.py` in Cfd module folder, 
+
+This script must run inside FreeCAD, PySide (actually PySide2) causes error
+run in FreeCAD command line mode has the drawback, error line location is not printed out.
+To debug, load this script in FreeCAD GUI python file editor, then error line location is available.
+
+This script only for Linux system,tested on Ubuntu
+
+
+Todo: make it working in FreeCAD TestWorkbench
+"""
+
+import os.path
 import sys
-sys.path.append('/usr/lib/freecad-daily/lib')  # not necessary for run in FreeCAD's TestWorkbench
-# manually test: run `python2 -m unittest TestCFD` in Cfd module folder
+
+# not necessary for run in FreeCAD, only needed if run out of FreeCAD CMD/GUI
+# if this script is NOT run in Cfd mod folder, add Cfd module path to python's sys.path
+
+# if(os.path.exists('/usr/lib/freecad-daily/lib')):
+#     sys.path.append('/usr/lib/freecad-daily/lib')
+# elif (os.path.exists('/usr/lib/freecad/lib')):
+#     sys.path.append('/usr/lib/freecad/lib')
+# else:
+#     print("can not find default FreeCAD install path")
+#     sys.exit()
 
 import tempfile
-import os.path
 import unittest
 
 import FreeCAD
@@ -42,13 +66,16 @@ import CfdRunnableFoam
 
 home_path = FreeCAD.getHomePath()
 temp_dir = tempfile.gettempdir() + '/CFD_unittests'
-test_file_dir = home_path + 'Mod/Cfd/test_files/OpenFOAM'
+
+mod_path = os.path.dirname(os.path.realpath(__file__))
+test_file_dir = mod_path + '/test_files/OpenFOAM'
+cfd_expected_values = test_file_dir + "/cube_cfd_expected_values"
 
 mesh_name = 'CfdMesh'
 case_name = 'cube_laminar'
 cfd_analysis_dir = temp_dir + '/CFD_laminar'
 cfd_save_fc_file = cfd_analysis_dir + '/' + case_name + '.fcstd'
-cfd_expected_values = test_file_dir + "/cube_cfd_expected_values"
+
 result_filename = cfd_analysis_dir + os.path.sep + case_name + "_result.vtk"
 
 
@@ -56,7 +83,7 @@ def fcc_print(message):
     FreeCAD.Console.PrintMessage('{} \n'.format(message))
 
 class CfdTest(unittest.TestCase):
-
+    "unit test for Cfd objects"
     def setUp(self):
         try:
             FreeCAD.setActiveDocument("CfdTest")
@@ -91,7 +118,7 @@ class CfdTest(unittest.TestCase):
         self.mesh_object = CfdObjects.makeCfdMeshGmsh()
         error = CfdTools.runGmsh(self.mesh_object)
         return error
-    
+
     def import_mesh(self, mesh_file):
         # import from saved mesh file
         self.imported_mesh_object = CfdObjects.makeCfdMeshImported()
@@ -126,9 +153,10 @@ class CfdTest(unittest.TestCase):
         self.runnable_object = CfdRunnableFoam.CfdRunnableFoam(self.solver_object)
 
     def run_cfd_simulation(self):
-        pass  # it taks too long to finish, skip it in unit test
+        pass  # it takes too long to finish, skip it in unit test
 
     def load_cfd_result(self):
+        # even cfd is not running, vtk data (initialization data) can still be loaded
         import importCfdResultVTKFoam
         importCfdResultVTKFoam.importCfdResult(result_filename, analysis=self.analysis)
 
@@ -182,12 +210,12 @@ class CfdTest(unittest.TestCase):
         fcc_print('Setting analysis type to laminar flow"')
         self.solver_object.TurbulenceModel = "laminar"
         self.solver_object.HeatTransfering = False
-        self.assertTrue(self.solver_object.TurbulenceModel == "laminar", "Setting anlysis type to laminar failed")
+        self.assertTrue(self.solver_object.TurbulenceModel == "laminar", "Setting analysis type to laminar failed")
 
         fcc_print('Checking Cfd case file write...')
         self.create_cfd_runnable()
-        sucessful = self.runnable_object.write_case()
-        self.assertTrue(sucessful, "Writing CFD cae failed")
+        successful = self.runnable_object.write_case()
+        self.assertTrue(successful, "Writing CFD cae failed")
 
         # todo: compare to confirm case writting and solution correctness
 
@@ -199,4 +227,13 @@ class CfdTest(unittest.TestCase):
 
     def tearDown(self):
         FreeCAD.closeDocument("CfdTest")
-        pass
+
+# to run in FreeCAD editor
+t = CfdTest()
+t.setUp()
+t.test_new_analysis()
+t.tearDown()
+
+# run without FreeCAD mode, not feasible for the time being
+#if __name__ == '__main__':
+#    unittest.main()

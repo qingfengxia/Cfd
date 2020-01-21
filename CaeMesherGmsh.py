@@ -29,6 +29,7 @@ __url__ = "http://www.freecadweb.org"
 import subprocess
 import tempfile
 import os.path
+import sys
 from platform import system
 from collections import OrderedDict
 
@@ -425,6 +426,20 @@ class CaeMesherGmsh(CaeMesher):
         return error
 
     def get_mesher_command(self):
+        if sys.version_info.major >=3:
+            from shutil import which
+            gmsh_path = which("gmsh")
+        else:
+            from distutils.spawn import find_executable
+            gmsh_path = find_executable("gmsh")
+        if not gmsh_path:
+            gmsh_std_location = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/Fem/Gmsh").GetBool("UseStandardGmshLocation")
+            if gmsh_std_location:
+                error_message = "GMSH binary gmsh not found in standard system binary path. Please install gmsh or set path to binary in FEM preferences tab GMSH.\n"
+                FreeCAD.Console.PrintError(error_message)
+                #raise Exception(error_message)
+        self.gmsh_bin = gmsh_path
+        """
         self.gmsh_bin = None
         gmsh_std_location = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/Fem/Gmsh").GetBool("UseStandardGmshLocation")
         if gmsh_std_location:
@@ -433,28 +448,22 @@ class CaeMesherGmsh(CaeMesher):
                 FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/Fem/Gmsh").SetString("gmshBinaryPath", gmsh_path)
                 self.gmsh_bin = gmsh_path
             elif system() == "Linux":
-                p1 = subprocess.Popen(['which', 'gmsh'], stdout=subprocess.PIPE)
-                if p1.wait() == 0:
-                    gmsh_path = p1.stdout.read().split('\n')[0]
-                elif p1.wait() == 1:
-                    error_message = "GMSH binary gmsh not found in standard system binary path. Please install gmsh or set path to binary in FEM preferences tab GMSH.\n"
-                    FreeCAD.Console.PrintError(error_message)
-                    raise Exception(error_message)
-                self.gmsh_bin = gmsh_path
+
+
             else:
                 error_message = "No standard location implemented for your operating system. Set GMHS binary path in FEM preferences.\n"
                 FreeCAD.Console.PrintError(error_message)
                 raise Exception(error_message)
-        else:
-            if not self.gmsh_bin:
-                self.gmsh_bin = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/Fem/Gmsh").GetString("gmshBinaryPath", "")
-            if not self.gmsh_bin:  # in prefs not set, we will try to use something reasonable
-                if system() == "Linux":
-                    self.gmsh_bin = "gmsh"
-                elif system() == "Windows":
-                    self.gmsh_bin = FreeCAD.getHomePath() + "bin/gmsh.exe"
-                else:
-                    self.gmsh_bin = "gmsh"
+        """
+        if not self.gmsh_bin:
+            self.gmsh_bin = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/Fem/Gmsh").GetString("gmshBinaryPath", "")
+        if not self.gmsh_bin:  # in prefs not set, we will try to use something reasonable
+            if system() == "Linux":
+                self.gmsh_bin = "gmsh"
+            elif system() == "Windows":
+                self.gmsh_bin = FreeCAD.getHomePath() + "bin/gmsh.exe"
+            else:
+                self.gmsh_bin = "gmsh"
         print('  ' + self.gmsh_bin)
 
 
