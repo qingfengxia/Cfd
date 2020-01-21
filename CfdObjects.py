@@ -25,7 +25,8 @@ __author__ = "Bernd Hahnebach, Qingfeng Xia"
 __url__ = "http://www.freecadweb.org"
 
 import FreeCAD
-from cfdobjects import _CfdResult, CfdSolverFenics, CfdSolverFoam, _CaeMeshGmsh, _CaeMeshImported
+from ObjectsFem import makeMaterialFluid
+from cfdobjects import _CfdResult, CfdSolverFenics, CfdSolverFoam, _CaeMeshGmsh, _CaeMeshImported, _CfdFluidBoundary
 
 def makeCfdAnalysis(name):
     '''makeCfdAnalysis(name): makes a Cfd Analysis object based on Fem::FemAnalysisPython'''
@@ -74,7 +75,6 @@ def makeCfdMeshImported(name="ImportedCFDMesh"):
 
 def makeCfdFluidMaterial(name="FluidMaterial"):
     '''makeCfdFluidMaterial(name): makes a CFD fluid material object from FemObjects.makeFemMaterialFluid'''
-    from ObjectsFem import makeMaterialFluid
     obj = makeMaterialFluid(FreeCAD.ActiveDocument, name)
     return obj
 

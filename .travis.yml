@@ -22,22 +22,26 @@ before_install:
 #     packages:
 #       - freecad-daily
 
-# ubuntu 18.04 has the 4.1 in the official repository
+# ubuntu 18.04 has OpenFOAM 4.1 in the official repository
 install:
 - sudo apt-get update -q
 - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then travis_retry sudo apt-get install   -y python-matplotlib python-numpy git openfoam && pip install PyFoam; fi
 
 - if [[ $TRAVIS_PYTHON_VERSION == '3.6' ]]; then travis_retry sudo apt-get install  -y python3-matplotlib python3-numpy git openfoam && pip3 install PyFoam; fi
 
+# this $(pwd) does not work!
 - echo "current working dir is $(pwd), current user is $(id)"
-- git clone https://github.com/qingfengxia/Cfd.git
-# install to user home (does that exist?), simulate the addon manager
-- cp -r Cfd ~/.FreeCAD/Mod/
+
+# clone this repo has been done by Travis, and cd to <user_name>/<repo_name>
+#- git clone https://github.com/qingfengxia/Cfd.git
+
+# install to user home (/home/travis/), simulate the addon manager
+- cd .. &&  mkdir -p ~/.FreeCAD/Mod && ls -s Cfd ~/.FreeCAD/Mod/Cfd
 
 # testing script
 script:
-# test should be done in dailybuild of FreeCAD
+# test should be done in daily build of FreeCAD
 - echo "start test script in the current working dir of $(pwd)"
-- if  [ -d 'TestCfd.py' ] ; then freecadcmd-daily Cfd/TestCfd.py; fi
+- if  [ -d 'Cfd/TestCfd.py' ] ; then freecadcmd-daily Cfd/TestCfd.py; fi
 - echo "start test script in the current working dir of $(pwd)"
 - freecad-daily Cfd/test_files/test_cfd_gui.py

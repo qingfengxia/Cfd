@@ -53,6 +53,8 @@ class CaeCaseWriterFenics:
         self.solver_obj = CfdTools.getSolver(analysis_obj)
         self.mesh_obj = CfdTools.getMesh(analysis_obj)
         self.part_obj = self.mesh_obj.Part
+        if not self.part_obj:
+            print("Error!, mesh has no Part property link to an geometry object")
         self.dimension = CfdTools.getPartDimension(self.part_obj)
         self.material_obj = CfdTools.getMaterial(analysis_obj)
         self.bc_group = CfdTools.getConstraintGroup(analysis_obj)  # not work for pure Python constraint yet
@@ -76,13 +78,13 @@ class CaeCaseWriterFenics:
         if self.solver_obj.PhysicalDomain == u"Fluidic":
             self.case_settings['solver_name'] = "CoupledNavierStokesSolver"
         elif self.solver_obj.PhysicalDomain == u"Thermal":
-            self.case_settings['solver_name'] = "ScalerEquationSolver"
-            self.case_settings['scaler'] = "temperature"
+            self.case_settings['solver_name'] = "ScalarTransportSolver"
+            self.case_settings['scalar_name'] = "temperature"
         else:
-            print('Error: {} solver is not not supported by Fencis and FreeCAD yet'.format(self.solver_obj.PhysicalDomain))
+            print('Error: {} solver is not not supported by Fenics and FreeCAD yet'.format(self.solver_obj.PhysicalDomain))
 
     def write_case(self, updating=False):
-        """ Write_case() will collect case setings, and finally build a runnable case
+        """ Write_case() will collect case settings, and finally build a runnable case
         """
 
         FreeCAD.Console.PrintMessage("Start to write case to folder {}\n".format(self.solver_obj.WorkingDir))
@@ -113,7 +115,7 @@ class CaeCaseWriterFenics:
             with open(self.case_file_name, 'w') as fp:
                 json.dump(self.case_settings, fp, ensure_ascii=True,  indent = 4)
                 #use_decimal=True,  Decimal instead of float
-            FreeCAD.Console.PrintMessage("Sucessfully write case file {}\n".format(self.case_file_name))
+            FreeCAD.Console.PrintMessage("Successfully write case file {}\n".format(self.case_file_name))
 
         os.chdir(_cwd)  # restore working dir
         return True
@@ -130,7 +132,7 @@ class CaeCaseWriterFenics:
     def write_mesh(self):
         """ This is FreeCAD specific code, convert from GMSH mesh file to 3D Fenics XML file
         """
-        self.console_log("Start Gmsh mesh export for Fenics solver...")
+        self.console_log("Start gmsh mesh export for Fenics solver...")
         import importGmshMesh
         error = importGmshMesh.export_fenics_mesh(self.mesh_obj, self.mesh_file_name)
         '''

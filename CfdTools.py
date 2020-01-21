@@ -204,7 +204,7 @@ if FreeCAD.GuiUp:
 def runGmsh(mesh_obj, anaysis_obj=None):
     if not anaysis_obj:
         anaysis_obj = getParentAnalysisObject(mesh_obj)
-    import CaeMesherGmsh
+    import CaeMesherGmsh  # do not import at the start of this file, to be able to run without GUI
     gmsh_mesh = CaeMesherGmsh.CaeMesherGmsh(mesh_obj, anaysis_obj)
     error = ''
     try:

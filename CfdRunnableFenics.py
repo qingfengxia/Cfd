@@ -25,14 +25,14 @@ __author__ = "Qingfeng Xia"
 __url__ = "http://www.freecadweb.org"
 
 import os.path
+import sys
 
 import FreeCAD
 
 import CaeCaseWriterFenics
 import CfdTools
 from _CfdRunnable import _CfdRunnable
-
-import FenicsSolver
+from CfdConsoleProcess import CfdConsoleProcess
 
 
 #  Concrete Class for CfdRunnable for FenicsSolver
@@ -62,18 +62,29 @@ class CfdRunnableFenics(_CfdRunnable):
             subprocess.Popen(['explorer', path]) # check_call() will block the python code
 
     def get_solver_cmd(self):
-        # get full path to solver script
-        #solver_script_path = os.path.dirname(__file__) + os.path.sep + "main.py"
+        #os.path.dirname(os.path.abspath(a_module.__file__)) to get module install path
+        # python3 -m FenicsSolver/main.py case_file
+        # see example in /usr/lib/python3.6/unittest/__init__.py
+
         import CfdTools
-        solver_script_path = CfdTools.getModulePath() + os.path.sep + "FenicsSolver/main.py"
-        cmd = 'python2 "{}" "{}"'.format(solver_script_path, self.case_file)
+        solver_script_path = CfdTools.getModulePath() + os.path.sep + "FenicsSolver/FenicsSolver/main.py"
+        if sys.version_info.major == 2:
+            python_bin = "python2"
+        elif sys.version_info.major == 3:
+            python_bin = "python3"
+        elif sys.version_info.major == 4:
+            python_bin = "python4"
+        else:
+            python_bin = "python"
+        cmd = '{} "{}" "{}"'.format(python_bin, solver_script_path, self.case_file)
         # mpirun -np {} 
         FreeCAD.Console.PrintMessage("Solver run command: " + cmd + "\n")
         return cmd
 
     def solve(self):
         # start external process, currently not in use  TODO:  move code from TaskPanel to here
-        FenicsSolver.main.main(self.case_file)
+        worker = CfdConsoleProcess()
+        worker.start(self.get_solver_cmd())
 
     def view_result_externally(self):
         pass

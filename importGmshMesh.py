@@ -129,8 +129,8 @@ def export_fenics_mesh(obj, meshfileString):
         FreeCAD.Console.PrintError(error)
         return error
     meshfileStem = (meshfileString[:-4])
-    if isinstance(meshfileStem, (type(u"string"),)):
-        meshfileStem = meshfileStem.encode('ascii')
+    if isinstance(meshfileStem, (type(b"bytes type"),)):
+        meshfileStem = meshfileStem.decode('utf8')
 
     gmsh = CaeMesherGmsh.CaeMesherGmsh(obj, CfdTools.getParentAnalysisObject(obj))
     meshfile = gmsh.export_mesh(u"Gmsh MSH", meshfileStem + u".msh")

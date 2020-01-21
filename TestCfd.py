@@ -63,6 +63,7 @@ import CfdTools
 import CfdObjects
 import CfdCaseWriterFoam
 import CfdRunnableFoam
+import CfdRunnableFenics
 
 home_path = FreeCAD.getHomePath()
 temp_dir = tempfile.gettempdir() + '/CFD_unittests'
@@ -92,15 +93,16 @@ class CfdTest(unittest.TestCase):
         finally:
             FreeCAD.setActiveDocument("CfdTest")
         self.active_doc = FreeCAD.ActiveDocument
-        self.box = self.active_doc.addObject("Part::Box", "Box")
+        self.geometry_object = self.active_doc.addObject("Part::Box", "Box")
         self.active_doc.recompute()
 
     def create_new_analysis(self):
         self.analysis = CfdObjects.makeCfdAnalysis('CfdAnalysis')
         self.active_doc.recompute()
 
-    def create_new_solver(self):
-        self.solver_object = CfdObjects.makeCfdSolver('OpenFOAM')
+    def create_new_solver(self, solverName='OpenFOAM'):
+        self.solver_name = solverName
+        self.solver_object = CfdObjects.makeCfdSolver(solverName)
         self.solver_object.WorkingDir = cfd_analysis_dir
         self.solver_object.InputCaseName = case_name
         self.active_doc.recompute()
@@ -116,7 +118,7 @@ class CfdTest(unittest.TestCase):
 
     def create_new_mesh(self):
         self.mesh_object = CfdObjects.makeCfdMeshGmsh()
-        error = CfdTools.runGmsh(self.mesh_object)
+        error = CfdTools.runGmsh(self.mesh_object)  # todo:  rename to runMesher()
         return error
 
     def import_mesh(self, mesh_file):
@@ -127,30 +129,36 @@ class CfdTest(unittest.TestCase):
 
     def create_wall_constraint(self):
         self.wall_constraint = self.active_doc.addObject("Fem::ConstraintFluidBoundary", "wall")
-        self.wall_constraint.References = [(self.box, "Face1")]
+        self.wall_constraint.References = [(self.geometry_object, "Face1")]
         self.wall_constraint.BoundaryType = 'wall'
         self.wall_constraint.Subtype = 'fixed'
         self.wall_constraint.BoundaryValue = 0
 
     def create_velocity_inlet_constraint(self):
         self.velocity_inlet_constraint = self.active_doc.addObject("Fem::ConstraintFluidBoundary", "velocity_inlet")
-        self.velocity_inlet_constraint.References = [(self.box, "Face6")]
+        self.velocity_inlet_constraint.References = [(self.geometry_object, "Face6")]
         self.velocity_inlet_constraint.BoundaryType = 'inlet'
         self.velocity_inlet_constraint.Subtype = 'uniformVelocity'
         self.velocity_inlet_constraint.BoundaryValue = 0.01
-        #self.velocity_inlet_constraint.Direction = (self.box, ["Edge5"])
+        #self.velocity_inlet_constraint.Direction = (self.geometry_object, ["Edge5"])
         #self.velocity_inlet_constraint.Reversed = False
 
     def create_pressure_outlet_constraint(self):
         self.pressure_outlet_constraint = self.active_doc.addObject("Fem::ConstraintFluidBoundary", "pressure_outlet")
-        self.pressure_outlet_constraint.References = [(self.box, "Face2")]
+        self.pressure_outlet_constraint.References = [(self.geometry_object, "Face2")]
         self.pressure_outlet_constraint.BoundaryType = 'outlet'
         self.pressure_outlet_constraint.Subtype = 'totalPressure'
         self.pressure_outlet_constraint.BoundaryValue = 0
         #self.pressure_outlet_constraint.Reversed = True
 
     def create_cfd_runnable(self):
-        self.runnable_object = CfdRunnableFoam.CfdRunnableFoam(self.solver_object)
+        if self.solver_name == "OpenFOAM":
+            self.runnable_object = CfdRunnableFoam.CfdRunnableFoam(self.solver_object)
+        elif self.solver_name == "Fenics":
+            self.runnable_object = CfdRunnableFenics.CfdRunnableFenics(self.solver_object)
+        else:
+             self.runnable_object = None
+             print("Error: solver {} is not suported, check spelling, OpenFOAM/Fenics". format(self.solver_name))
 
     def run_cfd_simulation(self):
         pass  # it takes too long to finish, skip it in unit test
@@ -163,7 +171,7 @@ class CfdTest(unittest.TestCase):
     def save_file(self, fc_file_name):
         self.active_doc.saveAs(fc_file_name)
 
-    def test_new_analysis(self):
+    def test_new_analysis(self, solverName='OpenFOAM'):
         # static
         fcc_print('--------------- Start of Cfd tests ---------------')
         fcc_print('Checking Cfd new analysis...')
@@ -171,14 +179,16 @@ class CfdTest(unittest.TestCase):
         self.assertTrue(self.analysis, "CfdTest of new analysis failed")
 
         fcc_print('Checking Cfd new solver...')
-        self.create_new_solver()
+        self.create_new_solver(solverName)
         self.assertTrue(self.solver_object, "CfdTest of new solver failed")
         self.analysis.addObject(self.solver_object)
 
         fcc_print('Checking Cfd new mesh...')
-        self.create_new_mesh()
+        self.create_new_mesh()  # call runGmsh()
         self.assertTrue(self.mesh_object, "CfdTest of new mesh failed")
         self.analysis.addObject(self.mesh_object)
+        self.mesh_object.Part = self.geometry_object  # very important!
+
 
         fcc_print('Checking Cfd new material...')
         self.create_new_material()
@@ -215,7 +225,7 @@ class CfdTest(unittest.TestCase):
         fcc_print('Checking Cfd case file write...')
         self.create_cfd_runnable()
         successful = self.runnable_object.write_case()
-        self.assertTrue(successful, "Writing CFD cae failed")
+        self.assertTrue(successful, "Writing CFD case failed")
 
         # todo: compare to confirm case writting and solution correctness
 
@@ -223,7 +233,7 @@ class CfdTest(unittest.TestCase):
         self.save_file(cfd_save_fc_file)
         self.assertTrue(self.save_file, "CfdTest saving of file {} failed ...".format(cfd_save_fc_file))
 
-        fcc_print('--------------- End of Cfd tests incompressible flow analysis ---------------')
+        fcc_print('--------------- End of Cfd tests incompressible flow analysis case writing ---------------')
 
     def tearDown(self):
         FreeCAD.closeDocument("CfdTest")
@@ -231,9 +241,13 @@ class CfdTest(unittest.TestCase):
 # to run in FreeCAD editor
 t = CfdTest()
 t.setUp()
-t.test_new_analysis()
+t.test_new_analysis("Fenics")
 t.tearDown()
 
+t = CfdTest()
+t.setUp()
+t.test_new_analysis()
+t.tearDown()
 # run without FreeCAD mode, not feasible for the time being
 #if __name__ == '__main__':
 #    unittest.main()

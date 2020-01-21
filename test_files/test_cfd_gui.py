@@ -38,6 +38,7 @@ import CfdObjects
 CfdObjects.makeCfdAnalysis('CfdAnalysis')
 FemGui.setActiveAnalysis(App.activeDocument().ActiveObject)
 FemGui.getActiveAnalysis().addObject(CfdObjects.makeCfdSolver('OpenFOAM'))
+FemGui.getActiveAnalysis().addObject(CfdObjects.makeCfdSolver('Fenics'))
 FemGui.getActiveAnalysis().addObject(CfdObjects.makeCfdFluidMaterial('FluidMaterial'))
 
 mesh_obj = CfdObjects.makeCfdMeshGmsh('Cylinder_Mesh')
@@ -51,6 +52,8 @@ except:
 # is there a API like `CfdObjects.makeCfdF`
 gmsh_mesh = CaeMesherGmsh(mesh_obj, FemGui.getActiveAnalysis())
 error = gmsh_mesh.create_mesh()
+
+# Runnable
 
 ####################end of copy ###################
 #Gui.getMainWindow().close()  #still wait for user to confirm save not discard
