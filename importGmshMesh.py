@@ -129,7 +129,7 @@ def export_fenics_mesh(obj, meshfileString):
         FreeCAD.Console.PrintError(error)
         return error
     meshfileStem = (meshfileString[:-4])
-    if isinstance(meshfileStem, (unicode,)):  # FIXME:  python3 has no such type unicode
+    if isinstance(meshfileStem, (type(u"string"),)):
         meshfileStem = meshfileStem.encode('ascii')
 
     gmsh = CaeMesherGmsh.CaeMesherGmsh(obj, CfdTools.getParentAnalysisObject(obj))
@@ -147,7 +147,7 @@ def export_fenics_mesh(obj, meshfileString):
         if error:
             return error
         if meshfileString[-5:] == ".hdf5":
-            raise NotImplemetnedError('')
+            raise NotImplementedError('')
     else:
         error = "Failed to write mesh file `{}` by Gmsh\n".format(meshfileString)
         FreeCAD.Console.PrintError(error)
@@ -156,7 +156,7 @@ def export_fenics_mesh(obj, meshfileString):
 
 def show_fenics_mesh(fname):
     # boundary layer, quad element is not supported
-    from dolfin import Mesh, MeshFunction, plot, interactive
+    from dolfin import Mesh, MeshFunction, plot, interactive  # TODO: fenicsX may have change API
     mesh = Mesh(fname+".xml")
     if os.path.exists(fname+"_physical_region.xml"):
         subdomains = MeshFunction("size_t", mesh, fname+"_physical_region.xml")

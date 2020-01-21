@@ -32,36 +32,18 @@ import FreeCADGui
 import FemGui
 
 from cfdguiobjects._TaskPanelCaeMesherGmsh import _TaskPanelCaeMesherGmsh
+from cfdguiobjects._TaskPanelCaeMeshImported import _TaskPanelCaeMeshImported
 
-import PySide.QtGui as QtGui
-class _TaskPanelCaeMeshImported:
-    def __init__(self, obj):
-        widget2 = QtGui.QWidget()
-        widget2.setWindowTitle("imported mesh setup")
-        text = QtGui.QLabel("Currently taskpanel is not empty, edit the property in property editor",widget2)
-        self.form = widget2
-
-    def getStandardButtons(self):
-        return int(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Apply | QtGui.QDialogButtonBox.Cancel)
-        # show a OK, a apply and a Cancel button
-        # def reject() is called on Cancel button
-        # def clicked(self, button) is needed, to access the apply button
-
-    def accept(self):
-        self.set_mesh_params()
-        FreeCADGui.ActiveDocument.resetEdit()
-        FreeCAD.ActiveDocument.recompute()
-        return True
-
-    def reject(self):
-        FreeCADGui.ActiveDocument.resetEdit()
-        FreeCAD.ActiveDocument.recompute()
-        return True
-
-    def clicked(self, button):
-        if button == QtGui.QDialogButtonBox.Apply:
-            #could reload mesh if necessary
-            pass
+def _contains(analysis, obj):
+    #since version 0.18? analysis is a DocumentGroupObject, has no Member attribute but Group
+    try:
+        group = analysis.Member
+    except:
+        group = analysis.Group
+    for m in group:
+        if m == obj:
+            return True
+    return False
 
 class _ViewProviderCaeMesh:
     "A View Provider for all CaeMesher object"
@@ -126,13 +108,12 @@ class _ViewProviderCaeMesh:
                             found_mesh_analysis = False
                             for o in gui_doc.Document.Objects:
                                 if o.isDerivedFrom('Fem::FemAnalysisPython'):
-                                    for m in o.Member:
-                                        if m == self.Object:
-                                            found_mesh_analysis = True
-                                            FemGui.setActiveAnalysis(o)
-                                            print('The analysis the GMSH FEM mesh object belongs too was found and activated: ' + o.Name)
-                                            gui_doc.setEdit(vobj.Object.Name)
-                                            break
+                                    if _contains(o ,self.Object):
+                                        found_mesh_analysis = True
+                                        FemGui.setActiveAnalysis(o)
+                                        print('The analysis the GMSH FEM mesh object belongs too was found and activated: ' + o.Name)
+                                        gui_doc.setEdit(vobj.Object.Name)
+                                        break
                             if not found_mesh_analysis:
                                 print('GMSH FEM mesh object does not belong to an analysis. Analysis group meshing will be deactivated.')
                                 gui_doc.setEdit(vobj.Object.Name)
@@ -143,13 +124,12 @@ class _ViewProviderCaeMesh:
                     found_mesh_analysis = False
                     for o in gui_doc.Document.Objects:
                         if o.isDerivedFrom('Fem::FemAnalysisPython'):
-                            for m in o.Member:
-                                if m == self.Object:
-                                    found_mesh_analysis = True
-                                    FemGui.setActiveAnalysis(o)
-                                    print('The analysis the GMSH FEM mesh object belongs to was found and activated: ' + o.Name)
-                                    gui_doc.setEdit(vobj.Object.Name)
-                                    break
+                            if _contains(o, this.Object):
+                                found_mesh_analysis = True
+                                FemGui.setActiveAnalysis(o)
+                                print('The analysis the GMSH FEM mesh object belongs to was found and activated: ' + o.Name)
+                                gui_doc.setEdit(vobj.Object.Name)
+                                break
                     if not found_mesh_analysis:
                         print('GMSH FEM mesh object does not belong to an analysis. Analysis group meshing will be deactivated.')
                         gui_doc.setEdit(vobj.Object.Name)
@@ -177,5 +157,5 @@ class _ViewProviderCaeMesh:
             for obj in self.claimChildren():
                 obj.ViewObject.show()
         except Exception as err:
-            FreeCAD.Console.PrintError("Error in onDelete: " + err.message)
+            FreeCAD.Console.PrintError("Error in onDelete: " + err.message)  # todo: err has no message
         return True
