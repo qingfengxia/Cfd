@@ -47,6 +47,7 @@ class CfdWorkbench(Workbench):
         import FemGui
         FreeCADGui.addModule("FemGui")  # FemCommandFluidMaterial need import FemGui first
 
+        # import those files will run this `FreeCADGui.addCommand` automatically
         from cfdcommands import _CommandCfdAnalysis
         from cfdcommands import _CommandCfdAnalysisFromMesh
         from cfdcommands import _CommandCfdSolver  # all solvers should be registered and selected in GUI fired by _CommandCfdSolver

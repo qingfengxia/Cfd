@@ -37,10 +37,8 @@ def makeCfdAnalysis(name):
 
 def makeCfdSolver(solver_name ='OpenFOAM'):
     if solver_name == 'OpenFOAM':
-        import CfdSolverFoam
         obj = CfdSolverFoam.makeCfdSolverFoam()
     elif solver_name == 'Fenics':
-        import CfdSolverFenics
         obj = CfdSolverFenics.makeCfdSolverFenics()
     else:
         # Todo: ChoiceDialog to choose different solver, commandSolver
@@ -51,8 +49,8 @@ def makeCfdMeshGmsh(name="CFDMeshGMSH"):
     '''makeCfdMeshGmsh(name): makes a GMSH CFD mesh object'''
     doc = FreeCAD.ActiveDocument
     obj = doc.addObject("Fem::FemMeshObjectPython", name)
-    from _CaeMeshGmsh import _CaeMeshGmsh
-    _CaeMeshGmsh(obj)
+    #from cfdobjects._CaeMeshGmsh import _CaeMeshGmsh
+    _CaeMeshGmsh._CaeMeshGmsh(obj)
     if FreeCAD.GuiUp:
         from cfdguiobjects._ViewProviderCaeMesh import _ViewProviderCaeMesh
         _ViewProviderCaeMesh(obj.ViewObject)
@@ -67,8 +65,7 @@ def makeCfdMeshImported(name="ImportedCFDMesh"):
     '''make mesh object to load external mesh'''
     doc = FreeCAD.ActiveDocument
     obj = doc.addObject("Fem::FemMeshObjectPython", name)
-    from _CaeMeshImported import _CaeMeshImported
-    _CaeMeshImported(obj)
+    _CaeMeshImported._CaeMeshImported(obj)
 
     if FreeCAD.GuiUp:
         from cfdguiobjects._ViewProviderCaeMesh import _ViewProviderCaeMesh
@@ -85,8 +82,8 @@ def makeCfdFluidBoundary(name="CfdFluidBoundary"):
     ''' makeCfdFoamBoundary([name]): Creates a advaned/raw boundary condition setup dict for OpenFOAM'''
     # obj = FreeCAD.ActiveDocument.addObject("Fem::FeaturePython", name)
     obj = FreeCAD.ActiveDocument.addObject("Part::FeaturePython", name)
-    from _CfdFluidBoundary import _CfdFluidBoundary
-    _CfdFluidBoundary(obj)
+    #from _CfdFluidBoundary import _CfdFluidBoundary
+    _CfdFluidBoundary._CfdFluidBoundary(obj)
     if FreeCAD.GuiUp:
         from cfdguiobjects._ViewProviderCfdFluidBoundary import _ViewProviderCfdFluidBoundary
         _ViewProviderCfdFluidBoundary(obj.ViewObject)
@@ -95,8 +92,8 @@ def makeCfdFluidBoundary(name="CfdFluidBoundary"):
 def makeCfdResult(result_obj_name = "CfdResult"):
     doc = FreeCAD.ActiveDocument
     obj= doc.addObject('Fem::FemResultObjectPython', result_obj_name)
-    from _CfdResult import _CfdResult
-    _CfdResult(obj)
+    #from _CfdResult import _CfdResult
+    _CfdResult._CfdResult(obj)
     if FreeCAD.GuiUp:
         from cfdguiobjects._ViewProviderCfdResult import _ViewProviderCfdResult
         _ViewProviderCfdResult(obj.ViewObject)
