@@ -200,7 +200,11 @@ def getFvSchemesTemplate(transient=True):
         div(phi,nuTilda)    bounded Gauss limitedLinear 1;
         div(phi,nuTilda) bounded Gauss linearUpwind grad(nuTilda);  // sparlart turbulent model
         div((nuEff*dev2(T(grad(U)))))       Gauss linear;  // incompressible flow
+        
         div(((rho*nuEff)*dev2(T(grad(U)))))     Gauss linear;  // compressible flow, no bounded scheme
+        div(phid,p)         Gauss upwind;  // compressible flow,
+        div(phi,Ekp)        bounded Gauss upwind;
+        div((phi|interpolate(rho)),p)  Gauss upwind;
     }
 
     laplacianSchemes
@@ -361,6 +365,19 @@ def getLESTurbulencePropertiesTemplate(LESModel = 'dynamicKEqn'):
     }
     """ % LESModel
 
+def getChangeDictionaryDictTemplate(patch_name = 'defaultFaces', bc_type = 'wall'):
+    return """
+    dictionaryReplacement
+    {
+        boundary
+        {
+            %s
+            {
+                type            %s;
+            }
+        }
+    }
+    """%(patch_name, bc_type)
 
 def getTopoSetDictTemplate(topoSetName, topoSetType, box):
     return """

@@ -25,21 +25,21 @@ __author__ = "Bernd Hahnebach, Qingfeng Xia"
 __url__ = "http://www.freecadweb.org"
 
 import FreeCAD
+from ObjectsFem import makeMaterialFluid
+from cfdobjects import _CfdResult, CfdSolverFenics, CfdSolverFoam, _CaeMeshGmsh, _CaeMeshImported, _CfdFluidBoundary
 
 def makeCfdAnalysis(name):
     '''makeCfdAnalysis(name): makes a Cfd Analysis object based on Fem::FemAnalysisPython'''
     obj = FreeCAD.ActiveDocument.addObject("Fem::FemAnalysisPython", name)
     if FreeCAD.GuiUp:
-        from _ViewProviderCfdAnalysis import _ViewProviderCfdAnalysis
+        from cfdguiobjects._ViewProviderCfdAnalysis import _ViewProviderCfdAnalysis
         _ViewProviderCfdAnalysis(obj.ViewObject)
     return obj
 
 def makeCfdSolver(solver_name ='OpenFOAM'):
     if solver_name == 'OpenFOAM':
-        import CfdSolverFoam
         obj = CfdSolverFoam.makeCfdSolverFoam()
     elif solver_name == 'Fenics':
-        import CfdSolverFenics
         obj = CfdSolverFenics.makeCfdSolverFenics()
     else:
         # Todo: ChoiceDialog to choose different solver, commandSolver
@@ -50,10 +50,10 @@ def makeCfdMeshGmsh(name="CFDMeshGMSH"):
     '''makeCfdMeshGmsh(name): makes a GMSH CFD mesh object'''
     doc = FreeCAD.ActiveDocument
     obj = doc.addObject("Fem::FemMeshObjectPython", name)
-    from _CaeMeshGmsh import _CaeMeshGmsh
-    _CaeMeshGmsh(obj)
+    #from cfdobjects._CaeMeshGmsh import _CaeMeshGmsh
+    _CaeMeshGmsh._CaeMeshGmsh(obj)
     if FreeCAD.GuiUp:
-        from _ViewProviderCaeMesh import _ViewProviderCaeMesh
+        from cfdguiobjects._ViewProviderCaeMesh import _ViewProviderCaeMesh
         _ViewProviderCaeMesh(obj.ViewObject)
 
     obj.ElementOrder = '1st'
@@ -66,17 +66,15 @@ def makeCfdMeshImported(name="ImportedCFDMesh"):
     '''make mesh object to load external mesh'''
     doc = FreeCAD.ActiveDocument
     obj = doc.addObject("Fem::FemMeshObjectPython", name)
-    from _CaeMeshImported import _CaeMeshImported
-    _CaeMeshImported(obj)
+    _CaeMeshImported._CaeMeshImported(obj)
 
     if FreeCAD.GuiUp:
-        from _ViewProviderCaeMesh import _ViewProviderCaeMesh
+        from cfdguiobjects._ViewProviderCaeMesh import _ViewProviderCaeMesh
         _ViewProviderCaeMesh(obj.ViewObject)
     return obj
 
 def makeCfdFluidMaterial(name="FluidMaterial"):
     '''makeCfdFluidMaterial(name): makes a CFD fluid material object from FemObjects.makeFemMaterialFluid'''
-    from ObjectsFem import makeMaterialFluid
     obj = makeMaterialFluid(FreeCAD.ActiveDocument, name)
     return obj
 
@@ -84,19 +82,19 @@ def makeCfdFluidBoundary(name="CfdFluidBoundary"):
     ''' makeCfdFoamBoundary([name]): Creates a advaned/raw boundary condition setup dict for OpenFOAM'''
     # obj = FreeCAD.ActiveDocument.addObject("Fem::FeaturePython", name)
     obj = FreeCAD.ActiveDocument.addObject("Part::FeaturePython", name)
-    import _CfdFluidBoundary
+    #from _CfdFluidBoundary import _CfdFluidBoundary
     _CfdFluidBoundary._CfdFluidBoundary(obj)
     if FreeCAD.GuiUp:
-        import _ViewProviderCfdFluidBoundary
-        _ViewProviderCfdFluidBoundary._ViewProviderCfdFluidBoundary(obj.ViewObject)
+        from cfdguiobjects._ViewProviderCfdFluidBoundary import _ViewProviderCfdFluidBoundary
+        _ViewProviderCfdFluidBoundary(obj.ViewObject)
     return obj
 
 def makeCfdResult(result_obj_name = "CfdResult"):
     doc = FreeCAD.ActiveDocument
     obj= doc.addObject('Fem::FemResultObjectPython', result_obj_name)
-    from _CfdResult import _CfdResult
-    _CfdResult(obj)
+    #from _CfdResult import _CfdResult
+    _CfdResult._CfdResult(obj)
     if FreeCAD.GuiUp:
-        from _ViewProviderCfdResult import _ViewProviderCfdResult
+        from cfdguiobjects._ViewProviderCfdResult import _ViewProviderCfdResult
         _ViewProviderCfdResult(obj.ViewObject)
     return obj

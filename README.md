@@ -74,13 +74,17 @@ added features:
 ### Platform support status
 - Linux:  
 
-        Ubuntu 16.04/18.04 as a baseline implementation, but should works for other linux distribution.
+        Ubuntu 18.04 as a baseline implementation, but should works for other linux distribution.
 
 - Windows 10 with Bash on Windows (WSL ubuntu 16.04) support (tested on windows 10 v1803):
 
-        Official OpenFOAM  (Ubuntu deb) can be installed and run on windows via Bash on Windows (WSL) Since version 1803 can piped process output back python, which is needed to detect OpenFOAM installation.  There is a tutorial to install OpenFOAM on windows WSL: <https://openfoam.org/download/windows-10/>, make sure OpenFOAM bashrc is sourced in `~/.bashrc`.   On FreeCAD v0.17 for windows, gmsh has been installed, but 'PyFoam' is not included to the FreeCAD's python2.7 bundle. However, `pip` bundled with FreeCAD does not work, instead, 'PyFoam' is downloaded and extracted to "C:\Program Files\FreeCAD 0.17\bin\Lib\site-packages".
+        Official OpenFOAM  (Ubuntu deb) can be installed and run on windows via Bash on Windows (WSL) Since version 1803 can piped process output back python, which is needed to detect OpenFOAM installation.  There is a tutorial to install OpenFOAM on windows WSL: <https://openfoam.org/download/windows-10/>, make sure OpenFOAM bashrc is sourced in `~/.bashrc`.   
+        
+        On FreeCAD v0.17 for windows, gmsh has been installed, but 'PyFoam' is not included to the FreeCAD's python2.7 bundle. However, `pip` bundled with FreeCAD does not work, instead, 'PyFoam' is downloaded and extracted to "C:\Program Files\FreeCAD 0.17\bin\Lib\site-packages".
 
     For paraview, it is recommended to uninstall WSL's paraview by `sudo apt-get remove openfoam5paraview54`, to use windows version (make sure paraview is installed and on PAHT) for better 3D performance. paraview on WSL just does not work for me, although `glxgears` works on software rendering via`export LIBGL_ALWAYS_INDIRECT=1`.
+
+    ![FreeCAD CFDworkbench on Windows 10](http://www.iesensor.com/blog/wp-content/uploads/2018/05/FreeCAD_CFD_module_openfoam_now_working_with_WSL.png)
 
 - MAC OSX (it may work, but not tested):
 
@@ -88,13 +92,13 @@ added features:
     As a POSIX system, it is possible to run OpenFOAM and this module, assuming OpenFOAM/etc/bashrc has been sourced for bash
 ```
 
-![FreeCAD CFDworkbench on Windows 10](http://www.iesensor.com/blog/wp-content/uploads/2018/05/FreeCAD_CFD_module_openfoam_now_working_with_WSL.png)
+
 
 ### Relationship with official FEM workbench:
 
 CFD is a pure Python wokbench based on FEM workbench. Code for meshing, material database capacity are shared.  FemConstraintFluidBoundary is written in C++ and included in official FreeCAD FEM module, similar are VTK mesh and result IO C++ code.
 
-=============================================
+---
 
 ## Installation guide
 
@@ -114,53 +118,50 @@ see more details of Prerequisites installation in *Readme.md* in *FoamCaseBuilde
 
 - paraFoam (paraview for OpenFOAM), usually installed with OpenFoam.
 
-RHEL/Scientific Linux/Centos/Fedora: should work Installation tutorial/guide is welcomed from testers
+#### RHEL/Scientific Linux/Centos/Fedora: 
 
-#### Qt5 and Python3 supportted
+should work Installation tutorial/guide is welcomed from testers
+
+#### Qt5 and Python3 supported
 
 There should be a FreeCAD 0.19 will release a Python3 support, since python for Qt5 (PySide2) is generally available and Python 2 will be not maintained since 2020.
 There should be little work on this Cfd module to support Python3, initial python3 has been tested since May 2019 with the official PPA 0.19-python3 dev on Ubuntu 18.04.
 
-### Install freecad v0.17 stable
+### Install freecad v0.18 stable
 After Oct 2016, Cfd boundary condition C++ code (FemConstraintFluidBoundary) has been merged into official master in stable v0.17
 
 Make sure Gmsh function is enabled and installed.  gmsh 3 has been bundled with FreeCAD v0.17 on Windows.
 
 ### Install Cfd workbemch
 
-#### using FreeCAD 0.17 addon manager
+#### use FreeCAD 0.17+ AddonManager
 
-#### from github for developers
+#### manually download from github
 `git clone https://github.com/qingfengxia/Cfd.git`
 
-symbolic link or copy the folder into `<freecad installation folder>/Mod`,
+symbolic link or copy the folder into `<freecad installation folder>/Mod`, or `~/.FreeCAD/Mod/`
 e.g, on POSIX system:
 
-`sudo ln -s (path_to_CFD)  (path_to_freecad)/Mod`
+`sudo ln -s (path_to_CFD)  (path_to_freecad)/Mod/Cfd`
 
 
 ## Testing
 
-### Tutorial to build up case in FreeCAD interactively
+All the following test may be implemented in CI.
 
-Similar with FemWorkbench
+### unit test
 
-+ make a simple part  in PartWorkbench or complex shape in Partdesign workbench
+As Cfd is not an official module, its unit test case will not be run in Test workbench, manually test: run 
 
-+ select the part and click "makeCfdAnalysis" in CfdWorkbench
-> which creats a CfdAnalysis object, FemMesh object, and default materail
+`python3 -m unittest TestCFD` 
 
-+ config the solver setting in property editor data tab on the left combi panel, by single click sovler object
+In Cfd module folder (otherwise, python module in Cfd is not importable for python). If FreeCAD is not installed to `/usr/local/FreeCAD/`, you need to update the FreeCAD module path statement, `sys.path.append('/usr/lib/freecad-daily/lib')`
 
-+ double click mesh object to refine mesh
+### Test CFD GUI
 
-+ hide the mesh and show hte part, so part surface can be select in creatation of boundary condition
+run  the test by `python test_files/test_cfd_gui.py` without start FreeCAD GUI
 
-+ add boundary conditions by click the toolbar item, and link surface and bondary value
-
-+ double click solver object to bring up the SolverControl task panel
-> select working directory, write up case, further edit the case setting up
-  then run the case (currently, copy the solver command in message box and run it in new console)
+to quickly run a gui test for FreeCAD GUI functions on command line
 
 ### Test with prebuilt case
 
@@ -175,18 +176,38 @@ Turbulence flow case setup is also usable, see (test_files/TestCaseKE.fcstd), bu
 Johan has built a case, see attachment [test procedure on freecad forum](http://forum.freecadweb.org/viewtopic.php?f=18&t=17322)
 
 
-In 2018, I have completed a new feature, intergrate teh external Salome meshing tool into FreeCAD and OpenFOAM workflow.
+In 2018, I have completed a new feature, integrate the external Salome meshing tool into FreeCAD and OpenFOAM workflow.
 
 
 ### Test FoamCaseBuider package (only in Linux terminal mode)
 
-There is a test script to test installation of this FoamCaseBuilder, copy the file FoamCaseBuilder/TestBuilder.py to somewhere writtable and run
+There is a test script to test installation of this `FoamCaseBuilder` package, copy the file `FoamCaseBuilder/TestBuilder.py` to somewhere writable and run
 
-`python2 pathtoFoamCaseBuilder/TestBuilder.py`
+`python3 pathtoFoamCaseBuilder/TestBuilder.py`
 
 This script will download a mesh file and build up a case without FreeCAD.
 
 
+
+## Tutorial to build up case in FreeCAD interactively
+
+Similar with FemWorkbench
+
+- make a simple part  in PartWorkbench or complex shape in Partdesign workbench
+- select the part and click "makeCfdAnalysis" in CfdWorkbench
+
+> which creats a CfdAnalysis object, FemMesh object, and default materail
+
+- config the solver setting in property editor data tab on the left combi panel, by single click sovler object
+- double click mesh object to refine mesh
+- hide the mesh and show hte part, so part surface can be select in creatation of boundary condition
+- add boundary conditions by click the toolbar item, and link surface and bondary value
+- double click solver object to bring up the SolverControl task panel
+
+> select working directory, write up case, further edit the case setting up
+>   then run the case (currently, copy the solver command in message box and run it in new console)
+>
+> 
 
 ## Roadmap
 

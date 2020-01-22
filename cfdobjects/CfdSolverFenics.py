@@ -31,13 +31,13 @@ if FreeCAD.GuiUp:
     import FreeCADGui
     from PySide import QtCore, QtGui
 
-import CfdSolver
+from . import CfdSolver
 
 def makeCfdSolverFenics(name="Fenics"):
     obj = FreeCAD.ActiveDocument.addObject("Fem::FemSolverObjectPython", name)
     CfdSolverFenics(obj)
     if FreeCAD.GuiUp:
-        from _ViewProviderCfdSolverFenics import _ViewProviderCfdSolverFenics
+        from cfdguiobjects._ViewProviderCfdSolverFenics import _ViewProviderCfdSolverFenics
         _ViewProviderCfdSolverFenics(obj.ViewObject)
     return obj
 

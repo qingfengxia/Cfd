@@ -262,6 +262,7 @@ class CfdPreferencePageThread(QThread):
             raise Exception("Failed to launch blueCFD-Core installer")
 
     def downloadGnuplotpy(self):
+        # gnuplot is deprecated, matplotlib is used instead
         self.signals.status.emit("Downloading Gnuplot-py, please wait...")
         try:
             import urllib

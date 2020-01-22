@@ -38,7 +38,7 @@ class CfdWorkbench(Workbench):
         from PySide import QtCore
         ICONS_PATH = CfdTools.getModulePath() + "/Resources/icons"
         QtCore.QDir.addSearchPath("icons", ICONS_PATH)
-        import CfdPreferencePage
+        from cfdguiobjects import CfdPreferencePage
         FreeCADGui.addPreferencePage(CfdPreferencePage.CfdPreferencePage, "CFD")
 
     def Initialize(self):
@@ -47,6 +47,7 @@ class CfdWorkbench(Workbench):
         import FemGui
         FreeCADGui.addModule("FemGui")  # FemCommandFluidMaterial need import FemGui first
 
+        # import those files will run this `FreeCADGui.addCommand` automatically
         from cfdcommands import _CommandCfdAnalysis
         from cfdcommands import _CommandCfdAnalysisFromMesh
         from cfdcommands import _CommandCfdSolver  # all solvers should be registered and selected in GUI fired by _CommandCfdSolver
@@ -60,16 +61,19 @@ class CfdWorkbench(Workbench):
         #detect FreeCAD version
         ver = [float(s) for s in FreeCAD.Version()[:2]]
         if (ver[0]==0 and (ver[1] ==19)):  # FEM module rename commands again!  Jan 20, 2019
-            from femcommands.commands import _MeshBoundaryLayer
-            from femcommands.commands import _MaterialFluid
-            from femcommands.commands import _MeshRegion
-            from femcommands.commands import _MeshDisplayInfo
-            mesh_info_cmd_name = 'FEM_MeshDisplayInfo'
+            try:
+                from femcommands.commands import _MeshBoundaryLayer
+                from femcommands.commands import _MaterialFluid
+                from femcommands.commands import _MeshRegion
+                from femcommands.commands import _MeshDisplayInfo
+                mesh_info_cmd_name = 'FEM_MeshDisplayInfo'
 
-            FreeCADGui.addCommand("FEM_MeshBoundaryLayer",  _MeshBoundaryLayer())
-            FreeCADGui.addCommand("FEM_MaterialFluid",  _MaterialFluid())
-            FreeCADGui.addCommand("FEM_MeshRegion",  _MeshRegion())
-            FreeCADGui.addCommand("mesh_info_cmd_name",  _MeshDisplayInfo())
+                FreeCADGui.addCommand("FEM_MeshBoundaryLayer",  _MeshBoundaryLayer())
+                FreeCADGui.addCommand("FEM_MaterialFluid",  _MaterialFluid())
+                FreeCADGui.addCommand("FEM_MeshRegion",  _MeshRegion())
+                FreeCADGui.addCommand("mesh_info_cmd_name",  _MeshDisplayInfo())
+            except ImportError as e:
+                print("Warning: import some commands from FemWorkbench failed. \n probably import path and name change in Fem mode")
 
         elif (ver[0]==0 and (ver[1]<=18 or ver[1]>=17)):
             from femcommands.commands import _CommandFemMeshBoundaryLayer

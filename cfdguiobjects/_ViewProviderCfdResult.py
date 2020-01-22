@@ -28,6 +28,8 @@ import FreeCAD
 import FreeCADGui
 import FemGui
 
+from cfdguiobjects._TaskPanelCfdResult import _TaskPanelCfdResult
+
 class _ViewProviderCfdResult:
     """A View Provider for the FemResultObject dervied CfdResult class
     """
@@ -61,7 +63,6 @@ class _ViewProviderCfdResult:
         
     def setEdit(self, vobj, mode):
         #if FemGui.getActiveAnalysis():
-        from _TaskPanelCfdResult import _TaskPanelCfdResult
         taskd = _TaskPanelCfdResult()
         taskd.obj = vobj.Object
         FreeCADGui.Control.showDialog(taskd)
