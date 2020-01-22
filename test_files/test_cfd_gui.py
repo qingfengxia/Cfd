@@ -58,7 +58,9 @@ error = gmsh_mesh.create_mesh()
 ####################end of copy ###################
 #Gui.getMainWindow().close()  #still wait for user to confirm save not discard
 #App.ActiveDocument.Name
-FreeCAD.closeDocument('Unnamed')
-Gui.doCommand('exit(0)')  # another way to exit
+
+App.closeDocument(u'Unnamed')
+Gui.doCommand(u'exit(0)')  # another way to exit
+
 
 

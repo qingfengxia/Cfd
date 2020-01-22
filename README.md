@@ -1,5 +1,7 @@
 # A computional fluid dynamics (CFD) module for FreeCAD
 
+[![Build Status](https://travis-ci.org/qingfengxia/Cfd.svg?branch=master)](https://travis-ci.org/qingfengxia/Cfd.svg) [![Coverage Status](https://coveralls.io/repos/github/qingfengxia/Cfd.svg/badge.svg?branch=master)](https://coveralls.io/github/qingfengxia/Cfd.svg?branch=master)
+
 **An advanced open source CAD integrated CFD preprocessing tool to enable automated one-stop CFD simulation**
 
 ![Schematic of automated engineering design pipeline](https://forum.freecadweb.org/download/file.php?id=73587)

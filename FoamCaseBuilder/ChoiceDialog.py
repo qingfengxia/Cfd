@@ -21,7 +21,7 @@
 #***************************************************************************
 
 import sys
-try:
+try:  #FreeCAD  PySide may refer to PySide2
     from PySide.QtGui import QDialog, QDialogButtonBox, QButtonGroup, QRadioButton, QVBoxLayout
     from PySide.QtGui import QApplication
     from PySide.QtCore import Qt

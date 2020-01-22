@@ -72,7 +72,7 @@ def _detectFoamVersion():
         cmdline = ['bash', '-i', '-c', 'source ~/.bashrc && echo $WM_PROJECT_VERSION']
         foam_ver = subprocess.check_output(cmdline, stderr=subprocess.PIPE)
     # there is warning for `-i` interative mode, but output is fine
-    print("detected openfoam version by Cfd module:", foam_ver, str(foam_ver))
+    print("detected openfoam version by Cfd module:", foam_ver)
     foam_ver = str(foam_ver)  # compatible for python3, check_output() return bytes type in python3
     if len(foam_ver)>3:  # not empty string in python3 which is b'\n'
         if foam_ver[:2] == "b'":
