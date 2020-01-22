@@ -159,7 +159,8 @@ def test_basic_builder(using_laminar_model = True):
 
 
 def test_heat_transfer_builder(compressible=True):
-    #
+    # getTestMesh
+
     #from ThermalBuilder import getDefaultHeatTransferSolverSettings
     solver_settings = getDefaultHeatTransferSolverSettings()
     solver_settings['compressible'] = compressible
@@ -208,8 +209,8 @@ def test_heat_transfer_builder(compressible=True):
     msg = case_builder.check()
     if msg:
         print('Error: case setup check failed with message\n, {}, \n please check dict files'.format(msg))
-
     case_builder.summarize()
+
 
 if __name__ == '__main__':
 

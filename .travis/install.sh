@@ -19,23 +19,27 @@ if [ $TRAVIS_OS_NAME = 'linux' ]; then
             #
             sudo apt-get update -q
             sudo apt-get install  -y python3-matplotlib python3-numpy git openfoam
-            pip3 install PyFoam
+            sudo pip3 install PyFoam
 
+            # install to user home (/home/travis/), simulate the addon manager
+            cd .. &&  mkdir -p ~/.FreeCAD/Mod 
+            if [ ! -e "~/.FreeCAD/Mod/Cfd" ]; then ln -s Cfd ~/.FreeCAD/Mod/Cfd; fi
             ;;
         FC_STABLE)
             sudo add-apt-repository -y ppa:freecad-maintainers/freecad-stable
             sudo apt-get -q update
             sudo apt-get -y install freecad
-            #
+            # OpenFOAM version may be too low for this test
             sudo apt-get update -q
             sudo apt-get install  -y python3-matplotlib python3-numpy git openfoam
-            pip3 install PyFoam
+            sudo pip3 install PyFoam
+
+            # install to user home (/home/travis/), simulate the addon manager
+            cd .. &&  mkdir -p ~/.FreeCAD/Mod 
+            if [ ! -e "~/.FreeCAD/Mod/Cfd" ]; then ln -s Cfd ~/.FreeCAD/Mod/Cfd; fi
             ;;
     esac
 else
     # Install some custom requirements on Linux
     exit 0
 fi
-
-# install to user home (/home/travis/), simulate the addon manager
-cd .. &&  mkdir -p ~/.FreeCAD/Mod && ln -s Cfd ~/.FreeCAD/Mod/Cfd

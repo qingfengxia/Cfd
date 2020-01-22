@@ -1,0 +1,16 @@
+ {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "Python: Current File (Integrated Terminal)",
+                "type": "python",
+                "request": "launch",
+                "stopOnEntry": true,
+                "program": "${file}",
+                "env": {"PYTHONPATH": "${workspaceRoot}; /usr/lib/freecad-daily/lib"},
+                //"envFile": "${workspaceRoot}/.env",
+                "console":"integratedTerminal",
+                "pythonPath": "${config:python.pythonPath}"
+            }
+        ]
+    }

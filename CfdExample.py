@@ -20,7 +20,10 @@
 #*                                                                         *
 #***************************************************************************
 
-#this file will be deprecated once TestCfd unittest is completed
+"""
+outdated, for FreeCAD 0.17 only
+TestCfd.py unit test supersedes this script
+"""
 
 App.newDocument("Unnamed")
 App.setActiveDocument("Unnamed")

@@ -12,10 +12,11 @@ jobs:
       env: TOXENV=FC_DAILY
   
     - os: linux
-      dist: trusty
+      dist: xenial
       python: 3.7
       env: TOXENV=FC_STABLE
 
+# do not forget to do `# git update-index --chmod +x .travis/install.sh` and same for test.sh
 install:
     - ./.travis/install.sh
 script:

@@ -138,6 +138,11 @@ see more details of Prerequisites installation in *Readme.md* in *FoamCaseBuilde
 
 - paraFoam (paraview for OpenFOAM), usually installed with OpenFoam.
 
+- gmsh, as it is requested by FemWorkbench, it is also used in CfdWorkbench for meshing, check the install and path setup by `which gmsh`
+
+  **Optional packages**
+- FenicsSolver:  a wrapper to Fenics project, can be installed using pip: `pip3 install git+https://github.com/qingfengxia/FenicsSolver.git#FenicsSolver`  after install Fenics, see FenicsSolver readme for details.
+
 #### RHEL/Scientific Linux/Centos/Fedora: 
 
 should work Installation tutorial/guide is welcomed from testers
