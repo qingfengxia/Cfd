@@ -94,9 +94,27 @@ added features:
 
 
 
-### Relationship with official FEM workbench:
+## Relationship with official FEM workbench:
 
 CFD is a pure Python wokbench based on FEM workbench. Code for meshing, material database capacity are shared.  FemConstraintFluidBoundary is written in C++ and included in official FreeCAD FEM module, similar are VTK mesh and result IO C++ code.
+
+Used C++ classes (quite stable API):
++ FemAnalysis:  DocumentGroupObject derived, extensible by python developer, `FemGui.getActiveAnalysis()`
++ FemSolverObject:  `FemSolverObjectPython` extensible by python developer
++ FemMesh: extensible by python developer
++ FemConstraintFluidBoundary: maintained by Cfd developer
++ FemResultObject: created by Cfd developer (Qingfeng Xia), extensible by python developer
+
+Imported Python classes  (unstable, change frequency in daily build):  
++ FemFluidMaterial: `FemObjects.makeFluidMaterial()`
+<Cfd/InitGui.py>
++ FemMeshRegion, 
++ FemMeshDisplayInfo
++ FemSelectionWidgets.GeometryElementsSelection  in _TaskPanelCfdFluidBoundary class
+
+Adapted Python classes (to avoid frequent changes in Fem to break Cfd module)
++ CfdCommand  from FemCommand or later named as FemCommandManager
++ CaeMesherGmsh from FemMeshGmsh
 
 ---
 
@@ -134,7 +152,7 @@ Make sure Gmsh function is enabled and installed.  gmsh 3 has been bundled with 
 
 ### Install Cfd workbemch
 
-#### use FreeCAD 0.17+ AddonManager
+#### use FreeCAD 0.18+ AddonManager
 
 #### manually download from github
 `git clone https://github.com/qingfengxia/Cfd.git`
@@ -211,6 +229,7 @@ Similar with FemWorkbench
 
 ## Roadmap
 
+### see external [Changelog.md](./Changelog.md)
 ### see external [Roadmap.md](./Roadmap.md)
 
 
