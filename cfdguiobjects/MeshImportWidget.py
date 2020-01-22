@@ -10,16 +10,15 @@ import sys
 import os.path
 
 # by adjust the import statement, this script can work independent from FreeCAD
-try:
+try:  # FreeCAD has renamed PySide2 into PySide
+    from PySide.QtWidgets import QApplication, QFileDialog
+    from PySide.QtWidgets import QComboBox,  QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout,\
+                                QButtonGroup, QRadioButton
+except:
     from qtpy import QtCore, QtWidgets, QtGui
     from qtpy.QtWidgets import QApplication, QFileDialog
     from qtpy.QtWidgets import QComboBox,  QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout,\
                                 QButtonGroup, QRadioButton
-except:  # FreeCAD has renamed PySide2 into PySide
-    from PySide.QtWidgets import QApplication, QFileDialog
-    from PySide.QtWidgets import QComboBox,  QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout,\
-                                QButtonGroup, QRadioButton
-
 # constants
 mesh_filters = u"IDES mesh (*.unv);;Med mesh(*.med);;VTK mesh (*.vtk *.vtu)"
 geometry_filters = u"BREP (*.brep *.brp);;STEP (*.step *.stp);;IGES (*.iges *.igs);; FcStd (*.fcstd)"
@@ -117,7 +116,7 @@ class MeshImportWidget(QWidget):
 
         self.setLayout(_layout)
 
-    def fileSelection(self):
+    def importSettings(self):
         "get the selection"
         s = {}
         if (self.geometryWidget):

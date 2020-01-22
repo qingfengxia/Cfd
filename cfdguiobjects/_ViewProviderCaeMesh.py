@@ -82,6 +82,47 @@ class _ViewProviderCaeMesh:
         self.ViewObject.hide()  # hide the mesh after edit is finished
         return
 
+    def process_dialog(self):
+        if self.ViewObject.Object.Proxy.Type != "FemMeshGmsh": 
+            return
+        if FemGui.getActiveAnalysis() is not None:
+            if FemGui.getActiveAnalysis().Document is FreeCAD.ActiveDocument:
+                if self.Object in FemGui.getActiveAnalysis().Group:
+                    if not gui_doc.getInEdit():
+                        gui_doc.setEdit(vobj.Object.Name)
+                    else:
+                        FreeCAD.Console.PrintError('Activate the analysis this GMSH FEM mesh object belongs too!\n')
+                else:
+                    print('GMSH FEM mesh object does not belong to the active analysis.')
+                    found_mesh_analysis = False
+                    for o in gui_doc.Document.Objects:
+                        if o.isDerivedFrom('Fem::FemAnalysisPython'):
+                            if _contains(o ,self.Object):
+                                found_mesh_analysis = True
+                                FemGui.setActiveAnalysis(o)
+                                print('The analysis the GMSH FEM mesh object belongs too was found and activated: ' + o.Name)
+                                gui_doc.setEdit(vobj.Object.Name)
+                                break
+                    if not found_mesh_analysis:
+                        print('GMSH FEM mesh object does not belong to an analysis. Analysis group meshing will be deactivated.')
+                        gui_doc.setEdit(vobj.Object.Name)
+            else:
+                FreeCAD.Console.PrintError('Active analysis is not in active document.')
+        else:
+            print('No active analysis in active document, we are going to have a look if the GMSH FEM mesh object belongs to a non active analysis.')
+            found_mesh_analysis = False
+            for o in gui_doc.Document.Objects:
+                if o.isDerivedFrom('Fem::FemAnalysisPython'):
+                    if _contains(o, self.Object):
+                        found_mesh_analysis = True
+                        FemGui.setActiveAnalysis(o)
+                        print('The analysis the GMSH FEM mesh object belongs to was found and activated: ' + o.Name)
+                        gui_doc.setEdit(vobj.Object.Name)
+                        break
+            if not found_mesh_analysis:
+                print('GMSH FEM mesh object does not belong to an analysis. Analysis group meshing will be deactivated.')
+                gui_doc.setEdit(vobj.Object.Name)
+
     def doubleClicked(self, vobj):
         FreeCADGui.activateWorkbench('CfdWorkbench')
         # Group meshing is only active on active analysis, we should make sure the analysis the mesh belongs too is active
@@ -96,43 +137,7 @@ class _ViewProviderCaeMesh:
                         found_an_analysis = True
                         break
             if found_an_analysis:
-                if FemGui.getActiveAnalysis() is not None:
-                    if FemGui.getActiveAnalysis().Document is FreeCAD.ActiveDocument:
-                        if self.Object in FemGui.getActiveAnalysis().Group:
-                            if not gui_doc.getInEdit():
-                                gui_doc.setEdit(vobj.Object.Name)
-                            else:
-                                FreeCAD.Console.PrintError('Activate the analysis this GMSH FEM mesh object belongs too!\n')
-                        else:
-                            print('GMSH FEM mesh object does not belong to the active analysis.')
-                            found_mesh_analysis = False
-                            for o in gui_doc.Document.Objects:
-                                if o.isDerivedFrom('Fem::FemAnalysisPython'):
-                                    if _contains(o ,self.Object):
-                                        found_mesh_analysis = True
-                                        FemGui.setActiveAnalysis(o)
-                                        print('The analysis the GMSH FEM mesh object belongs too was found and activated: ' + o.Name)
-                                        gui_doc.setEdit(vobj.Object.Name)
-                                        break
-                            if not found_mesh_analysis:
-                                print('GMSH FEM mesh object does not belong to an analysis. Analysis group meshing will be deactivated.')
-                                gui_doc.setEdit(vobj.Object.Name)
-                    else:
-                        FreeCAD.Console.PrintError('Active analysis is not in active document.')
-                else:
-                    print('No active analysis in active document, we are going to have a look if the GMSH FEM mesh object belongs to a non active analysis.')
-                    found_mesh_analysis = False
-                    for o in gui_doc.Document.Objects:
-                        if o.isDerivedFrom('Fem::FemAnalysisPython'):
-                            if _contains(o, self.Object):
-                                found_mesh_analysis = True
-                                FemGui.setActiveAnalysis(o)
-                                print('The analysis the GMSH FEM mesh object belongs to was found and activated: ' + o.Name)
-                                gui_doc.setEdit(vobj.Object.Name)
-                                break
-                    if not found_mesh_analysis:
-                        print('GMSH FEM mesh object does not belong to an analysis. Analysis group meshing will be deactivated.')
-                        gui_doc.setEdit(vobj.Object.Name)
+                self.process_dialog()
             else:
                 print('No analysis in the active document.')
                 gui_doc.setEdit(vobj.Object.Name)

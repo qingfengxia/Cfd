@@ -40,6 +40,7 @@ class _CaeMeshImported():
         obj.Imported = False
         obj.addProperty("App::PropertyPath","ImportedMeshPath","Import","mesh file path", True)
         obj.addProperty("App::PropertyLink","Part","Data","corresponding geometry object link")
+        obj.addProperty("App::PropertyPythonObject","ImportSettings","Import","python dict to hold settings")
 
     def execute(self, obj):
         return

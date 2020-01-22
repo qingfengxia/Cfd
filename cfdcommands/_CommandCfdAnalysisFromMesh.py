@@ -35,7 +35,7 @@ if FreeCAD.GuiUp:
     from PySide import QtCore
     from PySide import QtGui
     from PySide.QtGui import QFileDialog  # in QtWidgets for Qt5
-
+    from cfdguiobjects.MeshImportWidget import MeshImportWidget
 
 class _CommandCfdAnalysisFromMesh(CfdCommand):
     "the Cfd_AnalysisFromMesh command definition"
@@ -48,29 +48,47 @@ class _CommandCfdAnalysisFromMesh(CfdCommand):
                           'ToolTip': QtCore.QT_TRANSLATE_NOOP("Cfd_AnalysisFromMesh", "Creates a analysis container from existing geometry and mesh files")}
         self.is_active = 'with_document'
 
-    def Activated(self):
+    def select_without_widget(self):
         filters = u"IDES mesh (*.unv);;Med mesh(*.med);;VTK mesh (*.vtk *.vtu)"
         #;;GMSH mesh (*.msh) not supported, converted  to unv or vtk
         mesh_file = QFileDialog.getOpenFileName(None, u"Open mesh files", u"./", filters)
         mesh_file = mesh_file[0]
-        # why return a tuple of filename and selectedfilter
-
-        import CfdTools
-        if not CfdTools.getActiveAnalysis():
-            CfdTools.createAnalysis()
-
-        FreeCADGui.addModule("CfdTools")
+        # why return a tuple of filename and selected filter
         sel = FreeCADGui.Selection.getSelection()
         if (len(sel) == 1) and (sel[0].isDerivedFrom("Part::Feature")):
             # using existing part_feature, no need to import geometry, but get obj as link
             geo_obj = sel[0]
-            CfdTools.importGeometryAndMesh(geo_obj, mesh_file)  #Todo: macro recording is yet support
+            CfdTools.importGeometryAndMesh(geo_obj, mesh_file)  
+            # Todo: macro recording is yet support, get geo_obj
         else:
             filters = u"BREP (*.brep *.brp);;STEP (*.step *.stp);;IGES (*.iges *.igs);; FcStd (*.fcstd)"
             geo_file = QFileDialog.getOpenFileName(None, u"Open geometry files", u"./", filters)
-            geo_file = geo_file[0]
+            geo_file = geo_file[0]  # can be None? link mesh_obj.Part later manually by user
             FreeCADGui.doCommand("CfdTools.importGeometryAndMesh(u'{}', u'{}')".format(geo_file, mesh_file))
+
+    def select_with_widget(self):
+        settings = {"mesh": None}
+        sel = FreeCADGui.Selection.getSelection()
+        # create an empty 
+        if (len(sel) == 1) and (sel[0].isDerivedFrom("Part::Feature")):
+            goe_obj_label = sel[0].Label
+            FreeCADGui.doCommand("App.ActiveDocument.ActiveObject.Part = {}", goe_obj_label)
+        else:
+            settings["geometry"] = None
+        # delay the settings in TaskPanel
+        FreeCADGui.addModule("CfdObjects")
+        FreeCADGui.doCommand("CfdObjects.makeCfdMeshImported()")
+        FreeCAD.ActiveDocument.ActiveObject.ImportSettings = settings # do not record this command
         FreeCADGui.Selection.clearSelection()
+
+    def Activated(self):
+        # Todo: a dialog could be used to replace the content of this, adding length unit scaling
+        if not CfdTools.getActiveAnalysis():
+            CfdTools.createAnalysis()
+        FreeCADGui.addModule("CfdTools")
+
+        #self.select_without_widget()
+        self.select_with_widget()
 
         FreeCADGui.addModule("FemGui")
         #if FemGui.getActiveAnalysis():  # besides addModule, FemGui need to be imported

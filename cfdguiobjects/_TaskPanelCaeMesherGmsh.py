@@ -36,6 +36,7 @@ import FreeCAD
 from cfdobjects._CaeMeshGmsh import _CaeMeshGmsh
 import CfdTools
 import FreeCADGui
+import FemGui
 from PySide import QtGui
 from PySide import QtCore
 from PySide.QtCore import Qt
@@ -157,7 +158,6 @@ class _TaskPanelCaeMesherGmsh:
         QApplication.restoreOverrideCursor()
 
     def get_active_analysis(self):
-        import FemGui
         self.analysis = FemGui.getActiveAnalysis()
         if self.analysis:
             for m in FemGui.getActiveAnalysis().Group:
