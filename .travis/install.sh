@@ -3,7 +3,7 @@
 # clone this repo has been done by Travis, and cd to <user_name>/<repo_name>
 #- git clone https://github.com/qingfengxia/Cfd.git
 # this $(pwd) does not work!
-cho "current working dir is $(pwd), current user is $(id)"
+echo "current working dir is $(pwd), current user is $(id)"
 
 if [ $TRAVIS_OS_NAME = 'linux' ]; then
 

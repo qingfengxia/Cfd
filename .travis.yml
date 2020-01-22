@@ -22,6 +22,12 @@ install:
 script:
     - ./.travis/test.sh
 
+cache:
+  directories:
+    - $HOME/.cache/Cfd
+before_cache:
+  - rm -f $HOME/.cache/Cfd/*.*
+
 # is that possible to install another software from another PPA?
 # addons:
 #   apt:

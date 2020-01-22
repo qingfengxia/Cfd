@@ -82,8 +82,8 @@ class _ViewProviderCaeMesh:
         self.ViewObject.hide()  # hide the mesh after edit is finished
         return
 
-    def process_dialog(self):
-        if self.ViewObject.Object.Proxy.Type != "FemMeshGmsh": 
+    def process_dialog(self, gui_doc, vobj):
+        if vobj.Object.Proxy.Type != "FemMeshGmsh": 
             return
         if FemGui.getActiveAnalysis() is not None:
             if FemGui.getActiveAnalysis().Document is FreeCAD.ActiveDocument:
@@ -137,7 +137,7 @@ class _ViewProviderCaeMesh:
                         found_an_analysis = True
                         break
             if found_an_analysis:
-                self.process_dialog()
+                self.process_dialog(gui_doc, vobj)
             else:
                 print('No analysis in the active document.')
                 gui_doc.setEdit(vobj.Object.Name)
