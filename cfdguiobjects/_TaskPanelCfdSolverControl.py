@@ -270,7 +270,7 @@ class _TaskPanelCfdSolverControl:
         else:
             try:
                 out = str(out)  # python3 has no unicode type, utf-8 is the default encoding, this is a portable way to deal with bytes
-                # solver specific error dection code has been deleted here
+                # solver specific error detection code has been deleted here
                 self.femConsoleMessage(out = '<br>'.join([s for s in out.splitlines() if s]))
             except UnicodeDecodeError:
                 self.femConsoleMessage("Error converting stdout from Solver", "#FF0000")

@@ -36,7 +36,7 @@ install:
 #- git clone https://github.com/qingfengxia/Cfd.git
 
 # install to user home (/home/travis/), simulate the addon manager
-- cd .. &&  mkdir -p ~/.FreeCAD/Mod && ls -s Cfd ~/.FreeCAD/Mod/Cfd
+- cd .. &&  mkdir -p ~/.FreeCAD/Mod && ln -s Cfd ~/.FreeCAD/Mod/Cfd
 
 # testing script
 script:

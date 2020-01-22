@@ -124,7 +124,7 @@ class _ViewProviderCaeMesh:
                     found_mesh_analysis = False
                     for o in gui_doc.Document.Objects:
                         if o.isDerivedFrom('Fem::FemAnalysisPython'):
-                            if _contains(o, this.Object):
+                            if _contains(o, self.Object):
                                 found_mesh_analysis = True
                                 FemGui.setActiveAnalysis(o)
                                 print('The analysis the GMSH FEM mesh object belongs to was found and activated: ' + o.Name)

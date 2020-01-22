@@ -27,8 +27,11 @@ __url__ = "http://www.freecadweb.org"
 ## @package TaskPanelFemMeshGmsh
 #  \ingroup FEM
 
-import FreeCAD
+
 import time
+import os.path
+
+import FreeCAD
 #import PyObjects._FemMeshGmsh
 from cfdobjects._CaeMeshGmsh import _CaeMeshGmsh
 import CfdTools
@@ -43,7 +46,7 @@ class _TaskPanelCaeMesherGmsh:
     '''The TaskPanel for editing References property of FemMeshGmsh objects and creation of new FEM mesh'''
     def __init__(self, obj):
         self.mesh_obj = obj
-        self.form = FreeCADGui.PySideUic.loadUi(CfdTools.getModulePath() + "/TaskPanelCaeMesherGmsh.ui")
+        self.form = FreeCADGui.PySideUic.loadUi(os.path.dirname(__file__) + os.path.sep + "TaskPanelCaeMesherGmsh.ui")
 
         self.Timer = QtCore.QTimer()
         self.Timer.start(100)  # 100 milli seconds
@@ -102,15 +105,14 @@ class _TaskPanelCaeMesherGmsh:
 
     def console_log(self, message="", color="#000000"):
         self.console_message_gmsh = self.console_message_gmsh + '<font color="#0000FF">{0:4.1f}:</font> <font color="{1}">{2}</font><br>'.\
-            format(time.time() - self.Start, color, message.encode('utf-8', 'replace'))
+            format(time.time() - self.Start, color, str(message).encode('utf-8', 'replace'))
         self.form.te_output.setText(self.console_message_gmsh)
         self.form.te_output.moveCursor(QtGui.QTextCursor.End)
 
     def update_timer_text(self):
         # print('timer1')
         if self.gmsh_runs:
-            print('timer2')
-            # print('Time: {0:4.1f}: '.format(time.time() - self.Start))
+            #print('Time: {0:4.1f}: '.format(time.time() - self.Start)) # debug output to console
             self.form.l_time.setText('Time: {0:4.1f}: '.format(time.time() - self.Start))
 
     def max_changed(self, base_quantity_value):
@@ -127,7 +129,7 @@ class _TaskPanelCaeMesherGmsh:
 
     def run_gmsh(self):
         QApplication.setOverrideCursor(Qt.WaitCursor)
-        part = self.obj.Part
+        part = self.mesh_obj.Part
         if self.mesh_obj.MeshRegionList:
             if part.Shape.ShapeType == "Compound" and hasattr(part, "Proxy"):  # other part obj might not have a Proxy, thus an exception would be raised
                 if (part.Proxy.Type == "FeatureBooleanFragments" or part.Proxy.Type == "FeatureSlice" or part.Proxy.Type == "FeatureXOR"):
@@ -141,7 +143,7 @@ class _TaskPanelCaeMesherGmsh:
         self.get_active_analysis()
 
         self.console_log("Start GMSH ...")
-        error = CfdTools.runGmsh(self.obj, self.analysis)
+        error = CfdTools.runGmsh(self.mesh_obj, self.analysis)
         if error:
             print(error)
             self.console_log('GMSH had warnings ...')
