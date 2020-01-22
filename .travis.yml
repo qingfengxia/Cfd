@@ -1,17 +1,25 @@
-dist: bionic
 #https://docs.travis-ci.com/user/reference/bionic/
 
-# docker is available
+# ubuntu 18.04 has OpenFOAM 4.1 in the official repository
 
 sudo: required
 language: python
-python:
-- '3.6'
+jobs:
+  include:
+    - os: linux
+      dist: bionic
+      python: 3.6
+      env: TOXENV=FC_DAILY
+  
+    - os: linux
+      dist: trusty
+      python: 3.7
+      env: TOXENV=FC_STABLE
 
-before_install:
-  - sudo add-apt-repository -y ppa:freecad-maintainers/freecad-daily
-  - sudo apt-get -q update
-  - sudo apt-get -y install freecad-daily
+install:
+    - ./.travis/install.sh
+script:
+    - ./.travis/test.sh
 
 # is that possible to install another software from another PPA?
 # addons:
@@ -21,27 +29,3 @@ before_install:
 #     #ppa:freecad-maintainers/freecad-stable
 #     packages:
 #       - freecad-daily
-
-# ubuntu 18.04 has OpenFOAM 4.1 in the official repository
-install:
-- sudo apt-get update -q
-- if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then travis_retry sudo apt-get install   -y python-matplotlib python-numpy git openfoam && pip install PyFoam; fi
-
-- if [[ $TRAVIS_PYTHON_VERSION == '3.6' ]]; then travis_retry sudo apt-get install  -y python3-matplotlib python3-numpy git openfoam && pip3 install PyFoam; fi
-
-# this $(pwd) does not work!
-- echo "current working dir is $(pwd), current user is $(id)"
-
-# clone this repo has been done by Travis, and cd to <user_name>/<repo_name>
-#- git clone https://github.com/qingfengxia/Cfd.git
-
-# install to user home (/home/travis/), simulate the addon manager
-- cd .. &&  mkdir -p ~/.FreeCAD/Mod && ln -s Cfd ~/.FreeCAD/Mod/Cfd
-
-# testing script
-script:
-# test should be done in daily build of FreeCAD
-- echo "start test script in the current working dir of $(pwd)"
-- if  [ -d 'Cfd/TestCfd.py' ] ; then freecadcmd-daily Cfd/TestCfd.py; fi
-- echo "start test script in the current working dir of $(pwd)"
-- freecad-daily Cfd/test_files/test_cfd_gui.py
