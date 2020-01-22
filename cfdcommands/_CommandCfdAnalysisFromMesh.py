@@ -27,7 +27,6 @@ __url__ = "http://www.freecadweb.org"
 import os.path
 
 import FreeCAD
-from _CfdCommand import CfdCommand
 import CfdTools
 
 if FreeCAD.GuiUp:
@@ -35,7 +34,10 @@ if FreeCAD.GuiUp:
     from PySide import QtCore
     from PySide import QtGui
     from PySide.QtGui import QFileDialog  # in QtWidgets for Qt5
+
     from cfdguiobjects.MeshImportWidget import MeshImportWidget
+    from ._CfdCommand import CfdCommand
+
 
 class _CommandCfdAnalysisFromMesh(CfdCommand):
     "the Cfd_AnalysisFromMesh command definition"

@@ -26,10 +26,11 @@ __url__ = "http://www.freecadweb.org"
 
 
 import FreeCAD
-from _CfdCommand import CfdCommand
+
 if FreeCAD.GuiUp:
     import FreeCADGui
     from PySide import QtCore, QtGui
+    from ._CfdCommand import CfdCommand
 
 class _CommandCfdSolver(CfdCommand):
     "Command to create OpenFOAM solver for CFD anlysis"

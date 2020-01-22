@@ -30,12 +30,14 @@ __url__ = "http://www.freecadweb.org"
 ## @package CommandCfdFoamBoundary
 #  \ingroup CFD
 
-import FreeCAD
-import FreeCADGui
-from PySide import QtCore
 import os
+import FreeCAD
 import CfdTools
-from _CfdCommand import CfdCommand
+
+if FreeCAD.GuiUp:
+    import FreeCADGui
+    from PySide import QtCore
+    from ._CfdCommand import CfdCommand
 
 
 class _CommandCfdFluidBoundary(CfdCommand):

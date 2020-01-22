@@ -24,13 +24,15 @@ __title__ = "Command CFD GMSH Mesh From Shape"
 __author__ = "Bernd Hahnebach"
 __url__ = "http://www.freecadweb.org"
 
-import FreeCAD
-from _CfdCommand import CfdCommand
-import FreeCADGui
-import FemGui
-from PySide import QtCore
-import CfdTools
+
 import os
+import FreeCAD
+import CfdTools
+
+if FreeCAD.GuiUp:
+    import FreeCADGui
+    from PySide import QtCore
+    from ._CfdCommand import CfdCommand
 
 class _CommandCfdMeshGmshFromShape(CfdCommand):
     # the Cfd_MeshGmshFromShape command definition
