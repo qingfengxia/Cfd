@@ -1,5 +1,20 @@
-[FCdMat]
+;  see meta data definition in the file: src/Mod/Material/Templatematerial.yml
+[General]
 Name = SeaWater
-Description = Sea water (30%) at 20 Degrees Celsius and 1 atm
+Description = Sea water (35%) at 20 Degrees Celsius and 1 atm
+Father = Fluid
+ReferenceSource = 'https://www.engineeringtoolbox.com/sea-water-properties-d_840.html'
+
+[Fluidic]
 Density = 1025 kg/m^3
 DynamicViscosity = 1.07e-3 kg/m/s 
+KinematicViscosity = 1.044e-6 m^2/s
+; PrandtlNumber is a nondimension number for CFD simulation
+PrandtlNumber = 7.56
+
+[Thermal]
+SpecificHeat = 4007 J/kg/K
+;https://en.wikipedia.org/wiki/Seawater
+ThermalConductivity = 0.6 W/m/K
+; fluid has no such concept of line expansion coeff, but volumetric
+VolumetricThermalExpansionCoefficient = 2.07e-4 m/m/K

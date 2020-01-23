@@ -12,7 +12,7 @@ if [ $TRAVIS_OS_NAME = 'linux' ]; then
                 freecadcmd-daily Cfd/TestCfd.py > $HOME/.cache/Cfd/freecadcmd_output.log
             fi
             echo "start test script in the current working dir of $(pwd)"
-            freecad-daily Cfd/test_files/test_cfd_gui.py
+            #freecad-daily Cfd/test_files/test_cfd_gui.py
             ;;
         FC_STABLE)
             # test should be done in stable build of FreeCAD
@@ -20,7 +20,7 @@ if [ $TRAVIS_OS_NAME = 'linux' ]; then
                 freecadcmd Cfd/TestCfd.py > $HOME/.cache/Cfd/freecadcmd_output.log
             fi
             echo "start test script in the current working dir of $(pwd)"
-            freecad Cfd/test_files/test_cfd_gui.py
+            #freecad Cfd/test_files/test_cfd_gui.py
             ;;
     esac
 else

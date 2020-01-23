@@ -1,8 +1,9 @@
-; None means nothing, as the starting point of making a new fluid material
+; void space or vacuum has no density, but heat radiation still happens
+; it has eletromagetic properties
 
 [General]
-Name = None
-Description = "None"
+Name = Vacuum
+Description = "void, none material, vacuum"
 
 [Fluidic]
 Density = 0 kg/m^3
@@ -14,3 +15,7 @@ SpecificHeat = 0 J/kg/K
 ThermalConductivity = 0 W/m/K
 ThermalExpansionCoefficient = 0 um/m/K
 VolumetricThermalExpansionCoefficient = 0 m/m/K
+
+[Electrical]
+RelativePermittivity = 1.0
+; at 18°C and 50Hz

@@ -1,5 +1,15 @@
-[FCdMat]
+[General]
 Name = Gasoline
 Description = Gasoline at 20 Degrees Celsius and 1 atm
+ReferenceSource = ''
+Father = Fluid
+
+[Fluidic]
 Density = 680 kg/m^3
 DynamicViscosity = 2.92e-4 kg/m/s 
+
+[Thermal]
+SpecificHeat = 0 J/kg/K
+ThermalConductivity = 0 W/m/K
+; fluid has no such concept of line expansion coeff, but volumetric
+VolumetricThermalExpansionCoefficient = 0 m/m/K
