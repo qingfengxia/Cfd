@@ -51,8 +51,10 @@ if FreeCAD.GuiUp:
 
 BLUECFD_URL = \
     "https://github.com/blueCFD/Core/releases/download/blueCFD-Core-2016-1/blueCFD-Core-2016-1-win64-setup.exe"
+
 GNUPLOTPY_URL = "https://sourceforge.net/projects/gnuplot-py/files/Gnuplot-py/1.8/gnuplot-py-1.8.zip/download"
 GNUPLOTPY_FILE_BASE = "gnuplot-py-1.8"
+
 CFMESH_URL = "https://sourceforge.net/projects/cfmesh/files/v1.1.2/cfMesh-v1.1.2.tgz/download"
 CFMESH_FILE_BASE = "cfMesh-v1.1.2"
 CFMESH_FILE_EXT = ".tar.gz"
@@ -71,7 +73,12 @@ class CfdPreferencePage:
 
         self.form.tb_choose_foam_dir.clicked.connect(self.chooseFoamDir)
         self.form.le_foam_dir.textChanged.connect(self.foamDirChanged)
+
         self.form.pb_run_dependency_checker.clicked.connect(self.runDependencyChecker)
+        # hide those UI, not used by qingfengxia's Cfd module but CfdOF workbench only
+        self.form.pb_download_install_blueCFD.setVisible(False)
+        self.form.pb_download_install_Gnuplotpy.setVisible(False)
+        self.form.pb_download_install_cfMesh.setVisible(False)
         self.form.pb_download_install_blueCFD.clicked.connect(self.downloadInstallBlueCFD)
         self.form.pb_download_install_Gnuplotpy.clicked.connect(self.downloadInstallGnuplotpy)
         self.form.pb_download_install_cfMesh.clicked.connect(self.downloadInstallCfMesh)
