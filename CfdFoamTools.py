@@ -30,6 +30,7 @@
 from __future__ import print_function
 import os
 import os.path
+import sys
 import shutil
 import tempfile
 import string
@@ -60,11 +61,12 @@ from FoamCaseBuilder import supported_turbulence_models
 #from FoamCaseBuilder import supported_multiphase_models
 from FoamCaseBuilder import supported_radiation_models
 from FoamCaseBuilder import getVariableList
-from FoamCaseBuilder.utility import getFoamRuntime
+from FoamCaseBuilder.utility import getFoamRuntime, getFoamVersion
 from FoamCaseBuilder.utility import reverseTranslatePath, translatePath, makeRunCommand
 from FoamCaseBuilder.utility import getFoamDir as detectFoamDir
 
 
+#################### CfdPreferencePage ##################
 def getPreferencesLocation():
     # Set parameter location
     return "User parameter:BaseApp/Preferences/Mod/Cfd/OpenFOAM"
@@ -120,7 +122,25 @@ def getRunEnvironment():
     else:
         return {}
 
-#
+# it may bypass the requirement: python.Popen() must run from terminal
+# but it is based on QProcess, so need eventloop
+class CfdFoamProcess:
+    def __init__(self):
+        self.process = CfdConsoleProcess.CfdConsoleProcess(stdoutHook=self.readOutput, stderrHook=self.readOutput)
+        self.output = ""
+
+    def run(self, cmdline, case=None):
+        print("Running ", cmdline)
+        self.process.start(makeRunCommand(cmdline, case), env_vars=getRunEnvironment())
+        if not self.process.waitForFinished():
+            print("Error: Unable to run command " + cmdline)
+            #raise Exception("Unable to run command " + cmdline)
+        return self.process.exitCode()
+
+    def readOutput(self, output):
+        self.output += output
+
+
 def runFoamCommand(cmdline, case=None):
     """ Run a command in the OpenFOAM environment and wait until finished. Return output.
         Also print output as we go.
@@ -134,23 +154,6 @@ def runFoamCommand(cmdline, case=None):
     if exit_code:
         raise subprocess.CalledProcessError(exit_code, cmdline)
     return proc.output
-
-# it may bypass the requirement: python.Popen() must run from terminal
-# but it is based on QProcess, so need eventloop
-class CfdFoamProcess:
-    def __init__(self):
-        self.process = CfdConsoleProcess.CfdConsoleProcess(stdoutHook=self.readOutput, stderrHook=self.readOutput)
-        self.output = ""
-
-    def run(self, cmdline, case=None):
-        print("Running ", cmdline)
-        self.process.start(makeRunCommand(cmdline, case), env_vars=getRunEnvironment())
-        if not self.process.waitForFinished():
-            raise Exception("Unable to run command " + cmdline)
-        return self.process.exitCode()
-
-    def readOutput(self, output):
-        self.output += output
 
 
 def startFoamApplication(cmd, case, finishedHook=None, stdoutHook=None, stderrHook=None):
@@ -215,9 +218,10 @@ def checkCfdDependencies(term_print=True):
     try:
         foam_dir = getFoamDir()
     except IOError as e:
-        ofmsg = "Could not find OpenFOAM installation: " + e.message
+        ofmsg = "Error: Could not find OpenFOAM installation: "
         if term_print:
             print(ofmsg)
+            print(e)  # Exception has no `message` attribute in python3
         message += ofmsg + '\n'
     else:
         if not foam_dir:
@@ -227,30 +231,22 @@ def checkCfdDependencies(term_print=True):
                 print(ofmsg)
             message += ofmsg + '\n'
         else:
-            try:
-                foam_ver = runFoamCommand("echo $WM_PROJECT_VERSION")
-            except Exception as e:
-                runmsg = "OpenFOAM installation found, but unable to run command: " + e.message
-                message += runmsg + '\n'
-                if term_print:
-                    print(runmsg)
-            else:
-                foam_ver = foam_ver.rstrip().split('\n')[-1]
-                if int(foam_ver.split('.')[0]) < 4:
+                foam_ver = getFoamVersion()
+                if int(foam_ver[0]) < 4:
                     vermsg = "OpenFOAM version " + foam_ver + " pre-loaded is outdated: " \
                                + "The CFD workbench requires at least OpenFOAM 4.0"
                     message += vermsg + "\n"
                     if term_print:
                         print(vermsg)
-                else:
-                    # Check for cfMesh
-                    try:
-                        runFoamCommand("cartesianMesh -help")
-                    except subprocess.CalledProcessError:
-                        cfmesh_msg = "cfMesh not found"
-                        message += cfmesh_msg + '\n'
-                        if term_print:
-                            print(cfmesh_msg)
+
+                # Check for cfMesh
+                try:
+                    runFoamCommand("cartesianMesh -help")
+                except subprocess.CalledProcessError:
+                    cfmesh_msg = "cfMesh not found"
+                    message += cfmesh_msg + '\n'
+                    if term_print:
+                        print(cfmesh_msg)
 
     # check for PyFoam python module
     if term_print:
@@ -313,6 +309,8 @@ def checkCfdDependencies(term_print=True):
         # Only the last line contains gmsh version number
         gmshversion = gmshversion.rstrip().split()
         gmshversion = gmshversion[-1]
+        if sys.version_info.major >=3:
+            gmshversion = gmshversion.decode("utf-8")
         versionlist = gmshversion.split(".")
         if int(versionlist[0]) < 2 or (int(versionlist[0]) == 2 and int(versionlist[1]) < 13):
             gmsh_ver_msg = "gmsh version is older than minimum required (2.13)"

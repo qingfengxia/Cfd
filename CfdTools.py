@@ -47,10 +47,11 @@ def checkFreeCADVersion(term_print=True):
     if term_print:
         print("Checking FreeCAD version")
     ver = FreeCAD.Version()
-    gitver = int(ver[2].split()[0])
-    if int(ver[0]) == 0 and (int(ver[1]) < 17 or (int(ver[1]) == 17 and gitver < 11832)):
-        fc_msg = "FreeCAD version ({}.{}.{}) must be at least 0.17.11832".format(
-            int(ver[0]), int(ver[1]), gitver)
+    #gitver = int(ver[2].split()[0])  # this git commit version may not empy string
+    # or (int(ver[1]) == 17 and gitver < 11832)
+    if int(ver[0]) == 0 and (int(ver[1]) < 18):
+        fc_msg = "FreeCAD version ({}.{}) is not supported \n at least 0.17.118320, recommended 0.18+".format(
+            int(ver[0]), int(ver[1]))
         if term_print:
             print(fc_msg)
         message += fc_msg + '\n'
@@ -309,7 +310,7 @@ def getMesh(analysis_object):  # FIXME, deprecate this !
     # python will return None by default, so check None outside
 
 def getMeshObject(analysis_object):
-    # OUTDATED, replaced with CfdOF fork if cartMesh will be merged
+    # NOTE: replaced with CfdOF fork if cartMesh will be merged
     isPresent = False
     meshObj = []
     if analysis_object:
@@ -370,7 +371,7 @@ def convertQuantityToMKS(input, quantity_type, unit_system="MKS"):
     FreeCAD default length unit is mm, not metre, thereby, area is mm^2, pressure is MPa, etc
     MKS (metre, kg, second) could be selected from "Edit->Preference", "General -> Units",
     but not recommended since all CAD use mm as basic length unit.
-    see:
+    Note: if FreeCADGui.inputField quantity input GUI is used,  `Units.Quantity(value).getValueAs(units)`
     """
     return input
 

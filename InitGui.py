@@ -96,7 +96,7 @@ class CfdWorkbench(Workbench):
             from femcommands.commands import _CommandFemMeshClear
             # vtk pipeline commands  are not imported but can be imported
         else:
-            print("FreeCAD version less than 0.17 is not support", ver)
+            print("FreeCAD version {} less than 0.18 is not supported".format(ver))
 
         # Post Processing commands are located in FemWorkbench, implemented and imported in C++
         cmdlst = ['Cfd_Analysis',  'Cfd_AnalysisFromMesh', 'Cfd_Solver', 'Cfd_SolverFenics','FEM_MaterialFluid', 'Separator', # superseded 'Cfd_FluidMaterial',
