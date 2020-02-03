@@ -26,11 +26,19 @@ __url__ = "http://www.freecadweb.org"
 
 """
 This is a Python version of C++ version FemConstraintFluidBoundary,
-single big taskpanel is split into 3 and 5 widgets.
-A new widget can provide the extra widget to overwrite boundary patch setting by raw OpenFOAM dict
-Function in this Python class might be translated into C++ code in FemWorkbench
-It is possible to make these widget FreeCADGui independent, except `MagnitudeNormalWidget`
+single big taskpanel is split into 3 widgets: boundarySelection, boundaryTypeAndValue, FoamDictWidget
+FoamDictWidget: A new widget can provide the extra widget to overwrite boundary patch setting by raw OpenFOAM dict
 
+Function in this Python class might be translated into C++ code in FemWorkbench
+It is possible to make these widget FreeCADGui independent
+
+example code
+```
+obj = FreeCAD.getDocument("test_salome_mesh_2019").getObject("CfdFluidBoundary")
+import CfdBoundaryWidget
+w = CfdBoundaryWidget.MagnitudeNormalWidget([0,1,0], obj)
+w.show()
+```
 
 Change from C++
 1) form GUI value widget rename: spin->input
@@ -46,13 +54,12 @@ remained bugs:
 Todo:
 1) tr() i18n
 2) Pyside2 and Qt5
-"""
+3) advanced bc `rawFoamDict` using raw dict for each variable to solve, only for OpenFOAM
+   subtypes: fromTable/existingFoamDict/patchName
+   such as open and baffle type patch/boundary can be supported by raw dict  in qingfeng's Cfd module
+   Baffle is kind of inlet and outlet?
+4) TODO: open and freestream farField is quite similar,   interface -> constraint
 
-"""
-obj = FreeCAD.getDocument("test_salome_mesh_2019").getObject("CfdFluidBoundary")
-import CfdBoundaryWidget
-w = CfdBoundaryWidget.MagnitudeNormalWidget([0,1,0], obj)
-w.show()
 """
 
 import sys
@@ -61,26 +68,29 @@ import sys
 import sys
 import os.path
 
-# from PySide import QtCore
-from PySide import QtGui
-try:  # Qt5
-    from PySide2 import QtUiTools
-except ImportError:
+try:  # FreeCAD
     from PySide import QtUiTools
-from PySide.QtGui import QApplication
-from PySide.QtGui import QWidget, QFrame,QFormLayout, QVBoxLayout, QGridLayout, QHBoxLayout, QLabel,\
-                            QButtonGroup, QRadioButton, QPushButton, QCheckBox, QComboBox, QTextEdit, QLineEdit, QDoubleSpinBox, QTabWidget
+    from PySide import QtGui
+    from PySide.QtGui import QApplication
+    from PySide.QtGui import QWidget, QFrame,QFormLayout, QVBoxLayout, QGridLayout, QHBoxLayout, QLabel,\
+                                QButtonGroup, QRadioButton, QPushButton, QCheckBox, QComboBox, QTextEdit, QLineEdit, QDoubleSpinBox, QTabWidget
+except:
+    from PySide2 import QtUiTools
+    from PySide2.QtWidgets import QApplication
+    from PySide2.QtWidgets import QWidget, QFrame,QFormLayout, QVBoxLayout, QGridLayout, QHBoxLayout, QLabel,\
+                                QButtonGroup, QRadioButton, QPushButton, QCheckBox, QComboBox, QTextEdit, QLineEdit, QDoubleSpinBox, QTabWidget
 
 if sys.version_info.major >=3:  # to be compatible wtih python2
     unicode = str
 
 try:
     import FreeCAD
+    import FreeCAD.Units
     import CfdTools
     if FreeCAD.GuiUp:
-        import FreeCADGui
         import FreeCADGui as Gui
         within_FreeCADGui = True
+        ui = Gui.UiLoader()
     else:
         within_FreeCADGui = False
 except:
@@ -110,14 +120,24 @@ def _createChoiceGroup(valueTypes, valueTypeTips):
     return buttonGroupValueType, _buttonGroupLayout
 
 
-def _createInputField(unit = None):
+def _createInputField(quantityname = None, quantityunit = None):
     if within_FreeCADGui:
-        Value = QDoubleSpinBox()  # Gui.InputField()  # widget = ui.createWidget("Gui::InputField")
-    else:
-        Value = QDoubleSpinBox()  #
-        Value.setValue(0.0)
-        Value.setRange(-1e10, 1e10)  # give a range big enough
-    return Value
+        if quantityname and hasattr(FreeCAD.Units, quantityname):
+            widget = ui.createWidget("Gui::InputField")
+            unit = getattr(FreeCAD.Units, quantityname)  # string type?
+            if qunit:
+                widget.setProperty('unit', quantityunit)
+            else:
+                quantity = FreeCAD.Units.Quantity(1, unit)
+                widget.setProperty('unit', quantity.getUserPreferred()[2])  # by the third [2]?
+            return widget
+        else:
+            FreeCAD.Console.PrintMessage('Not known unit for property: {}\n'.format(quantityname))
+
+    widget = QDoubleSpinBox()  #
+    widget.setValue(0.0)
+    widget.setRange(-1e10, 1e10)  # give a range big enough
+    return widget
 
 
 def _setInputField(inputWidget, value, unit=None):
@@ -133,10 +153,11 @@ def _getInputField(inputWidget, unit = None):
     else:
         Value = inputWidget.value()
 
-
-# Constants, dict could be better, i18n,  open and baffle is not yet supported in qingfeng's Cfd module
-# TODO: open and freestrea farField is quite similar,  Baffle is kind of inlet and outlet?   interface -> constraint
-BOUNDARY_TYPES = ["wall", "inlet", "outlet", "farField", "interface"]  # freestream -> farField
+"""
+`rawFoamDict` is specific to OpenFOAM, temporarily disenable this boundary type
+ # freestream -> farField
+"""
+BOUNDARY_TYPES = ["wall", "inlet", "outlet", "farField", "interface"] 
 BOUNDARY_NAMES = ["Wall", "Inlet", "Outlet",  "Farfield", "interface"]  #shown in GUI, prepared for i18n
 
 """
@@ -160,30 +181,36 @@ SUBTYPES = {'wall': ["fixed", "slip", "partialSlip", "moving", "rough"],  #
             'outlet': ["staticPressure", "uniformVelocity", "outFlow"],
             'freestream': ["freestreamPressure", "freestreamVelocity", "characteristic"],
             'interface': ["symmetry", "wedge","cyclic","empty", "coupled"],  # backAndFront -> "twoDBoundingPlane", but that means  type translation is needed
-            'baffle': ["porousBaffle"]} # baffle is not supported in UI, it is fine to leave here
+            #'rawFoamDict': ["keyValueTable", "existingBoundary"]
+            } # baffle is not supported in UI, it is fine to leave here
 
 SUBTYPE_NAMES = {'wall': ["No-slip (viscous)", "Slip (inviscid)", "Partial slip", "Moving wall", "Rough surface"],
             'inlet': ["Uniform velocity", "Volumetric flow rate", "Mass flow rate", "Total pressure", "Static pressure"],
             'outlet': ["Static pressure", "Uniform velocity", "Outflow"],
             'farField': ["Ambient pressure", "Ambient velocity", "Characteristic-based"],
-            'interface': ["cartesian symmetry plane", "axisysmmetry axis line", "periodic (must in pair)", "front and back for 2D", "interface for external solvers"],
-            'baffle': ["Porous Baffle"] }
+            'interface': ["cartesian symmetry plane", "axisysmmetry axis line", "periodic (must in pair)", 
+                                    "front and back for 2D", "interface for external solvers"],
+            #'rawFoamDict': ["from the table widget below", "copy from existing & modify"] 
+            }
 
 SUBTYPE_VALUE_NAMES = {'wall': ["", "", "Slip ratio", "Wall velocity", "Roughness"],  # todo: rough boundary value and unit
             'inlet': ["Flow veloicty", "Volumetric flow rate", "mass flow rate", "Total pressure", "Static pressure"],
             'outlet': ["Static pressure", "Flow velocity", ""],
             'farField': ["Farfield pressure", "farfield velocity", 'not yet implemented type'], # todo: Characteristic-based type unit?
             'interface': ["", "", "", "", ""],
-            'baffle': [""] }
+            #'rawFoamDict': ["", ""] 
+            }
 
-# "" means hide BoundaryValue inputUI, 'm/s' means frameVelocity will show up, "m/m" for nondimensional value
+"""
+means hide BoundaryValue inputUI, 'm/s' means frameVelocity will show up, "m/m" for nondimensional value
+"""
 SUBTYPE_UNITS = {
     'wall': ["", "", "1", "m/s", "m"],  # todo: rough boundary value and unit
     'inlet': ["m/s", "m^3/s", "kg/s", "Pa", "Pa"],
     'outlet': ["Pa", "m/s", "1"],
     'farField': ["Pa", "m/s", ""], # todo: Characteristic-based type unit?
     'interface': ["", "", "", "", ""],
-    'baffle': [""]
+    #'rawFoamDict': ["", ""]
     }
 
 SUBTYPES_HELPTEXTS = {
@@ -208,13 +235,15 @@ SUBTYPES_HELPTEXTS = {
                 "periodic (must in pair) \n ",
                 "front and back boundary planes \n for a 2D case",
                 "interface for boundary value exchange \n with external solvers"],
-    'baffle': ["Permeable screen"]
+    #'rawFoamDict': ["all setting are provided by key-value pairs in the foam dict widget below",
+    #                             "copy from existing case selected in solver task panel and modify it"]
     }
 
 
 """'
-# see Ansys fluent's user manual on "Determining Turbulence Parameters"
-# either TurbulenceKineticEnergy(k) or TurbulenceIntensity(I) can be specified, but intensity (0.01-0.12) are commonly used and implemented here
+see Ansys fluent's user manual on "Determining Turbulence Parameters"
+# either TurbulenceKineticEnergy(k) or TurbulenceIntensity(I) can be specified, 
+but intensity (0.01-0.12) are commonly used and implemented here
 TurbulenceSpecification, mainly for inlet, how about freestream?
 #also search online for "Turbulence Calculator"
 """
@@ -242,7 +271,9 @@ TURBULENCE_CONFIG = [TURBULENCE_SPEC_TYPES, TURBULENCE_SPEC_NAMES, TURBULENCE_SP
                                 TURBULENCE_QUANTITY_NAMES, TURBULENCE_QUANTITY_UNITS, TURBULENCE_QUANTITY_VISIBILITY]
 
 
-
+"""
+ OpenFOAM specific thermal boundary type name
+"""
 THERMAL_BOUNDARY_TYPES = ["fixedValue","zeroGradient", "fixedGradient", "mixed", "heatFlux", "HTC","coupled"]
 THERMAL_BOUNDARY_NAMES = ["Fixed temperature",
                           "Adiabatic",
@@ -279,6 +310,7 @@ class InputWidget(QWidget):
     def __init__(self, settings, config, parent=None):
         super(InputWidget, self).__init__(parent)  # for both py2 and py3
 
+        self.setWindowTitle("Select boundary condition")
         if settings:
             self.settings = settings
         else:
@@ -305,7 +337,7 @@ class InputWidget(QWidget):
         for i in range(self.NumberOfInputs):
             _inputLabel = unicode("{}[{}]".format(self.QUANTITY_NAMES[i],self.QUANTITY_UNITS[i]))
 
-            input = _createInputField(unit = self.QUANTITY_UNITS[i])
+            input = _createInputField(quantityunit = self.QUANTITY_UNITS[i])
             #input.setRange(1e10, -1e10)  # give a range big enough
             expr = QLineEdit()  # QTextEdit is too big
             _label = QLabel(_inputLabel)
@@ -640,6 +672,7 @@ class CfdBoundaryWidget(QWidget):
     def __init__(self, object, boundarySettings, physics_model, material_objs, parent=None):
         super(CfdBoundaryWidget, self).__init__(parent)  # for both py2 and py3
 
+        #todo: add title to the task paenl
         self.obj = object
         if self.obj:
             self.BoundarySettings = self.obj.BoundarySettings
