@@ -78,6 +78,14 @@ class CfdSolverFoam(CfdSolver.CfdSolver):
         obj.MultiPhaseModel = list(supported_multiphase_models)
         '''
 
-        if "PotentialInit" not in obj.PropertiesList:  # FIXME: CfdFoam fork has changed this name and implementation
+        if "PotentialInit" not in obj.PropertiesList:  # FIXME: CfdOF fork has changed this name and implementation
             obj.addProperty("App::PropertyBool", "PotentialInit", "Solver",
                     "Initialise fields using potential flow solution", True)
+
+        if "TemplateCasePath" not in obj.PropertiesList:  # new feature in 2020
+            obj.addProperty("App::PropertyPath", "TemplateCasePath", "Solver",
+                    "Template foam case to build a new case, if empty, it means from scratch", True)
+            obj.addProperty("App::PropertyEnumeration", "CaseCreationMode", "Solver",
+                            "use this property with `TemplateCasePath` property to control how case is created")
+            obj.CaseCreationMode = list(["fromScratch", "fromTutorial", "fromExisting"])
+            obj.CaseCreationMode = "fromScratch"

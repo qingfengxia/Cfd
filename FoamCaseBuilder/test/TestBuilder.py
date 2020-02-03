@@ -40,7 +40,6 @@ from FoamCaseBuilder.ThermalBuilder import getDefaultHeatTransferSolverSettings,
 
 script_path = os.path.dirname(os.path.abspath( __file__ ))
 case_dir = '/tmp'  # to put test file
-case = "/tmp/TestCase"
 mesh_file = script_path  + os.path.sep +'TestCase.unv' #script path may not writable
 
 if not os.path.exists(mesh_file):
@@ -53,7 +52,7 @@ def test_runFoamApplication():
     print("getFoamDir() = ", getFoamDir())
     runFoamApplication(["icoFoam", '-help'])
 
-def test_dictFileLoad():
+def test_dictFileLoad(case):
     #PyFoam 0.66 can parse dict file for OF>=3.0, with "#include file"
     #case= getFoamDir() + "/tutorials/incompressible/simpleFoam/pipeCyclic"
     file="0/U"
@@ -61,13 +60,13 @@ def test_dictFileLoad():
     print(f['boundaryField'])
     print(f['internalField'])
 
-def test_boundaryDictLoad():
+def test_boundaryDictLoad(case):
     #PyFoam 0.66 can parse dict file for OF>=3.0, with "#include file"
     f = BoundaryDict(case)
     print(f.patches())
     print(f[f.patches()[0]])
 
-def test_createRawFoamFile():
+def test_createRawFoamFile(case):
     _constant_dir_created = False
     if not os.path.exists(case + os.path.sep + "constant"):
         _constant_dir_created = True
@@ -152,10 +151,14 @@ def test_basic_builder(using_laminar_model = True):
     cmdline = "simpleFoam -case {} > log.{}".format(case, case_builder._solverName)  # foamJob <solver> & foamLog
     print("please run the command in new terminal: \n"+ cmdline)
     #lauch command outside please, it takes several minutes to converge
+    runFoamApplication(cmdline)
+    
     #pyFoamPlotWatcher.py
 
     cmdline = "paraFoam -case {}".format(case)
     print("view result in command with: \n"+ cmdline)
+    
+    return case
 
 
 def test_heat_transfer_builder(compressible=True):
@@ -164,7 +167,7 @@ def test_heat_transfer_builder(compressible=True):
     #from ThermalBuilder import getDefaultHeatTransferSolverSettings
     solver_settings = getDefaultHeatTransferSolverSettings()
     solver_settings['compressible'] = compressible
-    case= case_dir + os.path.sep + "TestCaseCLI"
+    case= case_dir + os.path.sep + "TestCaseHT"
     #template_path = "tutorials/heatTransfer/buoyantBoussinesqSimpleFoam/hotRoom/"
     template_path = None
 
@@ -210,6 +213,8 @@ def test_heat_transfer_builder(compressible=True):
     if msg:
         print('Error: case setup check failed with message\n, {}, \n please check dict files'.format(msg))
     case_builder.summarize()
+    
+    return case
 
 
 if __name__ == '__main__':
@@ -218,9 +223,11 @@ if __name__ == '__main__':
         print("Test on Windows is not support, mainly because case path not translated, try python on Windows Linux System")
     else:
         #test_runFoamApplication()
-        test_basic_builder(using_laminar_model = False)
-        #test_dictFileLoad()
-        test_boundaryDictLoad()
-        test_createRawFoamFile()
-        test_basic_builder()
+        case = test_basic_builder(using_laminar_model = True)
+        test_dictFileLoad(case )
+        
+        test_boundaryDictLoad(case )
+        test_createRawFoamFile(case )
+        
+        #test_basic_builder(using_laminar_model = False)
         #test_heat_transfer_builder()

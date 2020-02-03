@@ -97,6 +97,7 @@ supported_outlet_types = set([
 
 def getDefaultSolverSettings():
     """ default sovler settings with the first letter as lower key
+    corresponding to CfdSolverFoam object' s properties
     """
     return {
             'parallel': False,
@@ -109,9 +110,12 @@ def getDefaultSolverSettings():
             'gravity': (0, -9.81, 0),
             'transient':False,
             'turbulenceModel': 'laminar',
+            # CSIP team contributed feature,
+            'potentialInit': False, #  new property inserted into CfdSolverFoam
             #
-            'potentialInit': False, # CSIP team contributed feature, new property inserted into CfdSolverFoam
-            #
+            'templateCasePath': None,  # New feature in 2020, control how case is created
+            'caseCreationMode': "fromScratch",
+            # heat transfer specific properties
             'heatTransfering':False,
             'conjugate': False, # conjugate heat transfer (CHT)
             'radiationModel': 'noRadiation',
@@ -311,7 +315,7 @@ class BasicBuilder(object):
     def __init__(self,  casePath,
                         #meshPath,
                         solverSettings=getDefaultSolverSettings(),
-                        templatePath=None, #detected from solverName which is deduced from sovlerSettings
+                        #templatePath=None, #detected from solverName which is deduced from sovlerSettings
                         fluidProperties = {'name':'water', "compressible":False, 'kinematicViscosity':1e6, "density": 1e3},
                         turbulenceProperties = {'name':'laminar'},
                         boundarySettings = [],
@@ -325,9 +329,9 @@ class BasicBuilder(object):
 
         self._solverSettings = solverSettings
         self._solverName = self.getSolverName()
-        if templatePath:
-            #shoud test existence first
-            self._templatePath = templatePath
+        if "templateCasePath" in solverSettings:
+            #shoud test existence first, but that does not work for WSL
+            self._templatePath = solverSettings["templateCasePath"]
         else:
             self._templatePath = None # self.getFoamTemplate()
         self._solverCreatedVariables = self.getSolverCreatedVariables()
@@ -341,7 +345,7 @@ class BasicBuilder(object):
         self._transientSettings = transientSettings
 
     def createCase(self):
-        # it will remove existent case folder
+        # TODO:        self._solverSettings["caseCreationMode"]
         if self._templatePath:
             createCaseFromTemplate(self._casePath, self._templatePath)
         else:
@@ -349,6 +353,40 @@ class BasicBuilder(object):
         self._createInitVarables()  # some high build level leave existing variable files there, just updating boundary values
         createRunScript(self._casePath, self._solverSettings['potentialInit'], self._solverSettings['parallel'], self._solverName, self._paralleSettings['numberOfSubdomains']) # Specify init_potential (defaults to true)
 
+    def _createSolverSolution(self):
+        # PyFoam may run into trouble given fvSolution file has C preprocessor command
+        # createCaseFromTemplate() should already copy these files
+        if self._solverSettings["caseCreationMode"] == "fromScratch":
+            createRawFoamFile(self._casePath, "system", "fvSolution", getFvSolutionTemplate())
+        else:
+            sf = ParsedParameterFile(self._templateCase + "/system/fvSolution")
+            of = ParsedParameterFile(self._casePath + "/system/fvSolution")
+            of = sf  # todo: unit test
+            of.writeFile()
+
+    def _createSolverSchemes(self):
+        # createCaseFromTemplate() should already copy these files
+        """
+        # add new variable (for diff turbulence model) schemes if abscent in source template
+        divSchemes
+        {
+            default         none;
+            div(phi,U)      bounded Gauss upwind;
+            div(phi,T)      bounded Gauss upwind;
+            div(phi,k)      bounded Gauss upwind;
+            div(phi,epsilon) bounded Gauss upwind;
+            div((nuEff*dev2(T(grad(U))))) Gauss linear;
+        }
+        """
+        if self._solverSettings["caseCreationMode"] == "fromScratch":
+            createRawFoamFile(self._casePath, "system", "fvSchemes", getFvSchemesTemplate())
+        else:
+            sf = ParsedParameterFile(self._templateCase + "/system/fvSchemes")
+            of = ParsedParameterFile(self._casePath + "/system/fvSchemes")
+            of = sf  # todo: unit test
+            of.writeFile()
+    
+    # TODO: setupCase()  or setup() could be a better name
     def build(self):
         # if case is built from clone/template, this function should not be called, or called with diff build_level
         self.setupBoundaryConditions()
@@ -373,9 +411,9 @@ class BasicBuilder(object):
         #movePolyMesh(self._casePath)  # make trouble in WSL for ln -s command in Allrun script
 
     def setupMesh(self, mesh_path, scale):
+        # create mesh by conversion from other mesh file format
         if os.path.exists(mesh_path):
             convertMesh(self._casePath, mesh_path, scale)
-
 
     def updateMesh(self, updated_mesh_path, scale):
         #runFoamCommand('foamCleanPolyMesh -case {}'.format(self._casePath)) #foamCleanPolyMesh v4.0+?
@@ -780,11 +818,9 @@ class BasicBuilder(object):
 
     ################################## solver control #####################################
     def setupSolverControl(self):
-        # PyFoam always run into trouble when loading such file
-        #pRefValue must be set, since some case does not contains such requested
-        #residual control, currently all default from tutorial case setup, but can be setup
-        createRawFoamFile(self._casePath, "system", "fvSolution", getFvSolutionTemplate())
-        #createRawFoamFile(self._casePath, "system", "fvSchemes", getFvSchemesTemplate())
+        # pRefValue must be set, since some case does not contains such requested
+        # residual control, currently all default from tutorial case setup, but can be setup
+        pass
 
     def setupRelaxationFactors(self, pressure_factor=0.1, velocity_factor=0.1, other_factor=0.3):
         # '.*' apply to all variables
@@ -813,28 +849,12 @@ class BasicBuilder(object):
                 f[algo]['nNonOrthogonalCorrectors'] = nTimes
         f.writeFile()
 
-    def setupResiduals(self, pResidual, UResidual, other = 0.001):
+    def setupResidualControl(self, pResidual, UResidual, other = 0.001):
         f = ParsedParameterFile(self._casePath + "/system/fvSolution")
         for algo in _supported_algorithms:
             if algo in f:
                 f[algo]['residualControl'] = {'p': pResidual, 'U': pResidual, '\".*\"': other}
         f.writeFile()
-
-    def setupSolverSchemes(self):
-        """
-        # add new variable (for diff turbulence model) schemes if abscent in source template
-        divSchemes
-        {
-            default         none;
-            div(phi,U)      bounded Gauss upwind;
-            div(phi,T)      bounded Gauss upwind;
-            div(phi,k)      bounded Gauss upwind;
-            div(phi,epsilon) bounded Gauss upwind;
-            div((nuEff*dev2(T(grad(U))))) Gauss linear;
-        }
-        """
-        #f = ParsedParameterFile(self._casePath + "/system/fvSchemes")
-        pass
 
     ############################## non public API ######################################
 

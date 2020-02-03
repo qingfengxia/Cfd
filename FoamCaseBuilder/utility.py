@@ -242,25 +242,28 @@ def createCaseFromScratch(output_path, solver_name):
     createRawFoamFile(output_path, 'system', 'fvSchemes', getFvSchemesTemplate())
     # turbulence properties and fuid properties will be setup later in base builder
 
-def copySettingsFromExistentCase(output_path, source_path):
+def cloneExistingCase(output_path, source_path):
     """build case structure from string template, both folder paths must existent
+    PyFoam has tools:
+    foamCloneCase:   Create a new case directory that includes time, system and constant directories from a source case.
+    foamCopySettings: Copy OpenFOAM settings from one case to another, without copying the mesh or results
     """
     shutil.copytree(source_path + os.path.sep + "constant", output_path + os.path.sep + "constant")
     shutil.copytree(source_path + os.path.sep + "system", output_path + os.path.sep + "system")
     #runFoamCommand('foamCopySettins  {} {}'.format(source_path, output_path))
-    #foamCopySettins: Copy OpenFOAM settings from one case to another, without copying the mesh or results
-    if os.path.exists(source_path + os.path.sep + "0"):
-        shutil.copytree(source_path + os.path.sep + "0", output_path + os.path.sep + "0")
+
     init_dir = output_path + os.path.sep + "0"
-    if not os.path.exists(init_dir):
-        os.makedirs(init_dir) # mkdir -p
+    if os.path.exists(source_path + os.path.sep + "0"):
+        shutil.copytree(source_path + os.path.sep + "0", init_dir)
+    else:
+        if not os.path.exists(init_dir):
+            os.makedirs(init_dir) # mkdir -p
     """
     if os.path.isdir(output_path + os.path.sep +"0.orig") and not os.path.exists(init_dir):
         shutil.copytree(output_path + os.path.sep +"0.orig", init_dir)
     else:
         print("Error: template case {} has no 0 or 0.orig subfolder".format(source_path))
     """
-    #foamCloneCase:   Create a new case directory that includes time, system and constant directories from a source case.
 
 def createCaseFromTemplate(output_path, source_path, backup_path=None):
     """create case from zipped template or existent case folder relative to $WM_PROJECT_DIR
@@ -279,7 +282,7 @@ def createCaseFromTemplate(output_path, source_path, backup_path=None):
         if not os.path.isabs(source_path):  # create case from existent case folder
             source_path = getFoamDir() + os.path.sep + source_path
         if os.path.exists(source_path):
-            copySettingsFromExistentCase(output_path, source_path)
+            cloneExistingCase(output_path, source_path)
         else:
             raise Exception("Error: tutorial case folder: {} not found".format(source_path))
     elif source_path[-4:] == ".zip":  # zipped case template,outdated
@@ -292,7 +295,9 @@ def createCaseFromTemplate(output_path, source_path, backup_path=None):
             raise Exception("Error: template case file {} not found".format(source_path))
     else:
         raise Exception('Error: template {} is not a tutorials case path or zipped file'.format(source_path))
-    #foamCleanPolyMesh
+
+def cleanCase(output_path):
+    # foamCleanPolyMesh
     mesh_dir = os.path.join(output_path, "constant", "polyMesh")
     if os.path.isdir(mesh_dir):
         shutil.rmtree(mesh_dir)
@@ -368,6 +373,8 @@ def createRunScript(case_path, init_potential, run_parallel, solver_name, num_pr
             f.write ("# Run application \n")
             f.write ("{} -case {} 2>&1 | tee {}/log.{} \n\n".format(solver_name,case,case,solver_name))
 
+        #pyFoamPlot.py
+
     # on windows linux subsystem, script must use unix line ending:  dos2unix
     if getFoamRuntime() == 'BashWSL':
         out = runFoamCommand("dos2unix Allrun", case_path)
@@ -430,17 +437,6 @@ def runFoamCommand(cmd, case=None):
     if error: print(error)
     return output
 
-"""
-def runFoamCommand(cmd, case=None):
-    from PyQt4 import QtCore
-    process = QtCore.QProcess()
-    process.setProcessChannelMode(QtCore.QProcess.MergedChannels)
-    process.start(makeRunCommand(cmd, case))  #
-    if process.waitForFinished():
-        output = process.readAll()
-        print(output)  # error in source bashrc file
-        return output
-"""
 
 def runFoamApplication(cmd, case=None):
     """ Run OpenFOAM application and automatically generate the log.application file.
@@ -464,100 +460,11 @@ def runFoamApplication(cmd, case=None):
     cmdline += " 1> >(tee -a " + logFile + ") 2> >(tee -a " + logFile + " >&2)"
     # Tee appends to the log file, so we must remove first. Can't do directly since
     # paths may be specified using variables only available in foam runtime environment.
-    cmdline = "{{ rm {}; {}; }}".format(logFile, cmdline)
+    cmdline = "{{ if [ -f {} ]; then rm {}; fi; {}; }}".format(logFile, logFile, cmdline)
     print("Running ", ' '.join(cmd))
     return runFoamCommand(cmdline, case)
 
-'''
-#deprecated, since WSL can pipe output back to caller process in python since windows 10 v1803
-def runFoamApplication(cmd, case=None, logFile=None):
-    """
-    run OpenFOAM command, wait until finished (it is not suitable for solver process with pipeliend output)
-    parameters:
-    case might be empty string or None for testing command, e.g. `simpleFoam -version`
-    application must be the first item of cmds sequence or first word of comline string
-    by default, output is not log but is print if in debug mode
-    error is reported in printing instead of raise exception
-    Bash on Ubuntu on Windows, may need case path translation done in Builder
-    unicode path and filename will be automatically supported when migrated to Python3
-    """
 
-    if (isinstance(cmd, list) or isinstance(cmd, tuple)):
-        cmds = cmd
-    elif isinstance(cmd, str):
-        cmds = cmd.split(' ')  # it does not matter if the following options is not split correctly like space and quote
-    else:
-        print("Warning: command and options must be specified in a list or tuple")
-
-    if getFoamRuntime() == "BashWSL":
-        out = runFoamCommandOnWSL(case, cmds, logFile)
-    else:
-        if logFile:
-            if not os.path.isabs(logFile):
-                if not case:
-                    print("Error: if logFile is not absolute path, case path must be specified")
-                else:
-                    logFile = os.path.abspath(case) + os.path.sep + logFile
-            if os.path.exists(logFile):
-                print ("Warning: " + logFile + " already exists under " + case + ", and is removed")
-                os.remove(logFile)
-
-        app = cmds[0]
-        cmdline = app + ' ' + ' '.join(cmds[1:])  # an extra space to sep app and options
-        env_setup_script = "{}/etc/bashrc".format(getFoamDir())
-
-        if logFile:
-            # list of commands will works, but command string merged is not working
-            #cmdline = """bash -c 'source {} && {} > "{}" ' """.format(env_setup_script, cmdline, logFile)
-            cmdline = ['bash', '-i', '-c', """source "{}" && {} > "{}" """.format(env_setup_script, cmdline, logFile)]
-        else:
-            #cmdline = """bash -c 'source {} && {}' """.format(env_setup_script, cmdline)
-            cmdline = ['bash', '-c', """source "{}" && {} """.format(env_setup_script, cmdline)]
-        #cmdline += (" | tee "+logFile) # Pipe to screen and log file
-        print("Running: ", cmdline)
-        out = subprocess.check_output(cmdline, cwd=case, stderr=subprocess.PIPE)
-    if _debug:
-        print(out)
-
-def runFoamCommandOnWSL(case, cmds, output_file=None):
-    """ Wait for command to complete on bash on windows 10
-    case path and output file path will be converted into ubuntu pass automatically in this function
-    """
-    if not output_file:
-        if tempfile.tempdir:
-            output_file = tempfile.tempdir + os.path.sep + "tmp_output.txt"
-        else:
-            output_file = "tmp_output.txt"
-    output_file = os.path.abspath(output_file)
-    print(output_file)
-    if os.path.exists(output_file):
-        os.remove(output_file)
-    output_file_wsl = _fromWindowsPath(output_file)
-    # using double quote to protect space in file path
-    app = cmds[0]
-    if case:
-        case_path = _fromWindowsPath(os.path.abspath(case))  # call getFoamRuntime(): circle reference
-        cmdline = app + ' -case "' + case_path +'" ' + ' '.join(cmds[1:])
-    else:
-        cmdline = app + ' ' + ' '.join(cmds[1:])
-    #cmdline = ['bash', '-i', '-c', 'source ~/.bashrc && {} > "{}"'.format(cmdline, output_file_wsl)]
-    #cmdline = """bash -c 'source ~/.bashrc && {} > "{}"' """.format(cmdline, output_file_wsl)
-    cmdline = """bash -c 'source ~/.bashrc && {} > {}' """.format(cmdline, output_file_wsl)
-    print("Running: ", cmdline)
-
-    retcode = subprocess.call(cmdline)  # os.system() does not work!
-    if int(retcode):
-        print("Error: command line return with code", retcode)
-    # corret and write to file on ubuntu path
-    if os.path.exists(output_file):
-        of = open(output_file)
-        result = of.read()
-        of.close()
-        return result
-    else:
-        print("Error: can not find the output file: ",output_file)
-        return None
-'''
 ###########################################################################
 
 def convertMesh(case, mesh_file, scale):
@@ -587,19 +494,6 @@ def convertMesh(case, mesh_file, scale):
     else:
         print("Error: mesh scaling ratio is must be a float or integer\n")
 
-def listBoundaryNames(case):
-    return BoundaryDict(case).patches()
-
-def changeBoundaryType(case, bc_name, bc_type):
-    """ change boundary named `bc_name` to `bc_type` in boundary dict file
-    """
-    f = BoundaryDict(case)
-    if bc_name in f.patches():
-        f[bc_name]['type'] = bc_type
-    else:
-        print("boundary `{}` not found, so boundary type is not changed".format(bc_name))
-    f.writeFile()
-
 def movePolyMesh(case):
     """ rename polyMesh to polyMesh.org
     """
@@ -626,7 +520,42 @@ def formatList():
     pass
 
 
-#################################topoSet, multiregion#####################################
+###########################topoSet, multiregion############################
+
+def getVariableBoundaryCondition(case, variable, boundary_name):
+    pf = ParsedParameterFile("{}/0/{}".format(case, variable))  # only for steady case?
+    return pf["boundaryField"][boundary_name]
+
+def listBoundaryNames(case):
+    return BoundaryDict(case).patches()
+
+def changeBoundaryType(case, bc_name, bc_type):
+    """ change boundary named `bc_name` to `bc_type` in boundary dict file
+    """
+    f = BoundaryDict(case)
+    if bc_name in f.patches():
+        f[bc_name]['type'] = bc_type
+    else:
+        print("boundary `{}` not found, so boundary type is not changed".format(bc_name))
+    f.writeFile()
+
+def getPatchType(bcType, bcSubType):
+    """ Get the boundary type based on selected BC condition """
+    if bcType == 'wall':
+        return 'wall'
+    elif bcType == 'constraint':
+        if bcSubType == 'symmetry':
+            return 'symmetry'
+        elif bcSubType == 'cyclic':
+            return 'cyclic'
+        elif bcSubType == 'wedge':
+            return 'wedge'
+        elif bcSubType == 'empty':
+            return 'empty'
+        else:
+            return 'patch'
+    else:
+        return 'patch'
 
 def listVarablesInFolder(path):
     """ list variable (fields) name for the case or under 0 path
