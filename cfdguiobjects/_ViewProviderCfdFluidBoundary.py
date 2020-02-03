@@ -140,13 +140,13 @@ class _TaskPanelCfdFluidBoundary:
         # fill the table in each variable tab, saved from the previous setup, existing case if BC name, done in each widget
 
         # geometry selection widget, only face is needed as boundary for CFD
-        # GeometryElementsSelection(ref, eltypes=[], multigeom=True)
+        # GeometryElementsSelection(ref, eltypes=[], multigeom=True)  # allow_multiple_geom_types = multigeom
         self.selectionWidget = FemSelectionWidgets.GeometryElementsSelection(obj.References, ['Face'], False)
-        # check references, has to be after initialisation of selectionWidget
+        # check references, has to be after initialization of selectionWidget
         try:
             self.selectionWidget.has_equal_references_shape_types() # boundarySelector has no such method
         except:
-            RuntimeError('this function only works for FreeCAD 0.18')
+            print('`selectionWidget.has_equal_references_shape_types()` is only available in FreeCAD 0.18+')
 
         #the magic to have two widgets in one taskpanel
         self.form = [self.selectionWidget, self.boundaryWidget]

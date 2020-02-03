@@ -41,6 +41,7 @@ class CfdRunnableFoam(_CfdRunnable):
         self.writer = CfdCaseWriterFoam.CfdCaseWriterFoam(self.analysis)
 
         from FoamCaseBuilder import FoamResidualPloter
+        # NOTE: Plot module in FreeCAD 0.19 is not official module
         self.ploter = FoamResidualPloter.FoamResidualPloter()
 
     def check_prerequisites(self):
@@ -74,5 +75,6 @@ class CfdRunnableFoam(_CfdRunnable):
 
     def process_output(self, text):
         self.ploter.process_text(text)
+        self.ploter.refresh()
         #self.ploter.plot()  # matplotlib plot using QTimer to update plotting
         # potential bug:  the ploter's QTimer should be stopped, once solver process finished,

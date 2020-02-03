@@ -60,7 +60,8 @@ error = gmsh_mesh.create_mesh()
 #App.ActiveDocument.Name
 
 App.closeDocument(u'Unnamed')
-Gui.doCommand(u'exit(0)')  # another way to exit
+#Gui.doCommand(u'exit(0)')  # will give exit code not zero, why?   trys another way to exit
+Gui.getMainWindow().close()
 
 
 

@@ -259,8 +259,8 @@ class _TaskPanelCfdSolverControl:
         text = str(self.solver_run_process.readAllStandardOutput())
         self.solver_runner.process_output(text)
 
-        #NOTE: can print the output from the solver to the console via the following command
-        FreeCAD.Console.PrintMessage(text)
+        #NOTE: print the output from the solver to the console via the following line
+        #FreeCAD.Console.PrintMessage(text)
 
     def printSolverProcessStdout(self):
         # this method should be deprecated, since plot will process the data

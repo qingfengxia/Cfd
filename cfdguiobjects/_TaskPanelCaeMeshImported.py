@@ -11,11 +11,12 @@ class _TaskPanelCaeMeshImported:
         settings = obj.ImportSettings
         #if "mesh" not in settings:
         #    settings = {"mesh": None}
-        #print("import settings", settings)
+        print("import settings for the ", settings)
         self.widget = MeshImportWidget(settings)
+
         #widget = QtGui.QWidget()  # empty taskpanel
         #widget.setWindowTitle("imported mesh setup")
-        #text = QtGui.QLabel("Currently taskpanel is not empty, edit the property in property editor", widget)
+        #text = QtGui.QLabel("Currently taskpanel is empty, edit the property in property editor", widget)
         self.form = self.widget  # must be in a list? no !  does not show up, why?
 
     def getStandardButtons(self):

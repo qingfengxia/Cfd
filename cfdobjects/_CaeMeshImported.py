@@ -39,6 +39,10 @@ class _CaeMeshImported():
         obj.addProperty("App::PropertyBool","Imported","Import","flag suggesting mesh is imported", True)
         obj.Imported = False
         obj.addProperty("App::PropertyPath","ImportedMeshPath","Import","mesh file path", True)
+        
+        obj.addProperty("App::PropertyLinkList", "MeshGroupList", "Base", "Mesh groups of the mesh attachable to boundary condition/constraint")
+        obj.MeshGroupList = []
+
         obj.addProperty("App::PropertyLink","Part","Data","corresponding geometry object link")
         obj.addProperty("App::PropertyPythonObject","ImportSettings","Import","python dict to hold settings")
 

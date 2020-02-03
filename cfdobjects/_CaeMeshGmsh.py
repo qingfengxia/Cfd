@@ -46,7 +46,7 @@ class _CaeMeshGmsh():
         obj.addProperty("App::PropertyLinkList", "MeshBoundaryLayerList", "Base", "Mesh boundaries need inflation layers")
         obj.MeshBoundaryLayerList = []
 
-        obj.addProperty("App::PropertyLinkList", "MeshRegionList", "Base", "Mesh regions of the mesh")
+        obj.addProperty("App::PropertyLinkList", "MeshRegionList", "Base", "Mesh regions of the gmsh mesh for local refinement")
         obj.MeshRegionList = []
 
         obj.addProperty("App::PropertyLinkList", "MeshGroupList", "Base", "Mesh groups of the mesh")
