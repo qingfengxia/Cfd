@@ -83,7 +83,9 @@ def _detectFoamVersion(bashrc = '~/.bashrc'):
         foam_ver = foam_ver.rstrip()  # Python2: Strip EOL char
     #print("afer decoding foam_ver = ", foam_ver)
     if len(foam_ver)>=1:  # not empty string in python3 which is b'\n'
-        if len(foam_ver.split('.'))>=2:
+        if foam_ver == 'dev':
+            _version = tuple([8, 0])
+        elif len(foam_ver.split('.'))>=2:
             _version = tuple([int(s) if s.isdigit() else 0 for s in foam_ver.split('.')])  # version string 4.x should be parsed as 4.0
         else:
             _version = tuple([int(foam_ver), 0])  # version 7 has no minor version
