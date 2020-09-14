@@ -28,8 +28,8 @@ __author__ = "CfdOF team"
 __url__ = "http://www.freecadweb.org"
 
 """
-This is exactly the same/compatible from CfdOF's _CfdFluidBoundary class
-but adding a new property: FoamBoundarySettings, raw foam dict widget, spliting face selection
+This class is exactly the same with CfdOF's _CfdFluidBoundary class
+but adding a new property: FoamBoundarySettings, raw foam dict widget
 """
 
 ## @package CfdFoamBoundary
@@ -52,6 +52,7 @@ class _CfdFluidBoundary(PartFeature):
 
         obj.Proxy = self
         self.Type = "CfdFluidBoundary"
+
         #Refrence selection method: InteractiveSelect or CadQuery expression
         obj.addProperty("App::PropertyPythonObject", "References")
         obj.addProperty("App::PropertyPythonObject", "BoundarySettings")
@@ -67,6 +68,11 @@ class _CfdFluidBoundary(PartFeature):
                         }
         # new feature
         obj.FoamBoundarySettings = {}
+
+
+    #def onDocumentRestored(self, obj):
+        #self.initProperties(obj)
+
 
     def execute(self, obj):
         ''' Create compound part at recompute. '''
