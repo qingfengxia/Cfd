@@ -25,7 +25,7 @@ __author__ = "Qingfeng Xia"
 __url__ = "http://www.freecadweb.org"
 
 """
-This widget can work with and without FreeCAD
+This widget can work with and without FreeCAD, while FreeCAD windows does not provide qtpy
 qtpy should be used to import QtObjects for the better compatibility
 
 add checkbox "appending extra setting"
@@ -37,12 +37,12 @@ import sys
 import pprint
 from collections import OrderedDict
 try:
-    from qtpy.QtWidgets import QMainWindow, QApplication, QPushButton, QLabel, QWidget, QAction, \
+    from PySide.QtGui import QMainWindow, QApplication, QPushButton, QLabel, QWidget, QAction, \
             QTabWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QHBoxLayout, QTextEdit, \
             QButtonGroup, QRadioButton, QComboBox
-    from qtpy.QtGui import QIcon
-    from qtpy import QtCore
-except:
+    from PySide.QtGui import QIcon
+    from PySide import QtCore
+except ImportError:
     from PySide2.QtWidgets import QMainWindow, QApplication, QPushButton, QLabel, QWidget, QAction, \
             QTabWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QHBoxLayout, QTextEdit, \
             QButtonGroup, QRadioButton, QComboBox

@@ -15,9 +15,9 @@ try:  # FreeCAD has renamed PySide2 into PySide
     from PySide.QtWidgets import QComboBox,  QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout,\
                                 QButtonGroup, QRadioButton
 except:
-    from qtpy import QtCore, QtWidgets, QtGui
-    from qtpy.QtWidgets import QApplication, QFileDialog
-    from qtpy.QtWidgets import QComboBox,  QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout,\
+    from PySide2 import QtCore, QtWidgets, QtGui
+    from PySide2.QtWidgets import QApplication, QFileDialog
+    from PySide2.QtWidgets import QComboBox,  QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout,\
                                 QButtonGroup, QRadioButton
 # constants
 mesh_filters = u"IDES mesh (*.unv);;Med mesh(*.med);;VTK mesh (*.vtk *.vtu)"

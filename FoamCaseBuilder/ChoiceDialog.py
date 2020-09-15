@@ -27,9 +27,9 @@ try:  #FreeCAD  PySide may refer to PySide2
     from PySide.QtGui import QApplication, QPushButton, QLineEdit, QLabel, QFileDialog
     from PySide.QtCore import Qt
 except:
-    from qtpy.QtWidgets import QDialog, QWidget, QDialogButtonBox, QButtonGroup, QRadioButton, QVBoxLayout
-    from qtpy.QtWidgets import QApplication, QPushButton, QLineEdit, QLabel, QFileDialog
-    from qtpy.QtCore import Qt
+    from PySide2.QtWidgets import QDialog, QWidget, QDialogButtonBox, QButtonGroup, QRadioButton, QVBoxLayout
+    from PySide2.QtWidgets import QApplication, QPushButton, QLineEdit, QLabel, QFileDialog
+    from PySide2.QtCore import Qt
 
 class ChoiceWidget(QWidget):
     def __init__(self, choices, help_texts= [], parent = None):
