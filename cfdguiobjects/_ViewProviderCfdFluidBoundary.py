@@ -26,18 +26,24 @@ __url__ = "http://www.freecadweb.org"
 
 """
 This TaskPanel is adapted from FemMaterial and CfdOF's CfdFluidBoundary
-I split the taskpanel into 3 widgets, references selection, fluid boundary, advanced foam boundary
+I split the taskpanel into 3 widgets, 
+  geometry references selection
+  fluid boundary value, similar to FemConstraintFluidBoundary C++ class
+  advanced foam boundary setup dictionary
 """
 
 ## @package _ViewProviderCfdFoamBoundary
 #  \ingroup CFD
-#  \brief FreeCAD CFD _ViewProviderCfdFluidBoundary: advanced boundary condition (ABC) for OpenFOAM, directly specify a dictionary
+#  \brief CFD advanced boundary setup for OpenFOAM, directly specify a dictionary
 
 import FreeCAD
 import FreeCADGui
 import FemGui  # needed to display the icons in TreeView
-False if False else FemGui.__name__  # dummy usage of FemGui for flake8, just returns 'FemGui'
-from femguiobjects import FemSelectionWidgets
+False if False else FemGui.__name__  # dummy usage of FemGui for flake8, just return 'FemGui'
+try:
+    from femguiobjects import FemSelectionWidgets  # stable 0.18
+except:
+    from . import CaeSelectionWidgets as FemSelectionWidgets  # tmp solution, copy from Fem to Cfd module
 from cfdguiobjects.CfdBoundaryWidget import CfdBoundaryWidget
 
 # for the panel
@@ -160,10 +166,11 @@ class _TaskPanelCfdFluidBoundary:
                 self.foam_boundary_conditions = self.obj.FoamBoundarySettings
             else:
                 print("debug print: variable_list", variable_list)
-                self.foam_boundary_conditions = {var : {} for var in variable_list}  # {varible: bc_dict, ...}
+                self.foam_boundary_conditions = {var: {} for var in variable_list}  # {varible: bc_dict, ...}
 
             from FoamCaseBuilder.FoamBoundaryWidget import FoamBoundaryWidget
-            self.foamWidget = FoamBoundaryWidget(self.foam_boundary_conditions)
+            s = {"variables": self.foam_boundary_conditions}
+            self.foamWidget = FoamBoundaryWidget(s)
             self.form.append(self.foamWidget)
         
     # ********* leave task panel *********

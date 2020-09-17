@@ -27,7 +27,7 @@ __url__ = "http://www.freecadweb.org"
 import os.path
 
 import FreeCAD
-import FemTools
+import FemTools  # todo: femtools
 import CfdTools
 import numpy as np
 
