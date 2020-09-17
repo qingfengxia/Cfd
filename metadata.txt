@@ -28,12 +28,14 @@ workbenches=Fem, Plot
 python=
 
 ; add 3rd party python libs
-pylibs=PyFoam
+;pylibs=PyFoam
+pylibs=
 
 ; add 3rd party optional python libs
 optionalpylibs=numpy
 
 ; add 3rd party applications
+; also OpenFOAM can be identified by `icoFoam`, but Windows 10 has a different way to detect
 3rdparty=gmsh
 
 ; add dependencies of other FC addons

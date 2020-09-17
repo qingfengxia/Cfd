@@ -1,4 +1,4 @@
-# A computional fluid dynamics (CFD) module for FreeCAD
+# A computational fluid dynamics (CFD) module for FreeCAD
 
 [![Build Status](https://travis-ci.org/qingfengxia/Cfd.svg?branch=master)](https://travis-ci.org/qingfengxia/Cfd.svg) [![Coverage Status](https://coveralls.io/repos/github/qingfengxia/Cfd.svg/badge.svg?branch=master)](https://coveralls.io/github/qingfengxia/Cfd.svg?branch=master)
 
@@ -10,12 +10,12 @@ LGPL licensed, the same as FreeCAD
 
 by Qingfeng Xia, 2015~2020 <http://www.iesensor.com/HTML5pptCV>
 
-The team from CSIR South Africa, 2016 has significant contribution to this repo:
+The team from CSIR South Africa,  has significant contribution to this repo in 2016:
 + Oliver Oxtoby <http://www.linkedin.com/in/oliver-oxtoby-05616835>
 + Alfred Bogears <http://www.csir.co.za/dr-alfred-bogaers>
 + Johan Heyns  <http://www.linkedin.com/in/johan-heyns-54b75511>
 
-CSIR team has forked this repo into <https://github.com/jaheyns/CfdOF>, focusing on usability for new users and OpenFOAM. Meanwhile, this repo still targets at preparing real-world case files from FreeCAD goemetry for advanced users, which also means user needs to tweak the OpenFOAM case files in production environment. Features from CSIR fork may be picked up in the future if agreed, but CfdOF is GPL licensed.
+CSIR team has forked this repo into <https://github.com/jaheyns/CfdOF> in 2017, focusing on usability for new users and OpenFOAM. Meanwhile, this repo still targets at preparing real-world case files from FreeCAD geometry for advanced users, which also means user needs to tweak the OpenFOAM case files in production environment.  Features from CSIR fork has not been picked up from CfdOF repo even agreed; CfdOF has a different GPL license.
 
 changelog and roadmap at [Roadmap.md](./Roadmap.md)
 
@@ -26,7 +26,7 @@ Please file bugs and feature request in <https://github.com/qingfengxia/Cfd/issu
 
 ## Features and limitation
 
-This CFD module now have a subforum in FreeCAD's official forum, see the link: <https://forum.freecadweb.org/viewforum.php?f=37>
+This CFD module now have a sub forum in FreeCAD's official forum, see the link: <https://forum.freecadweb.org/viewforum.php?f=37>
 
 This module aims to accelerate CFD case build up. Limited by the long solving time and mesh quality sensitivity of CFD problem, this module will not as good as FEM module. For engineering application, please seek support from other commercial CFD software.
 
@@ -74,11 +74,22 @@ added features:
 2. OpenFOAM thermal solver is under development
 
 ### Platform support status
-- Linux:  
+#### Linux  
 
-        Ubuntu 18.04 as a baseline implementation, but should works for other linux distribution.
+```
+Ubuntu 18.04 as a baseline implementation, but should works for other linux distribution.
+Ubuntu 20.04 is also tested working
+```
 
-- Windows 10 with Bash on Windows (WSL ubuntu 16.04) support (tested on windows 10 v1803):
+#### MacOS and other POSIX compatible Unix-like OS
+
+MacOS not tested but should work, but OpenFOAM detection could be a problem as bash is not the default shell.
+
+As a POSIX system, it is possible to run OpenFOAM and this module, assuming `OpenFOAM/etc/bashrc` has been sourced for bash
+
+#### Windows 10 
+
+- with Bash on Windows (WSL ubuntu 16.04) support (tested on windows 10 v1803):
 
         Official OpenFOAM  (Ubuntu deb) can be installed and run on windows via Bash on Windows (WSL) Since version 1803 can piped process output back python, which is needed to detect OpenFOAM installation.  There is a tutorial to install OpenFOAM on windows WSL: <https://openfoam.org/download/windows-10/>, make sure OpenFOAM bashrc is sourced in `~/.bashrc`.   
         
@@ -88,11 +99,18 @@ added features:
 
     ![FreeCAD CFDworkbench on Windows 10](http://www.iesensor.com/blog/wp-content/uploads/2018/05/FreeCAD_CFD_module_openfoam_now_working_with_WSL.png)
 
-- MAC OSX (it may work, but not tested):
+    
 
++ WSL2 ubuntu 18.04 support (on windows 10 v2004) is under testing
+
+OpenFOAM installation detection needs to be reworked, see [issue 20](https://github.com/qingfengxia/Cfd/pull/20),  for Ubuntu 18.04, the repo, not PPA, install OpenFOAM 4.x into system `/usr/bin` , so source a `openfoam/etc/bashrc` is not necessary.
+
+```sh
+# within WSL linux, add this line below to ~/.bashrc, to start paraview installed on Windows host
+alias paraview=/mnt/d/Software/ParaView-5.8.1-Windows-Python3.7-msvc2015-64bit/bin/paraview.exe
 ```
-    As a POSIX system, it is possible to run OpenFOAM and this module, assuming OpenFOAM/etc/bashrc has been sourced for bash
-```
+
+For Paraview, it should be installed to windows for better performance, also installed into WSL2 as a Linux app may still working. Some OpenFOAM package has the paraview bundled with OpenFOAM.
 
 
 
@@ -125,22 +143,25 @@ Adapted Python classes (to avoid frequent changes in Fem to break Cfd module)
 ### Prerequisites OpenFOAM related software
 
 #### Debian/Ubuntu
-Cfd module are now tested with Python3 on FreeCAD 0.19dev (official PPA has python3 build), pip command should be replaced with 'pip3'
+Cfd module are now tested with Python3 on FreeCAD 0.19dev and FreeCAD 18.4 has Python3 build (official PPA has python3 build), in the future only Python3 will be supported. 
 see more details of Prerequisites installation in *Readme.md* in *FoamCaseBuilder* folder
 
 - OpenFOAM (3.0+)  `sudo apt-get install openfoam` once repo is added/imported
 
 > see more [OpenFOAM official installation guide](http://openfoamwiki.net/index.php/Installation), make sure openfoam/etc/bashrc is sourced into ~/.bashrc
 
-- PyFoam (0.6.6+) `sudo pip install PyFoam` (see platform notes for Windows). In the future, this dependency will be removed. This module is Python3 compatible
+- PyFoam (0.6.6+) `sudo pip3 install PyFoam` (see platform notes for Windows). In the future, this dependency will be removed. This module is Python3 compatible.
 
-- matplotlib for residual plot (it is bundled with FreeCAD on Windows), gnuplot is not needed any longer. On ubuntu/debian, `sudo apt-get install python-matplotlib`
+  **If FreeCAD comes with App format,  there maybe a Python embedded inside, install the PyFoam into that Python, not the system Pyhton**,  **otherwise Cfd can not been installed inside Addon Manager!! **
+
+- matplotlib for residual plot (it is bundled with FreeCAD on Windows), gnuplot is not needed any longer. On ubuntu/debian, `sudo apt-get install python3-matplotlib`
 
 - paraFoam (paraview for OpenFOAM), usually installed with OpenFoam.
 
 - gmsh, as it is requested by FemWorkbench, it is also used in CfdWorkbench for meshing, check the install and path setup by `which gmsh`
 
   **Optional packages**
+  
 - FenicsSolver:  a wrapper to Fenics project, can be installed using pip: `pip3 install git+https://github.com/qingfengxia/FenicsSolver.git#FenicsSolver`  after install Fenics, see FenicsSolver readme for details.
 
 #### RHEL/Scientific Linux/Centos/Fedora: 
@@ -152,10 +173,17 @@ should work Installation tutorial/guide is welcomed from testers
 There should be a FreeCAD 0.19 will release a Python3 support, since python for Qt5 (PySide2) is generally available and Python 2 will be not maintained since 2020.
 There should be little work on this Cfd module to support Python3, initial python3 has been tested since May 2019 with the official PPA 0.19-python3 dev on Ubuntu 18.04.
 
-### Install freecad v0.18 stable
-After Oct 2016, Cfd boundary condition C++ code (FemConstraintFluidBoundary) has been merged into official master in stable v0.17
+After Oct 2016, Cfd boundary condition C++ code (FemConstraintFluidBoundary) has been merged into official master in stable v0.17.   Make sure Gmsh function is enabled and installed.  gmsh 3 has been bundled with FreeCAD v0.17 on Windows.
 
-Make sure Gmsh function is enabled and installed.  gmsh 3 has been bundled with FreeCAD v0.17 on Windows.
+### Install OpenFOAM into WSL on Windows 10
+
+OpenFOAM installation is identical to general Linux.
+
+**PyFoam must be installed to the Python embedded/bundled with FreeCAD**
+
+To check if PyFoam has been properly installed, inside the FreeCAD Python console,  run `import PyFoam`, if there is error, then Addon manager can not install Cfd module.   User may edit PyFoam source code after installation to fix the error, see instruction in [issue 21](https://github.com/qingfengxia/Cfd/pull/21)
+
+This prerequisite check by Addon can be skipped by "comment out PyFoam line in metadata.txt" 
 
 ### Install Cfd workbemch
 
@@ -245,13 +273,15 @@ Similar with FemWorkbench
 
 Cfd is still under testing and development, but we are planning to be merged into FreeCAD official.
 
-You can fork this Cfd module (stay with official stable FreeCAD release) to add new CFD solver or fix bugs for this OpenFOAM solver by send pull request.
+You can fork this Cfd module (stay with official stable FreeCAD release) to add new CFD solver or fix bugs for this OpenFOAM solver by send pull request. 
+
+CLA: For bug fixing, it is assumed the contributor agrees for the original author to relicense this Cfd module potential in the future.
 
 There is a ebook "Module developer's guide on FreeCAD source code", there are two chapters describing how Fem and Cfd modules are designed and implemented.
 
-<https://github.com/qingfengxia/FreeCAD_Mod_Dev_Guide.git> where updated PDF could be found on this git repo
+<https://github.com/qingfengxia/FreeCAD_Mod_Dev_Guide.git> where updated PDF could be found on this git repo's `pdf` folder.
 
-This is an outdated version for early preview:
+This is an outdated version for early preview:  
 <https://www.iesensor.com/download/FreeCAD_Mod_Dev_Guide__20161224.pdf>
 
 
