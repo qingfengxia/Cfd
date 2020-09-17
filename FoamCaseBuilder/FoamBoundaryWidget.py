@@ -177,7 +177,7 @@ class FoamDictWidget(QWidget):
         self.pushButtonClear = QPushButton("Clear table")
 
         self.buttonLayout.addWidget(self.pushButtonInsert)
-        self.buttonGroup.addButton(self.pushButtonRemove)
+        self.buttonLayout.addWidget(self.pushButtonRemove)
         self.buttonLayout.addWidget(self.pushButtonRestore)
         self.buttonLayout.addWidget(self.pushButtonClear)
 
@@ -264,7 +264,7 @@ class FoamDictWidget(QWidget):
         self.tableWidget.setItem(nRows, 0, kitem)
         self.tableWidget.setItem(nRows, 1, vitem)
 
-    def removeRow(self, rowID : Optional[int] = None):
+    def removeRow(self, rowID = None): # : Optional[int]  typing is not supported by python2
         if rowID == None:
             for ind in self.tableWidget.selectedIndexes():
                 self.tableWidget.removeRow(ind.row())
