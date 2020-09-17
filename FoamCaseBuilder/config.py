@@ -7,15 +7,17 @@ import sys
 import subprocess
 
 # ubuntu 14.04 defaullt to 3.x, while ubuntu 16.04 default to 4.x, ubuntu 18.04 defaullt to 4.1
+# ubuntu 20.04 default to 19.06
 # PPA has the lastest, windows 10 WSL simulate ubuntu 14.04/16.04/18.04
 
 _DEFAULT_FOAM_DIR = '/opt/openfoam5'
-_DEFAULT_FOAM_VERSION = (5,0)
+_DEFAULT_FOAM_VERSION = (5, 0)
 
 
 def _runCommandOnWSL(cmdstr):
     """ used to detect Foam runtime
     the key is to run bash in interative mode (-i) to source ~/.bashrc
+    `WSL cmd` will not source ~/.bashrc for non-interactive bash
     option: encoding='utf_8' is not supported on Python2
     """
     proc = subprocess.Popen("wsl bash -i -c '{}'".format(cmdstr), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)  #
@@ -26,15 +28,47 @@ def _runCommandOnWSL(cmdstr):
 ###################################################
 
 # Some standard install locations that are searched if an install directory is not specified
-FOAM_DIR_DEFAULTS = {"Windows": ["C:\\Program Files\\blueCFD-Core-2016\\OpenFOAM-4.x",
-                                                            "C:\\Program Files\\blueCFD-Core-2017\\OpenFOAM-5.x"],
-                     "Linux": ["/opt/openfoam7", #std position if installed from repo for ubuntu and debian
-                                "/opt/openfoam6", "/opt/openfoam5", "/opt/openfoam4", "/opt/openfoam-dev",
-                                "~/OpenFOAM/OpenFOAM-6.x","~/OpenFOAM/OpenFOAM-5.x", "~/OpenFOAM/OpenFOAM-4.x", "~/OpenFOAM/OpenFOAM-dev"]
-                     }
+
+def _searchSubfolder(dir, subfolderName):
+    '''
+    return the first subfolder with the name begins with subfolderName
+    '''
+    if os.path.exists(dir):
+        for d in os.listdir(dir):
+            if d is not os.path.isfile(d):
+                if d.startswith(subfolderName):
+                    return dir + os.path.sep + d
+
+
+def _detectDefaultFoamDir():
+    '''
+    default position if compiled from source code "~/OpenFOAM/OpenFOAM-5.x"
+    default position if installed from repo for ubuntu and debian "/opt/openfoam7"
+    windows blueCFD:  "C:\\Program Files\\blueCFD-Core-2017\\OpenFOAM-5.x"
+    '''
+    if platform.system() == "Linux":
+        if _searchSubfolder("/opt", "openfoam"):
+            return _searchSubfolder("/opt", "openfoam")
+        if _searchSubfolder(os.path.expanduser("~"), "OpenFOAM"):
+            _searchSubfolder(os.path.expanduser("~"), "OpenFOAM")
+    elif platform.system() == 'Windows':
+        # only for blueCFD,  "C:\\Program Files\\blueCFD-Core-2017\\OpenFOAM-5.x"
+        blueCFD_dir = _searchSubfolder("C:\\Program Files", "blueCFD")
+        if blueCFD_dir:
+            return _searchSubfolder(blueCFD_dir, "OpenFOAM")
+    else:
+        print("Default OpenFOAM installation check is not supported, please export WM_PROJECT_DIR on ", platform.system())
+
+
+def _isValidFoamFolder(foam_dir):
+    if foam_dir and os.path.exists(os.path.join(foam_dir, "etc", "bashrc")):
+        return True
+    else:
+        return False
+
 
 def _detectFoamDir():
-    """ Try to guess Foam install dir from WM_PROJECT_DIR or, failing that, various defaults """
+    """ detect Foam install dir from WM_PROJECT_DIR at first, if failed try various defaults """
     foam_dir = None
     if platform.system() == "Linux":
         cmdline = ['bash', '-i', '-c', 'echo $WM_PROJECT_DIR']
@@ -48,26 +82,47 @@ def _detectFoamDir():
     else:
         foam_dir = foam_dir.rstrip()  # Python2: Strip EOL char
     if len(foam_dir) > 1:
-        if foam_dir and not os.path.exists(os.path.join(foam_dir, "etc", "bashrc")):
-            foam_dir = None
+        if platform.system() != 'Windows':
+            if foam_dir and not os.path.exists(os.path.join(foam_dir, "etc", "bashrc")):
+                print(foam_dir + "/etc/bashrc does not exist")
+                foam_dir = None
     else:
         print("""environment var 'WM_PROJECT_DIR' is not defined\n,
               fallback to default {}""".format(_DEFAULT_FOAM_DIR))
         foam_dir = None
 
     if not foam_dir:  # not the best way, since only the user should activate one foam version by append to ~/.bashrc
-        for d in FOAM_DIR_DEFAULTS[platform.system()]:
-            foam_dir = os.path.expanduser(d)
-            if foam_dir and not os.path.exists(os.path.join(foam_dir, "etc", "bashrc")):
-                foam_dir = None
-            else:
-                break
-
+        foam_dir = _detectDefaultFoamDir()
     return foam_dir
+
+
+def _detectOpenFOAMorgVersion(foam_ver):
+    # OpenFOAM.org  OpenFOAM Foundation , version pattern X.Y
+    # version string 4.x should be parsed as 4.0, return as a tuple of int
+    if len(foam_ver.split('.')) >= 2:
+        _version = tuple([int(s) if s.isdigit() else 0 for s in foam_ver.split('.')])  
+    elif foam_ver.find('dev') >= 0:
+        _version = tuple([100, 0])  # using a very big integer like 100 to indicate it is the latest version
+    else:
+        _version = tuple([int(foam_ver), 0])  # version 7 has no minor version
+    #print("detected openfoam version by Cfd module:", _version)  # this line will print when FreeCAD startup
+    return _version
+
+
+def _detectOpenFOAMcomVersion(foam_ver):
+    # OpenFOAM.com (variant name: OpenFOAM+) the commercial version of OpenFOAM, 
+    # version pattern is vYYMM  maybe have a ending `+` like `v1612+`
+    # return as a integer like 1612
+    yymm = foam_foam[1:] if len(foam_ver)==5 else foam_foam[1:5]
+    if yymm.isdigit():
+        return int(yymm)
+    else:
+        print("Error: can not detect OpenFOAM version `vyymm` patter form string ", foam_ver)
 
 
 def _detectFoamVersion(bashrc = '~/.bashrc'):
     # todo: detect OpenFOAM variant or runtime first
+    # `foamVersion` which available since openfoam7? gives result like `OpenFOAM-8`
     if platform.system() == 'Windows':
         foam_ver = _runCommandOnWSL('echo $WM_PROJECT_VERSION')
     else:
@@ -83,12 +138,10 @@ def _detectFoamVersion(bashrc = '~/.bashrc'):
         foam_ver = foam_ver.rstrip()  # Python2: Strip EOL char
     #print("afer decoding foam_ver = ", foam_ver)
     if len(foam_ver)>=1:  # not empty string in python3 which is b'\n'
-        if len(foam_ver.split('.'))>=2:
-            _version = tuple([int(s) if s.isdigit() else 0 for s in foam_ver.split('.')])  # version string 4.x should be parsed as 4.0
+        if foam_ver[0] == 'v':
+            return _detectOpenFOAMcomVersion(foam_ver)
         else:
-            _version = tuple([int(foam_ver), 0])  # version 7 has no minor version
-        #print("detected openfoam version by Cfd module:", _version)  # this line will print when FreeCAD startup
-        return _version
+           return  _detectOpenFOAMorgVersion(foam_ver)
     else:
         print("""environment var 'WM_PROJECT_VERSION' is not defined, fallback to hard-coded {}""".format(_DEFAULT_FOAM_VERSION))
         return None
@@ -104,10 +157,12 @@ def setFoamDir(dir):
     else:
         print("Warning: {} does not contain etc/bashrc file to set as foam_dir".format(dir))
 
+
 def setFoamVersion(ver):
     """specify OpenFOAM version by a list or tupe of integer like (3, 0, 0)
     """
     _FOAM_SETTINGS['FOAM_VERSION'] = tuple(ver)
+
 
 def getFoamDir():
     """detect from output of 'bash -i -c "echo $WM_PROJECT_DIR"', if default is not set
@@ -128,20 +183,27 @@ _FOAM_SETTINGS = {"FOAM_DIR": _detectedFoamDir if _detectedFoamDir else _DEFAULT
 
 # see more details on variants: https://openfoamwiki.net/index.php/Forks_and_Variants
 # http://www.cfdsupport.com/install-openfoam-for-windows.html, using cygwin
-# FOAM_VARIANTS = ['OpenFOAM', 'foam-extend', 'OpenFOAM+']
-# FOAM_RUNTIMES = ['Posix', 'Cygwin', 'BashWSL']
+# openfoam.com (OpenFOAM+) and openfoam.org are similar, but has diff version string, see
+# https://www.cfd-online.com/Forums/openfoam/197150-openfoam-com-versus-openfoam-org-version-use.html
+# FOAM_VARIANTS = ['OpenFOAM', 'foam-extend', 'OpenFOAM+'] 
+# for the moment there is no need to distinguish OpenFOAM and OpenFOAM+,  getFoamVersion() return type can distinguish
+# FOAM_RUNTIMES = ['Posix', 'Cygwin', 'BashWSL']   
 def _detectFoamVarient():
-    """ FOAM_EXT version is also detected from 'bash -i -c "echo $WM_PROJECT_VERSION"'  or $WM_FORK
+    """ FOAM_EXT version is also detected from 'bash -i -c "echo $WM_PROJECT"'
+    return 'foam' for foam-extend , and "OpenFOAM" for the other two
     """
     if getFoamDir() and getFoamDir().find('ext') > 0:
         return  "foam-extend"
     else:
-       return "OpenFOAM"
+        #if getFoamVersion() and isinstance(getFoamVersion(), int):
+        #    return "OpenFOAM+"
+        return "OpenFOAM"
 
-# Bash on Ubuntu on Windows detection and path translation
+
 def _detectFoamRuntime():
+    # For Linux and other POSIX platforms: 'Posix'; or one from ['Posix', 'Cygwin', 'BashWSL'] on Windows
     if platform.system() == 'Windows':
-        return "BashWSL"  # 'Cygwin', 'Docker'
+        return "BashWSL"  # 'Cygwin', 'Docker'  is not supported
     else:
         return "Posix"
 
@@ -161,3 +223,9 @@ def getFoamRuntime():
     """
     if 'FOAM_RUNTIME' in _FOAM_SETTINGS:
         return _FOAM_SETTINGS['FOAM_RUNTIME']
+
+
+if __name__ == "__main__":
+    print(getFoamDir())
+    print(getFoamVariant())
+    print(getFoamVersion())
