@@ -74,10 +74,10 @@ added features:
 2. OpenFOAM thermal solver is under development
 
 ### Platform support status
-#### Linux  
+#### Linux:  Ubuntu LTS as the baseline
 
 ```
-Ubuntu 18.04 as a baseline implementation, but should works for other linux distribution.
+Ubuntu 18.04 as a baseline , but should works for other linux distribution.
 Ubuntu 20.04 is also tested working
 ```
 
@@ -91,12 +91,8 @@ As a POSIX system, it is possible to run OpenFOAM and this module, assuming `Ope
 
 - with Bash on Windows (WSL ubuntu 16.04) support (tested on windows 10 v1803):
 
-        Official OpenFOAM  (Ubuntu deb) can be installed and run on windows via Bash on Windows (WSL) Since version 1803 can piped process output back python, which is needed to detect OpenFOAM installation.  There is a tutorial to install OpenFOAM on windows WSL: <https://openfoam.org/download/windows-10/>, make sure OpenFOAM bashrc is sourced in `~/.bashrc`.   
-        
-        On FreeCAD v0.17 for windows, gmsh has been installed, but 'PyFoam' is not included to the FreeCAD's python2.7 bundle. However, `pip` bundled with FreeCAD does not work, instead, 'PyFoam' is downloaded and extracted to "C:\Program Files\FreeCAD 0.17\bin\Lib\site-packages".
-
-    For paraview, it is recommended to uninstall WSL's paraview by `sudo apt-get remove openfoam5paraview54`, to use windows version (make sure paraview is installed and on PAHT) for better 3D performance. paraview on WSL just does not work for me, although `glxgears` works on software rendering via`export LIBGL_ALWAYS_INDIRECT=1`.
-
+        OpenFOAM  (Ubuntu official deb) can be installed and run on windows via Bash on Windows (WSL) Since version 1803 can piped process output back python, which is needed to detect OpenFOAM installation.  There is a tutorial to install OpenFOAM on windows WSL: <https://openfoam.org/download/windows-10/>, make sure OpenFOAM bashrc is sourced in `~/.bashrc`.   
+    
     ![FreeCAD CFDworkbench on Windows 10](http://www.iesensor.com/blog/wp-content/uploads/2018/05/FreeCAD_CFD_module_openfoam_now_working_with_WSL.png)
 
     
@@ -104,13 +100,6 @@ As a POSIX system, it is possible to run OpenFOAM and this module, assuming `Ope
 + WSL2 ubuntu 18.04 support (on windows 10 v2004) is under testing
 
 OpenFOAM installation detection needs to be reworked, see [issue 20](https://github.com/qingfengxia/Cfd/pull/20),  for Ubuntu 18.04, the repo, not PPA, install OpenFOAM 4.x into system `/usr/bin` , so source a `openfoam/etc/bashrc` is not necessary.
-
-```sh
-# within WSL linux, add this line below to ~/.bashrc, to start paraview installed on Windows host
-alias paraview=/mnt/d/Software/ParaView-5.8.1-Windows-Python3.7-msvc2015-64bit/bin/paraview.exe
-```
-
-For Paraview, it should be installed to windows for better performance, also installed into WSL2 as a Linux app may still working. Some OpenFOAM package has the paraview bundled with OpenFOAM.
 
 
 
@@ -130,15 +119,26 @@ Imported Python classes  (unstable, change frequency in daily build):
 <Cfd/InitGui.py>
 + FemMeshRegion, 
 + FemMeshDisplayInfo
-+ FemSelectionWidgets.GeometryElementsSelection  in _TaskPanelCfdFluidBoundary class
 
 Adapted Python classes (to avoid frequent changes in Fem to break Cfd module)
 + CfdCommand  from FemCommand or later named as FemCommandManager
 + CaeMesherGmsh from FemMeshGmsh
-
++ FemSelectionWidgets.GeometryElementsSelection  in _TaskPanelCfdFluidBoundary class
 ---
 
 ## Installation guide
+
+### Select the OpenFOAM variant
+
+OpenFOAM has different variant, such as:
+
+1. community version from OpenFOAM foundation: https://www.openfoam.org with version like 7.0
+
+2. commercial version from OpenCFD:  https://www.openfoam.com with version using year and month like v1906.  This commercial code base is most compatible with the community version.
+
+3. early community fork [foam-extend]() led by Prof Jasak. 
+
+This Cfd module is tested with OpenFOAM foundation, should work for the commercial version , but foam-extend is yet tested.
 
 ### Prerequisites OpenFOAM related software
 
@@ -150,11 +150,17 @@ see more details of Prerequisites installation in *Readme.md* in *FoamCaseBuilde
 
 > see more [OpenFOAM official installation guide](http://openfoamwiki.net/index.php/Installation), make sure openfoam/etc/bashrc is sourced into ~/.bashrc
 
-- PyFoam (0.6.6+) `sudo pip3 install PyFoam` (see platform notes for Windows). In the future, this dependency will be removed. This module is Python3 compatible.
+- PyFoam (0.6.6+) `sudo pip3 install PyFoam` (see platform notes for Windows).  This module is Python3 compatible. In the future, this dependency will be removed.
 
-  **If FreeCAD comes with App format,  there maybe a Python embedded inside, install the PyFoam into that Python, not the system Pyhton**,  **otherwise Cfd can not been installed inside Addon Manager!! **
+  **If FreeCAD comes with App format,  there maybe a Python embedded inside. PyFoam should be installed into that embedded Python, not the system Python. FreeCAD on Windows  always use the embedded Python **
+  otherwise Cfd can not been installed inside Addon Manager!! **
 
-- matplotlib for residual plot (it is bundled with FreeCAD on Windows), gnuplot is not needed any longer. On ubuntu/debian, `sudo apt-get install python3-matplotlib`
+  **Solution: When Cfd module is import for the first time, it will try to `import PyFoam` if failed FreeCAD's Python will install PyFoam to user site: 
+   `subprocess.check_output([sys.executable, "-m", "pip", "install", "PyFoam"])` 
+  However, one Linux, `sys.exectuable` is `freecd` instead of `python`**
+  on windows, for FreeCAD 0.19, it is also `D:\Software\FreeCAD_0.19.22411-Win-Conda_vc14.x-x86_64\bin\freecad.exe`
+
+- matplotlib for residual plot (it is bundled with FreeCAD on Windows), gnuplot is not needed any longer. On ubuntu/debian, `sudo apt-get install python3-matplotlib`, it is a dep of official FreeCAD package, so it should have been installed.
 
 - paraFoam (paraview for OpenFOAM), usually installed with OpenFoam.
 
@@ -163,6 +169,7 @@ see more details of Prerequisites installation in *Readme.md* in *FoamCaseBuilde
   **Optional packages**
   
 - FenicsSolver:  a wrapper to Fenics project, can be installed using pip: `pip3 install git+https://github.com/qingfengxia/FenicsSolver.git#FenicsSolver`  after install Fenics, see FenicsSolver readme for details.
+
 
 #### RHEL/Scientific Linux/Centos/Fedora: 
 
@@ -185,11 +192,26 @@ To check if PyFoam has been properly installed, inside the FreeCAD Python consol
 
 This prerequisite check by Addon can be skipped by "comment out PyFoam line in metadata.txt" 
 
+#### Install paraview for Windows 10 WSL
+
+For Paraview, it should be installed to windows for better performance, also installed into WSL2 as a Linux app may still working. Some OpenFOAM package has the paraview bundled with OpenFOAM, so it is not possible to remove it.
+
+WSL2 can search windows PATH for executables. To use windows version (make sure paraview is installed and on PAHT), just type `paraview.exe` (with the .exe suffix, windows PATH will be search). 
+
+In order to be compatible with Linux environment, bash alias can be used:
+
+```sh
+# within WSL linux, add this line below to ~/.bashrc, to start paraview installed on Windows host
+alias paraview=/mnt/d/Software/ParaView-5.8.1-Windows-Python3.7-msvc2015-64bit/bin/paraview.exe
+```
+
+Note: paraview on WSL (version 1 as in 2018) just does not work for me, although `glxgears` works on software rendering via`export LIBGL_ALWAYS_INDIRECT=1`.
+
 ### Install Cfd workbemch
 
-#### use FreeCAD 0.18+ AddonManager
+#### 1. use FreeCAD 0.18+ AddonManager (recommended)
 
-#### manually download from github
+#### 2. manually download from github
 `git clone https://github.com/qingfengxia/Cfd.git`
 
 symbolic link or copy the folder into `<freecad installation folder>/Mod`, or `~/.FreeCAD/Mod/`
@@ -253,7 +275,7 @@ Similar with FemWorkbench
 
 - config the solver setting in property editor data tab on the left combi panel, by single click sovler object
 - double click mesh object to refine mesh
-- hide the mesh and show hte part, so part surface can be select in creatation of boundary condition
+- hide the mesh and show the part, so part surface can be select in creatation of boundary condition
 - add boundary conditions by click the toolbar item, and link surface and bondary value
 - double click solver object to bring up the SolverControl task panel
 
