@@ -32,6 +32,7 @@ from __future__ import print_function, absolute_import
 
 import numbers
 import os
+import sys
 import os.path
 import shutil
 import platform
@@ -43,6 +44,24 @@ import subprocess
 ########################### FOAM file operation###########################
 _using_pyfoam = True  # using try to auto select?
 if _using_pyfoam:
+    try:
+        import PyFoam
+        print("PyFoam installatoin path:", PyFoam.__file__)
+    except ImportError:
+        print("Error: PyFoam is not importable")
+        # on all platform, sys.executable is `freecad` instead of `python`
+        if platform.system() == "Windows":
+            print("try to install to user site. sys.executable = ", sys.executable)
+            if sys.executable:
+                pythonapp = os.path.dirname(sys.executable) + os.path.sep + "python.exe"
+                if os.path.exists(pythonapp):
+                    subprocess.check_output([pythonapp, "-m", "pip", "install", "PyFoam"])
+                    # this should install PyFoam to the correct Python site
+        else:
+            print("try to install PyFoam to the system python site-package")
+            if sys.version_info[0] == 3:
+                pythonapp = "python3"
+                subprocess.check_output([pythonapp, "-m", "pip", "install", "PyFoam"])
     try:
         from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
         from PyFoam.RunDictionary.BoundaryDict import BoundaryDict

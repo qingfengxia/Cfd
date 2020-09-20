@@ -231,22 +231,22 @@ def checkCfdDependencies(term_print=True):
                 print(ofmsg)
             message += ofmsg + '\n'
         else:
-                foam_ver = getFoamVersion()
-                if int(foam_ver[0]) < 4:
-                    vermsg = "OpenFOAM version " + foam_ver + " pre-loaded is outdated: " \
-                               + "The CFD workbench requires at least OpenFOAM 4.0"
-                    message += vermsg + "\n"
-                    if term_print:
-                        print(vermsg)
+            foam_ver = getFoamVersion()
+            if int(foam_ver[0]) < 4:
+                vermsg = "OpenFOAM version " + foam_ver + " pre-loaded is outdated: " \
+                            + "The CFD workbench requires at least OpenFOAM 4.0"
+                message += vermsg + "\n"
+                if term_print:
+                    print(vermsg)
 
-                # Check for cfMesh
-                try:
-                    runFoamCommand("cartesianMesh -help")
-                except subprocess.CalledProcessError:
-                    cfmesh_msg = "cfMesh not found"
-                    message += cfmesh_msg + '\n'
-                    if term_print:
-                        print(cfmesh_msg)
+            # Check for cfMesh
+            try:
+                runFoamCommand("cartesianMesh -help")
+            except subprocess.CalledProcessError:
+                cfmesh_msg = "cfMesh not found"
+                message += cfmesh_msg + '\n'
+                if term_print:
+                    print(cfmesh_msg)
 
     # check for PyFoam python module
     if term_print:
@@ -254,7 +254,7 @@ def checkCfdDependencies(term_print=True):
     try:
         import PyFoam
     except ImportError:
-        PyFoam_msg = "matplotlib python module not installed"
+        PyFoam_msg = "PyFoam python module not installed"
         message += PyFoam_msg + '\n'
         if term_print:
             print(PyFoam_msg)

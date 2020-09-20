@@ -192,20 +192,16 @@ To check if PyFoam has been properly installed, inside the FreeCAD Python consol
 
 This prerequisite check by Addon can be skipped by "comment out PyFoam line in metadata.txt" 
 
-#### Install paraview for Windows 10 WSL
+#### Install `paraFoam` for Windows 10 WSL
 
-For Paraview, it should be installed to windows for better performance, also installed into WSL2 as a Linux app may still working. Some OpenFOAM package has the paraview bundled with OpenFOAM, so it is not possible to remove it.
+It is recommend to use the `paraFoam` bundbled with OpenFOAM on Linux to view  the result.
 
-WSL2 can search windows PATH for executables. To use windows version (make sure paraview is installed and on PAHT), just type `paraview.exe` (with the .exe suffix, windows PATH will be search). 
+`paraFoam` is a POSIX shell script. It will call `paraview` and load the OpenFOAM reader plugin.
 
-In order to be compatible with Linux environment, bash alias can be used:
-
-```sh
-# within WSL linux, add this line below to ~/.bashrc, to start paraview installed on Windows host
-alias paraview=/mnt/d/Software/ParaView-5.8.1-Windows-Python3.7-msvc2015-64bit/bin/paraview.exe
-```
-
+paraview inside WSL2 on windows 10 version 2004 is yet tested.
 Note: paraview on WSL (version 1 as in 2018) just does not work for me, although `glxgears` works on software rendering via`export LIBGL_ALWAYS_INDIRECT=1`.
+
+
 
 ### Install Cfd workbemch
 

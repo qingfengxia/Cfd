@@ -276,7 +276,8 @@ class _TaskPanelCfdSolverControl:
                 self.femConsoleMessage("Error converting stdout from Solver", "#FF0000")
 
     def showResult(self):
-        self.femConsoleMessage("Loading result into FreeCAD is disabled for bugs...", "#FF0000")
+        self.femConsoleMessage("Loading result into FreeCAD is disabled for bugs...", "#FFFF00")
+        self.femConsoleMessage("start an external paraview process to view the result", "#FFFF00")
         """
         self.femConsoleMessage("Loading result sets...")
         self.Start = time.time()
