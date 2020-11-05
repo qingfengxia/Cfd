@@ -109,6 +109,12 @@ def export(objectslist, fileString):
 
 
 def _run_command(comandlist):
+    """
+    Runs a command and return output.
+
+    Args:
+        comandlist: (list): write your description
+    """
     print("Run command: " + ' '.join(comandlist))
     error = None
     try:
@@ -124,6 +130,13 @@ def _run_command(comandlist):
 
 
 def export_fenics_mesh(obj, meshfileString):
+    """
+    Export a meshfile as a meshfile.
+
+    Args:
+        obj: (todo): write your description
+        meshfileString: (str): write your description
+    """
     if not (meshfileString[-4:] == ".xml" or meshfileString[-5:] == ".hdf5"):
         error = "Error: only xml or hdf5 mesh is supported by gmsh conversion"
         FreeCAD.Console.PrintError(error)
@@ -155,6 +168,12 @@ def export_fenics_mesh(obj, meshfileString):
 
 
 def show_fenics_mesh(fname):
+    """
+    Displays the area of the fits file.
+
+    Args:
+        fname: (str): write your description
+    """
     # boundary layer, quad element is not supported
     from dolfin import Mesh, MeshFunction, plot, interactive  # TODO: fenicsX may have change API
     mesh = Mesh(fname+".xml")
@@ -170,6 +189,14 @@ def show_fenics_mesh(fname):
 
 
 def export_foam_mesh(obj, meshfileString, foamCaseFolder=None):
+    """
+    Export a mesh as a meshfile object.
+
+    Args:
+        obj: (todo): write your description
+        meshfileString: (str): write your description
+        foamCaseFolder: (todo): write your description
+    """
     # support only 3D
     gmsh = CaeMesherGmsh.CaeMesherGmsh(obj, CfdTools.getParentAnalysisObject(obj))
     meshfile = gmsh.export_mesh(u"Gmsh MSH", meshfileString)

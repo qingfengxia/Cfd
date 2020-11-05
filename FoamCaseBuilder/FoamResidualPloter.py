@@ -48,6 +48,13 @@ matplotlib standalone mode is not yet working
 '''
 class FoamResidualPloter():
     def __init__(self, backend = 'matplotlib'):
+        """
+        Initialize the figure
+
+        Args:
+            self: (todo): write your description
+            backend: (todo): write your description
+        """
         self.reset()
         if backend == 'gnuplot':
             import Gnuplot
@@ -87,6 +94,12 @@ class FoamResidualPloter():
         self.backend = backend
 
     def refresh(self):  ## only for matplotlib in FreeCAD plot module
+        """
+        Refresh the figure
+
+        Args:
+            self: (todo): write your description
+        """
         if self.updated:
             self.updated = False
             ax = self.fig.axes
@@ -107,6 +120,12 @@ class FoamResidualPloter():
         self.fig.canvas.draw()
 
     def reset(self):
+        """
+        Reset residuals and resets.
+
+        Args:
+            self: (todo): write your description
+        """
         # set init values for plotting tool independent data, gnuplot does not accept numpy.array?
         init_residual = [1]  # numpy.array([1])
         self.UxResiduals = init_residual
@@ -117,6 +136,13 @@ class FoamResidualPloter():
         self.niter = 0
 
     def process_text(self, text):
+        """
+        Process text
+
+        Args:
+            self: (todo): write your description
+            text: (str): write your description
+        """
         loglines = text.split('\n')
         printlines = []
         for line in loglines:
@@ -139,6 +165,12 @@ class FoamResidualPloter():
         self.updated = True
 
     def plot(self):
+        """
+        Function to plot
+
+        Args:
+            self: (todo): write your description
+        """
         if self.backend == 'gnuplot':
             # NOTE: the mod checker is in place for the possibility plotting takes longer
             # NOTE: than a small test case to solve

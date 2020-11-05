@@ -49,10 +49,21 @@ if not os.path.exists(mesh_file):
     runFoamApplication(['curl -o {} {}'.format(mesh_file, mesh_file_url)])
 
 def test_runFoamApplication():
+    """
+    Run test test.
+
+    Args:
+    """
     print("getFoamDir() = ", getFoamDir())
     runFoamApplication(["icoFoam", '-help'])
 
 def test_dictFileLoad(case):
+    """
+    Saves test case
+
+    Args:
+        case: (str): write your description
+    """
     #PyFoam 0.66 can parse dict file for OF>=3.0, with "#include file"
     #case= getFoamDir() + "/tutorials/incompressible/simpleFoam/pipeCyclic"
     file="0/U"
@@ -61,12 +72,24 @@ def test_dictFileLoad(case):
     print(f['internalField'])
 
 def test_boundaryDictLoad(case):
+    """
+    Print test case test results
+
+    Args:
+        case: (str): write your description
+    """
     #PyFoam 0.66 can parse dict file for OF>=3.0, with "#include file"
     f = BoundaryDict(case)
     print(f.patches())
     print(f[f.patches()[0]])
 
 def test_createRawFoamFile(case):
+    """
+    Creates a test case.
+
+    Args:
+        case: (todo): write your description
+    """
     _constant_dir_created = False
     if not os.path.exists(case + os.path.sep + "constant"):
         _constant_dir_created = True
@@ -162,6 +185,12 @@ def test_basic_builder(using_laminar_model = True):
 
 
 def test_heat_transfer_builder(compressible=True):
+    """
+    Generate transfer builder
+
+    Args:
+        compressible: (todo): write your description
+    """
     # getTestMesh
 
     #from ThermalBuilder import getDefaultHeatTransferSolverSettings

@@ -39,6 +39,13 @@ class _CaeMeshGmsh():
                                 'INRIA medit':30, 'CGNS':32, 'Salome mesh':33, 'Abaqus INP':39, 'Ploy surface':42}
 
     def __init__(self, obj):
+        """
+        Initialize the gtk obj
+
+        Args:
+            self: (todo): write your description
+            obj: (todo): write your description
+        """
         self.Type = "FemMeshGmsh"  # must be this type to hold objects like MeshGroup, MeshBoundaryLayer
         self.Object = obj  # keep a ref to the DocObj for nonGui usage
         obj.Proxy = self  # link between App::DocumentObject to  this object
@@ -105,11 +112,31 @@ class _CaeMeshGmsh():
         obj.LengthScalingFactor = 1.0
 
     def execute(self, obj):
+        """
+        Executes the given object.
+
+        Args:
+            self: (todo): write your description
+            obj: (todo): write your description
+        """
         return
 
     def __getstate__(self):
+        """
+        Returns the state of this object.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.Type
 
     def __setstate__(self, state):
+        """
+        Sets whether or not this button.
+
+        Args:
+            self: (todo): write your description
+            state: (dict): write your description
+        """
         if state:
             self.Type = state

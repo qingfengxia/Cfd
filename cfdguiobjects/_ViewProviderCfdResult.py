@@ -35,6 +35,13 @@ class _ViewProviderCfdResult:
     """
 
     def __init__(self, vobj):
+        """
+        Initialize the object
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+        """
         vobj.Proxy = self
 
     def getIcon(self):
@@ -42,16 +49,46 @@ class _ViewProviderCfdResult:
         return ":/icons/fem-result.svg"
 
     def attach(self, vobj):
+        """
+        Attach the given object
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+        """
         self.ViewObject = vobj
         self.Object = vobj.Object
 
     def updateData(self, obj, prop):
+        """
+        Updates the data of an object.
+
+        Args:
+            self: (todo): write your description
+            obj: (todo): write your description
+            prop: (todo): write your description
+        """
         return
 
     def onChanged(self, vobj, prop):
+        """
+        Called when a callback is received.
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+            prop: (str): write your description
+        """
         return
         
     def doubleClicked(self, vobj):
+        """
+        Determine if this document is double running.
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+        """
         if FreeCADGui.activeWorkbench().name() != 'CfdWorkbench':
             FreeCADGui.activateWorkbench("CfdWorkbench")
         doc = FreeCADGui.getDocument(vobj.Object.Document)
@@ -62,6 +99,14 @@ class _ViewProviderCfdResult:
         return True
         
     def setEdit(self, vobj, mode):
+        """
+        Sets whether orcfd mode
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+            mode: (str): write your description
+        """
         #if FemGui.getActiveAnalysis():
         taskd = _TaskPanelCfdResult()
         taskd.obj = vobj.Object
@@ -69,11 +114,32 @@ class _ViewProviderCfdResult:
         return True
 
     def unsetEdit(self, vobj, mode):
+        """
+        Returns a popup for the inputed mode.
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+            mode: (str): write your description
+        """
         FreeCADGui.Control.closeDialog()
         return
 
     def __getstate__(self):
+        """
+        Get the state of the state
+
+        Args:
+            self: (todo): write your description
+        """
         return None
 
     def __setstate__(self, state):
+        """
+        Set the state of the state of the given state.
+
+        Args:
+            self: (todo): write your description
+            state: (dict): write your description
+        """
         return None

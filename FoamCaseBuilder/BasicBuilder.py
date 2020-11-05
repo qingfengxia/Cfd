@@ -126,6 +126,12 @@ def getDefaultSolverSettings():
             }  # containing all setting properties
 
 def _getMultiphaseSolverName(settings):
+    """
+    Get soliphase settings.
+
+    Args:
+        settings: (dict): write your description
+    """
     # solver list: https://github.com/OpenFOAM/OpenFOAM-5.x/tree/master/applications/solvers/multiphase
     # interFoam: 2 incompressible, isothermal immiscible fluids using a VOF (volume of fluid)
     # multiphaseModel: mapping to controldict of 
@@ -244,9 +250,21 @@ _DEFAULT_VARIABLE_BOUNDARY = {'U': "Velocity",
 'p_rgh': "Pressure-rgh"}
 
 def getDefaultBoundarySettings(variable_list):
+    """
+    Returns the default list of the given list
+
+    Args:
+        variable_list: (list): write your description
+    """
     pass
 
 def getVariableList(solverSettings):
+    """
+    Returns a list of variable names that can turbables
+
+    Args:
+        solverSettings: (todo): write your description
+    """
         # density variable/field 'rho' will be automatically created by the compressible solver if not present
         vars = ['p', 'U'] + getTurbulenceVariables(solverSettings)
         if solverSettings['buoyant']:
@@ -323,6 +341,23 @@ class BasicBuilder(object):
                         transientSettings = {"startTime":0, "endTime":1000, "timeStep":1, "writeInterval":100}, # simpleFoam
                         paralleSettings = {'method':"simple", "numberOfSubdomains":multiprocessing.cpu_count()}, # NOTE: check typo should be paralle'l'Settings NOTE: Should we not use scotch for default
                 ):
+        """
+        Initialize the class instance
+
+        Args:
+            self: (todo): write your description
+            casePath: (str): write your description
+            solverSettings: (todo): write your description
+            getDefaultSolverSettings: (bool): write your description
+            fluidProperties: (str): write your description
+            turbulenceProperties: (todo): write your description
+            boundarySettings: (todo): write your description
+            internalFields: (str): write your description
+            transientSettings: (dict): write your description
+            paralleSettings: (todo): write your description
+            multiprocessing: (todo): write your description
+            cpu_count: (int): write your description
+        """
         if casePath[0] == "~": casePath = os.path.expanduser(casePath)
         self._casePath = os.path.abspath(casePath)
         #self._meshPath = meshPath
@@ -345,6 +380,12 @@ class BasicBuilder(object):
         self._transientSettings = transientSettings
 
     def createCase(self):
+        """
+        Creates the template for the application.
+
+        Args:
+            self: (todo): write your description
+        """
         # TODO:        self._solverSettings["caseCreationMode"]
         if self._templatePath:
             createCaseFromTemplate(self._casePath, self._templatePath)
@@ -354,6 +395,12 @@ class BasicBuilder(object):
         createRunScript(self._casePath, self._solverSettings['potentialInit'], self._solverSettings['parallel'], self._solverName, self._paralleSettings['numberOfSubdomains']) # Specify init_potential (defaults to true)
 
     def _createSolverSolution(self):
+        """
+        Creates the solver file
+
+        Args:
+            self: (todo): write your description
+        """
         # PyFoam may run into trouble given fvSolution file has C preprocessor command
         # createCaseFromTemplate() should already copy these files
         if self._solverSettings["caseCreationMode"] == "fromScratch":
@@ -388,6 +435,12 @@ class BasicBuilder(object):
     
     # TODO: setupCase()  or setup() could be a better name
     def build(self):
+        """
+        Builds the solver
+
+        Args:
+            self: (todo): write your description
+        """
         # if case is built from clone/template, this function should not be called, or called with diff build_level
         self.setupBoundaryConditions()
         self.setupInternalFields()
@@ -411,11 +464,27 @@ class BasicBuilder(object):
         #movePolyMesh(self._casePath)  # make trouble in WSL for ln -s command in Allrun script
 
     def setupMesh(self, mesh_path, scale):
+        """
+        Set up mesh for the mesh_path.
+
+        Args:
+            self: (todo): write your description
+            mesh_path: (str): write your description
+            scale: (float): write your description
+        """
         # create mesh by conversion from other mesh file format
         if os.path.exists(mesh_path):
             convertMesh(self._casePath, mesh_path, scale)
 
     def updateMesh(self, updated_mesh_path, scale):
+        """
+        Update the case of the mesh.
+
+        Args:
+            self: (todo): write your description
+            updated_mesh_path: (str): write your description
+            scale: (float): write your description
+        """
         #runFoamCommand('foamCleanPolyMesh -case {}'.format(self._casePath)) #foamCleanPolyMesh v4.0+?
         casePath = self._casePath
         shutil.rmtree(casePath + os.path.sep + "constant" + os.path.sep + 'polyMesh') #  rm -rf dir
@@ -460,6 +529,12 @@ class BasicBuilder(object):
         print("Please run the command in new terminal: \n" + cmdline)
 
     def _summarizeInternalFields(self):
+        """
+        Summarize all the variables.
+
+        Args:
+            self: (todo): write your description
+        """
         print("Solver created fields are initialized with value:\n")
         for var in self._solverCreatedVariables:
             f = ParsedParameterFile(self._casePath + os.path.sep + "0" + os.path.sep + var)
@@ -505,12 +580,24 @@ class BasicBuilder(object):
 
     ###########################################################################
     def getSolverCommand(self):
+        """
+        Returns the command for this command.
+
+        Args:
+            self: (todo): write your description
+        """
         if os.path.exists(self._casePath + os.path.sep + "Allrun"):
             return  makeRunCommand("./Allrun", self._casePath)
         else:
             return makeRunCommand(self.getSolverName(), self._casePath)
 
     def getSolverName(self):
+        """
+        Returns the name of the solver
+
+        Args:
+            self: (todo): write your description
+        """
         return _getSolverName(self._solverSettings)
 
     def getFoamTemplate(self):
@@ -541,6 +628,12 @@ class BasicBuilder(object):
             return template_path # case folder zipped with version number
 
     def getSolverCreatedVariables(self):
+        """
+        Returns a list of all variables
+
+        Args:
+            self: (todo): write your description
+        """
         return set(getVariableList(self._solverSettings))
 
     def _createInitVarables(self):
@@ -619,8 +712,21 @@ class BasicBuilder(object):
 
     @property
     def solverSettings(self):
+        """
+        Returns : class : ~plex.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._solverSettings
     def setupSolverSettings(self, settings):
+        """
+        Sets up todosolver.
+
+        Args:
+            self: (todo): write your description
+            settings: (dict): write your description
+        """
         if settings and isinstance(value, dict):
             self._solverSettings = settings
             self._solverName = getSolverName(self._solverSettings)
@@ -628,8 +734,21 @@ class BasicBuilder(object):
 
     @property
     def parallelSettings(self):
+        """
+        Returns a list of the currently available settings.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._parallelSettings
     def setupParallelSettings(self, settings):
+        """
+        Sets up the settings.
+
+        Args:
+            self: (todo): write your description
+            settings: (dict): write your description
+        """
         # copy if not existent dic file`decomposeParDict`
         # OpenFOAM 3.0 + can have dict file in other place
         # `decomposeParDict -decomposeParDict dictPath`
@@ -649,9 +768,22 @@ class BasicBuilder(object):
 
     @property
     def fluidProperties(self):
+        """
+        : return : class of the block.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._fluidProperties
     @fluidProperties.setter
     def fluidProperties(self, value):
+        """
+        Set the confidPro of the value.
+
+        Args:
+            self: (todo): write your description
+            value: (todo): write your description
+        """
         if value and isinstance(value, dict):
             self._fluidProperties = value
         else:
@@ -669,6 +801,12 @@ class BasicBuilder(object):
         self.setupTransportProperties()
 
     def setupTransportProperties(self):
+        """
+        Setup transport transport ids
+
+        Args:
+            self: (todo): write your description
+        """
         case = self._casePath
         solver_settings = self._solverSettings
         assert solver_settings['compressible'] == False
@@ -696,6 +834,12 @@ class BasicBuilder(object):
 
     @property
     def gravity(self):
+        """
+        : class settings.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._solverSettings['gravity']
     @gravity.setter
     def setGravityProperties(self, value):
@@ -713,15 +857,35 @@ class BasicBuilder(object):
 
     @property
     def internalFields(self):
+        """
+        Returns a list of field names of this is_idocates.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._internalFields
     @internalFields.setter
     def internalFields(self, fields=None):
+        """
+        Print the fields to the fields
+
+        Args:
+            self: (todo): write your description
+            fields: (list): write your description
+        """
         if fields and isinstance(fields, dict):
             self._internalFields = fields  # mapping type like dict
         else:
             print('Warning: only dict with variable name as key is accepted to init internal fields')
 
     def setupInternalFields(self, fields=None):
+        """
+        Set up the fields.
+
+        Args:
+            self: (todo): write your description
+            fields: (list): write your description
+        """
         # support a short name in openfoam dict file like 'T' and long name like 'Temperature'
         if fields and isinstance(fields, dict):
             self.internalFields = fields
@@ -791,13 +955,33 @@ class BasicBuilder(object):
     """
     @property
     def transientSettings(self):
+        """
+        Return the currently selected transport.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._transientSettings
     @transientSettings.setter
     def transientSettings(self, transientSettings):
+        """
+        Set the transaction settings
+
+        Args:
+            self: (todo): write your description
+            transientSettings: (todo): write your description
+        """
         if transientSettings:
             self._transientSettings = transientSettings
 
     def setupTransientSettings(self, tSettings):
+        """
+        Sets up the transient settings
+
+        Args:
+            self: (todo): write your description
+            tSettings: (dict): write your description
+        """
         if tSettings:
             self.transientSettings = tSettings
         if self._transientSettings:
@@ -818,11 +1002,26 @@ class BasicBuilder(object):
 
     ################################## solver control #####################################
     def setupSolverControl(self):
+        """
+        Solver for this module.
+
+        Args:
+            self: (todo): write your description
+        """
         # pRefValue must be set, since some case does not contains such requested
         # residual control, currently all default from tutorial case setup, but can be setup
         pass
 
     def setupRelaxationFactors(self, pressure_factor=0.1, velocity_factor=0.1, other_factor=0.3):
+        """
+        Set up the conductors
+
+        Args:
+            self: (todo): write your description
+            pressure_factor: (bool): write your description
+            velocity_factor: (todo): write your description
+            other_factor: (todo): write your description
+        """
         # '.*' apply to all variables
         f = ParsedParameterFile(self._casePath + "/system/fvSolution")
         f["relaxationFactors"]["fields"] = {} # this `fields` may not exist
@@ -834,6 +1033,14 @@ class BasicBuilder(object):
         f.writeFile()
 
     def setupPressureReference(self, pRefValue, pRefCell=0):
+        """
+        Sets up the alignment file for this file
+
+        Args:
+            self: (todo): write your description
+            pRefValue: (todo): write your description
+            pRefCell: (str): write your description
+        """
         f = ParsedParameterFile(self._casePath + "/system/fvSolution")
         for algo in _supported_algorithms:
             if algo in f:
@@ -842,6 +1049,13 @@ class BasicBuilder(object):
         f.writeFile()
 
     def setupNonOrthogonalCorrectors(self, nTimes):
+        """
+        Sets up all the alignment file for this file.
+
+        Args:
+            self: (todo): write your description
+            nTimes: (todo): write your description
+        """
         ## important for netgen mesh with only tetragal cell to convergent
         f = ParsedParameterFile(self._casePath + "/system/fvSolution")
         for algo in _supported_algorithms:
@@ -850,6 +1064,15 @@ class BasicBuilder(object):
         f.writeFile()
 
     def setupResidualControl(self, pResidual, UResidual, other = 0.001):
+        """
+        Sets the origin for the origin.
+
+        Args:
+            self: (todo): write your description
+            pResidual: (todo): write your description
+            UResidual: (todo): write your description
+            other: (todo): write your description
+        """
         f = ParsedParameterFile(self._casePath + "/system/fvSolution")
         for algo in _supported_algorithms:
             if algo in f:
@@ -902,6 +1125,12 @@ class BasicBuilder(object):
         f.writeFile()
 
     def _initPressure_rghAsWall(self):
+        """
+        Initializes the rgh rgh rgh rgh rgh rgh rgh rgh rgh rgh rgh rgh. t.
+
+        Args:
+            self: (todo): write your description
+        """
         #
         p_rgh = ParsedParameterFile(self._casePath + "/0/p_rgh")
         for bcName in listBoundaryNames(self._casePath):
@@ -909,6 +1138,12 @@ class BasicBuilder(object):
         p_rgh.writeFile()
 
     def _initPointDisplacementAsWall(self):
+        """
+        Initializes the mask points
+
+        Args:
+            self: (todo): write your description
+        """
         #
         pd = ParsedParameterFile(self._casePath + "/0/pointDisplacement")
         for bcName in listBoundaryNames(self._casePath):
@@ -919,13 +1154,33 @@ class BasicBuilder(object):
 
     @property
     def boundaryConditions(self):
+        """
+        Boundary : ~zhmcclient.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._boundarySettings
     @boundaryConditions.setter
     def boundaryConditions(self, boundarySettings=None):
+        """
+        Set the bound boundary.
+
+        Args:
+            self: (todo): write your description
+            boundarySettings: (todo): write your description
+        """
         if boundarySettings and isinstance(boundarySettings, list) and len(boundarySettings)>=1:
             self._boundarySettings = boundarySettings
 
     def setupBoundaryConditions(self, settings=None):
+        """
+        Sets up the settings
+
+        Args:
+            self: (todo): write your description
+            settings: (dict): write your description
+        """
         if settings and isinstance(settings, list) and len(settings)>=1:
             self.boundaryConditions = settings
 
@@ -1005,6 +1260,13 @@ class BasicBuilder(object):
         self.setupWallTurbulence(bcDict, turbulenceSettings)
 
     def setupInterfaceBoundary(self, bcDict):
+        """
+        Set up the interface for the interface
+
+        Args:
+            self: (todo): write your description
+            bcDict: (dict): write your description
+        """
         # freestream is kind of like interface boundary type like wall, always uniform $internalField
         ## empty:  2D as a special case of 3D mesh with one layer of mesh with front and back as empty
         # symmetry: for any (non-planar) patch which uses the symmetry plane (slip) condition.
@@ -1048,6 +1310,12 @@ class BasicBuilder(object):
         pass
 
     def _setupPressure_rgh(self):
+        """
+        Set up the rgh documentation for the rgh library
+
+        Args:
+            self: (todo): write your description
+        """
         # Pseudo hydrostatic pressure [Pa] : p - rho * g * height
         # only for buoyant flow in heat transfer in compressible and incompressible flow
         # /opt/openfoam4/tutorials/heatTransfer/chtMultiRegionSimpleFoam/heatExchanger/0.orig/porous
@@ -1078,6 +1346,13 @@ class BasicBuilder(object):
         f.writeFile()
 
     def setupPressureInletBoundary(self, bcDict):
+        """
+        Sets a dictionary of hdf5 file
+
+        Args:
+            self: (todo): write your description
+            bcDict: (dict): write your description
+        """
         # value is MPa in FreeCAD, but Pa is needed in OpenFOAM
         bcName = bcDict['name']
         inlet_type = bcDict['subtype']
@@ -1262,6 +1537,12 @@ class BasicBuilder(object):
 
     @property
     def turbulenceProperties(self):
+        """
+        : rtype of the chi.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._turbulenceProperties
 
     @turbulenceProperties.setter
@@ -1450,6 +1731,14 @@ class BasicBuilder(object):
             f.writeFile()
 
     def setupOutletTurbulence(self, bcDict, turbulenceSettings):
+        """
+        Sets the turbulence parameters.
+
+        Args:
+            self: (todo): write your description
+            bcDict: (dict): write your description
+            turbulenceSettings: (todo): write your description
+        """
         case = self._casePath
         bcName = bcDict['name']
         turbulence_var_list = self.listTurbulenceVarables()
@@ -1487,6 +1776,14 @@ class BasicBuilder(object):
             f.writeFile()
 
     def setupFreestreamTurbulence(self, bcDict, turbulenceSettings):
+        """
+        Sets a dictionary of the scores
+
+        Args:
+            self: (todo): write your description
+            bcDict: (dict): write your description
+            turbulenceSettings: (todo): write your description
+        """
         # see: tutorials/incompressible/simpleFoam/airFoil2D/0.org/  SA model
         # tutorial for other RAS model?  k, omege, epsilon, nut, alphat,  "calculated"?
         case = self._casePath
@@ -1510,6 +1807,14 @@ class BasicBuilder(object):
             f.writeFile()
 
     def setupInterfaceTurbulence(self, bcDict, turbulenceSettings):
+        """
+        Sets up all the database
+
+        Args:
+            self: (todo): write your description
+            bcDict: (dict): write your description
+            turbulenceSettings: (todo): write your description
+        """
         #todo: need double check with tutorials
         bcName = bcDict['name']
         subtype = bcDict['subtype']

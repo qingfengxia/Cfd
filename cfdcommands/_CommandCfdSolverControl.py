@@ -34,6 +34,12 @@ if FreeCAD.GuiUp:
 class _CommandCfdSolverControl(CfdCommand):
     "the Cfd_SolverControl command definition"
     def __init__(self):
+        """
+        Initialize the toc
+
+        Args:
+            self: (todo): write your description
+        """
         super(_CommandCfdSolverControl, self).__init__()
         self.resources = {'Pixmap': 'cfd-solver-control',
                           'MenuText': QtCore.QT_TRANSLATE_NOOP("Cfd_SolverControl", "Solver job control"),
@@ -42,6 +48,12 @@ class _CommandCfdSolverControl(CfdCommand):
         self.is_active = 'with_solver'
 
     def Activated(self):
+        """
+        Sets the best match.
+
+        Args:
+            self: (todo): write your description
+        """
         #self.hide_parts_constraints_show_meshes()  #CfdCommand class has no such method
 
         solver_obj = FreeCADGui.Selection.getSelection()[0]

@@ -27,6 +27,14 @@ from .parser import CppDictParser
 class ParsedParameterFile(object):
     """ adapter class to simulate PyFoam API """
     def __init__(self, fpath, *args, **kw):
+        """
+        Initialize a case from a file.
+
+        Args:
+            self: (todo): write your description
+            fpath: (str): write your description
+            kw: (todo): write your description
+        """
         #parse filepath to case, location, name
         location_path, name = os.path.split(fpath)
         cls = 'dictionary'
@@ -39,39 +47,112 @@ class ParsedParameterFile(object):
         self.content = self.foamFile.values
 
     def items(self):
+        """
+        Returns the items.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.content.items()
     def keys(self):
+        """
+        Return a list of all keys.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.content.keys()
     def values(self):
+        """
+        Return the values.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.content.values()
 
     # dict-like API
     def __contains__(self,key):
+        """
+        Determine if the given key is contained content.
+
+        Args:
+            self: (todo): write your description
+            key: (todo): write your description
+        """
         return key in self.content
 
     def __getitem__(self,key):
+        """
+        Return the value of a key.
+
+        Args:
+            self: (todo): write your description
+            key: (str): write your description
+        """
         return self.content[key]
 
     def __setitem__(self,key,value):
+        """
+        Sets the value of a key.
+
+        Args:
+            self: (todo): write your description
+            key: (str): write your description
+            value: (str): write your description
+        """
         self.content[key]=value
 
     def __delitem__(self,key):
+        """
+        Removes an item from the cache.
+
+        Args:
+            self: (todo): write your description
+            key: (str): write your description
+        """
         del self.content[key]
 
     def __len__(self):
+        """
+        Returns the length of the content.
+
+        Args:
+            self: (todo): write your description
+        """
         return len(self.content)
 
     def __iter__(self):
+        """
+        Iterate over the content.
+
+        Args:
+            self: (todo): write your description
+        """
         for key in self.content:
             yield key
     # the only API used in FoamCaseBuilder
     def writeFile(self):
+        """
+        Writes the case to disk.
+
+        Args:
+            self: (todo): write your description
+        """
         # def save(self, project_folder, sub_folder=None, overwrite=True)
         self.foamFile.save(self.case_path)
 
 class BoundaryDict(ParsedParameterFile):
     """ adapter class to simulate PyFoam API """
     def __init__(self, case_path, *args, **kw):
+        """
+        Initialize case data.
+
+        Args:
+            self: (todo): write your description
+            case_path: (str): write your description
+            kw: (todo): write your description
+        """
         #build filepath from case, location, name
         cls = 'dictionary'
         location = "constant/polyMesh"
@@ -85,6 +166,12 @@ class BoundaryDict(ParsedParameterFile):
         print(self.foamFile.values)
 
     def patches(self):
+        """
+        Returns a list of all keys.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.foamFile.keys()
 
 class FoamFile(object):
@@ -335,6 +422,12 @@ class FoamFile(object):
         """Return body string."""
         # remove None values
         def remove_none(d):
+            """
+            Recursively remove empty dict.
+
+            Args:
+                d: (dict): write your description
+            """
             if isinstance(d, (dict, collections.OrderedDict)):
                 return collections.OrderedDict(
                     (k, remove_none(v)) for k, v in d.iteritems()

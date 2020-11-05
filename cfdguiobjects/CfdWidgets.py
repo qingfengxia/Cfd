@@ -37,6 +37,13 @@ if sys.version_info.major >=3:  # to be compatible wtih python2
 
 
 def _createChoiceGroup(valueTypes, valueTypeTips):
+    """
+    Helper function toplemented button that will be used to be used for a button is clicked.
+
+    Args:
+        valueTypes: (str): write your description
+        valueTypeTips: (str): write your description
+    """
     _buttonGroupLayout = QHBoxLayout()
     buttonGroupValueType = QButtonGroup()
     buttonGroupValueType.setExclusive(True)
@@ -52,6 +59,13 @@ def _createChoiceGroup(valueTypes, valueTypeTips):
 
 
 def _createInputField(quantityname = None, quantityunit = None):
+    """
+    Creates a widget widget for the input widget.
+
+    Args:
+        quantityname: (str): write your description
+        quantityunit: (todo): write your description
+    """
     if within_FreeCADGui:
         if quantityname and hasattr(FreeCAD.Units, quantityname):
             widget = ui.createWidget("Gui::InputField")
@@ -72,6 +86,14 @@ def _createInputField(quantityname = None, quantityunit = None):
 
 
 def _setInputField(inputWidget, value, unit=None):
+    """
+    Sets the input for the inputed inputed inputed value.
+
+    Args:
+        inputWidget: (todo): write your description
+        value: (todo): write your description
+        unit: (str): write your description
+    """
     if within_FreeCADGui:
         inputWidget.setValue(value) #Gui.InputField()
     else:
@@ -79,6 +101,13 @@ def _setInputField(inputWidget, value, unit=None):
 
 
 def _getInputField(inputWidget, unit = None):
+    """
+    Returns the input for the inputed input field. : param input field | <int > value >
+
+    Args:
+        inputWidget: (todo): write your description
+        unit: (str): write your description
+    """
     if within_FreeCADGui:
         return inputWidget.value()
     else:
@@ -87,6 +116,15 @@ def _getInputField(inputWidget, unit = None):
 class InputWidget(QWidget):
     """ QWidget for selet type and values """
     def __init__(self, settings, config, parent=None):
+        """
+        Initialize window settings.
+
+        Args:
+            self: (todo): write your description
+            settings: (dict): write your description
+            config: (todo): write your description
+            parent: (todo): write your description
+        """
         super(InputWidget, self).__init__(parent)  # for both py2 and py3
 
         self.setWindowTitle("Select boundary condition")
@@ -149,6 +187,13 @@ class InputWidget(QWidget):
         """
 
     def setInputSettings(self, settings):
+        """
+        Sets the inputed settings for the inputed settings. : param settings | <str >
+
+        Args:
+            self: (todo): write your description
+            settings: (dict): write your description
+        """
         # fill setting data into UI, possibibly value is empty
         vtype = settings['ValueType']  if ('ValueType' in settings) else "Quantity"
         try:
@@ -168,17 +213,41 @@ class InputWidget(QWidget):
                     self.quantityInputs[i].setValue(settings[var])
 
     def valueChanged(self):
+        """
+        Called when the user.
+
+        Args:
+            self: (todo): write your description
+        """
         pass # if quantity value changed, no UI is needed to update
 
     def valueTypeChanged(self):
+        """
+        Updates the field changed.
+
+        Args:
+            self: (todo): write your description
+        """
         #print(self.buttonGroupValueType.checkedId())
         self.currentValueType = self.valueTypes[self.buttonGroupValueType.checkedId()]
         self.updateUi()
 
     def comboInputTypeChanged(self):
+        """
+        Updates the input type for the input type.
+
+        Args:
+            self: (todo): write your description
+        """
         self.updateUi()
 
     def updateUi(self):
+        """
+        Updates the input button.
+
+        Args:
+            self: (todo): write your description
+        """
         _vindex = self.buttonGroupValueType.checkedId()
         _typeIndex = self.form.comboInputType.currentIndex()
         self.form.labelHelpText.setText(self.INPUT_HELPTEXTS[_typeIndex])
@@ -200,6 +269,12 @@ class InputWidget(QWidget):
                     w.setVisible(False)
 
     def inputSettings(self):
+        """
+        Returns the settings for the settings.
+
+        Args:
+            self: (todo): write your description
+        """
         # collect settings
         _vindex = self.buttonGroupValueType.checkedId()
 
@@ -221,6 +296,15 @@ class MagnitudeNormalWidget(QWidget):
     """ QWidget for specifying vector by magnitude and Normal
     previous selected object is not loaded"""
     def __init__(self, vector, obj, parent=None):
+        """
+        Initialize the tooltip
+
+        Args:
+            self: (todo): write your description
+            vector: (todo): write your description
+            obj: (todo): write your description
+            parent: (todo): write your description
+        """
         super(MagnitudeNormalWidget, self).__init__(parent)  # for both py2 and py3
 
         """
@@ -263,6 +347,12 @@ class MagnitudeNormalWidget(QWidget):
         self.form.checkReverse.toggled.connect(self.checkReverseToggled)
 
     def updateUi(self):
+        """
+        Update the direction.
+
+        Args:
+            self: (todo): write your description
+        """
         # set mag and preview label
         _m = self._magnitude*-1.0 if self._reversedDirection else self._magnitude
         self._vector = [v*_m for v in self._directionVector]
@@ -270,6 +360,13 @@ class MagnitudeNormalWidget(QWidget):
         pass
 
     def setVector(self, vector):
+        """
+        Set vector vector.
+
+        Args:
+            self: (todo): write your description
+            vector: (todo): write your description
+        """
         self._vector = vector
         self._reversedDirection = False
         self._magnitude = (sum(v*v for v in vector)**0.5)
@@ -280,10 +377,22 @@ class MagnitudeNormalWidget(QWidget):
         self.updateUi()
 
     def vector(self):
+        """
+        Returns the vector of this vector.
+
+        Args:
+            self: (todo): write your description
+        """
         _m = self._magnitude*-1.0 if self._reversedDirection else self._magnitude
         return [_m* v for v in self._directionVector]
 
     def buttonDirectionClicked(self):
+        """
+        Obtain the clicked button.
+
+        Args:
+            self: (todo): write your description
+        """
         self.selecting_direction = not self.selecting_direction
         if self.selecting_direction:
             # If one object already selected, use it
@@ -304,6 +413,16 @@ class MagnitudeNormalWidget(QWidget):
         self.updateSelectionbuttonUI()
 
     def selectDirection(self, doc_name, obj_name, sub, selectedPoint=None):
+        """
+        Select the selected text.
+
+        Args:
+            self: (todo): write your description
+            doc_name: (str): write your description
+            obj_name: (str): write your description
+            sub: (todo): write your description
+            selectedPoint: (bool): write your description
+        """
         # This is the direction selection
         if not self.selecting_direction:
             # Shouldn't be here
@@ -335,6 +454,13 @@ class MagnitudeNormalWidget(QWidget):
                 self.updateUi()
 
     def _getEdgeDirection(self, elt):
+        """
+        Calculate the integral.
+
+        Args:
+            self: (todo): write your description
+            elt: (todo): write your description
+        """
         v = elt.lastVertex().Point - elt.firstVertex().Point
         v_mag = sum([q*q for q in v])**0.5
         if v_mag != 0:
@@ -342,9 +468,22 @@ class MagnitudeNormalWidget(QWidget):
         return v
 
     def updateSelectionbuttonUI(self):
+        """
+        Updates the selection.
+
+        Args:
+            self: (todo): write your description
+        """
         self.form.buttonDirection.setChecked(self.selecting_direction)
 
     def lineDirectionChanged(self, value):
+        """
+        Triggered when a direction field has changed.
+
+        Args:
+            self: (todo): write your description
+            value: (str): write your description
+        """
         # soecify direc by directly setting QLineEdit with obj and subobj name
         selection = value.split(GEOMETRY_REFERENCE_SEP)
         # See if entered face actually exists and is planar
@@ -366,9 +505,23 @@ class MagnitudeNormalWidget(QWidget):
             pass
 
     def inputVectorMagChanged(self, value):
+        """
+        Set the input vectorMag.
+
+        Args:
+            self: (todo): write your description
+            value: (todo): write your description
+        """
         self._magnitude = value
 
     def checkReverseToggled(self, checked):
+        """
+        Checks if the given check is a valid
+
+        Args:
+            self: (todo): write your description
+            checked: (bool): write your description
+        """
         self._reversedDirection = checked
 
 
@@ -376,6 +529,15 @@ GEOMETRY_REFERENCE_SEP = ':'
 class VectorInputWidget(QWidget):
     """ QWidget for adding fluid boundary """
     def __init__(self, velocity, obj= None, parent=None):
+        """
+        Initialize window state
+
+        Args:
+            self: (todo): write your description
+            velocity: (todo): write your description
+            obj: (todo): write your description
+            parent: (todo): write your description
+        """
         super(VectorInputWidget, self).__init__(parent)  # for both py2 and py3
 
         self.valueTypes = ['Cartisan components']
@@ -409,16 +571,34 @@ class VectorInputWidget(QWidget):
         self.setVector(velocity)
 
     def valueTypeChanged(self):
+        """
+        Updates the field changed.
+
+        Args:
+            self: (todo): write your description
+        """
         #print(self.buttonGroupValueType.checkedId())
         self.currentValueType = self.valueTypes[self.buttonGroupValueType.checkedId()]
         self.updateUi()
 
     def vectorChanged(self):
+        """
+        Sets the vectorChanged. vector.
+
+        Args:
+            self: (todo): write your description
+        """
         #todo: update other form, preview vector
         _vector = self.vector()
         self.setVector(vector)  # will call each widget's self.updateUi()
 
     def updateUi(self):
+        """
+        Updates the button for the button.
+
+        Args:
+            self: (todo): write your description
+        """
         for i, form in enumerate(self.forms):
             if i == self.buttonGroupValueType.checkedId():
                 form.setVisible(True)
@@ -427,6 +607,12 @@ class VectorInputWidget(QWidget):
                 form.setVisible(False)
 
     def vector(self):
+        """
+        Obtain the input.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.buttonGroupValueType.checkedId() == 0:
             _inputs = self.componentWidget.inputSettings()
             vector = [_inputs[k] for k in ['Vx', 'Vy', 'Vz']]
@@ -436,6 +622,13 @@ class VectorInputWidget(QWidget):
         return vector
 
     def setVector(self, vector):
+        """
+        Sets the inputed vector to the inputed vector. : param vector | <qvector >
+
+        Args:
+            self: (todo): write your description
+            vector: (todo): write your description
+        """
         #set vector for both widget
         _inputs = self.componentWidget.inputSettings()
         for i,k in enumerate(['Vx', 'Vy', 'Vz']):

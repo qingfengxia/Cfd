@@ -35,6 +35,12 @@ if FreeCAD.GuiUp:
 class _CommandCfdResult(CfdCommand):
     "the Fem show reslult command definition"
     def __init__(self):
+        """
+        Initialize the toc.
+
+        Args:
+            self: (todo): write your description
+        """
         super(_CommandCfdResult, self).__init__()
         self.resources = {'Pixmap': 'fem-result',
                           'MenuText': QtCore.QT_TRANSLATE_NOOP("Cfd_Result", "Show result"),
@@ -43,6 +49,12 @@ class _CommandCfdResult(CfdCommand):
         self.is_active = 'with_results'
 
     def Activated(self):
+        """
+        Show result
+
+        Args:
+            self: (todo): write your description
+        """
         self.result_object = CfdTools.getResultObject()
 
         if not self.result_object:

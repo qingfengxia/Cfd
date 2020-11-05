@@ -34,6 +34,12 @@ if FreeCAD.GuiUp:
 from . import CfdSolver
 
 def makeCfdSolverFenics(name="Fenics"):
+    """
+    Return a cfd object.
+
+    Args:
+        name: (str): write your description
+    """
     obj = FreeCAD.ActiveDocument.addObject("Fem::FemSolverObjectPython", name)
     CfdSolverFenics(obj)
     if FreeCAD.GuiUp:
@@ -44,6 +50,13 @@ def makeCfdSolverFenics(name="Fenics"):
 
 class CfdSolverFenics(CfdSolver.CfdSolver):
     def __init__(self, obj):
+        """
+        Initialize the cfd object.
+
+        Args:
+            self: (todo): write your description
+            obj: (todo): write your description
+        """
         super(CfdSolverFenics, self).__init__(obj)
         self.Type = "CfdSolverFenics"
         self.SolverName = "Fenics"

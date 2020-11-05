@@ -75,6 +75,12 @@ class CaeCaseWriterFenics:
         self.case_settings['case_file'] = self.case_file_name
 
     def write_solver_name(self):
+        """
+        Write solver name
+
+        Args:
+            self: (todo): write your description
+        """
         if self.solver_obj.PhysicalDomain == u"Fluidic":
             self.case_settings['solver_name'] = "CoupledNavierStokesSolver"
         elif self.solver_obj.PhysicalDomain == u"Thermal":
@@ -121,9 +127,23 @@ class CaeCaseWriterFenics:
         return True
 
     def console_log(self, msg, color = '#FF0000'):
+        """
+        Log a debug message
+
+        Args:
+            self: (todo): write your description
+            msg: (str): write your description
+            color: (str): write your description
+        """
         print(msg)
 
     def validated(self):
+        """
+        Return true if this console is valid.
+
+        Args:
+            self: (todo): write your description
+        """
         if not self.mesh_obj.Proxy.Type == "FemMeshGmsh": # Gmsh has already write boundary mesh
             self.console_log("Error: only GMSH xml mesh is supported by Fenics solver")
             return False
@@ -355,6 +375,12 @@ class CaeCaseWriterFenics:
         self.case_settings['boundary_conditions'] = self._from_fluidic_to_fenics_boundary(bc_settings)  # not test yet!!
 
     def write_boundary_condition(self):
+        """
+        Write bound bound bound boundary conditions.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.solver_obj.PhysicalDomain == u"Fluidic":
             self.write_fluidic_boundary_conditions()
         elif self.solver_obj.PhysicalDomain == u"Thermal":
@@ -365,9 +391,21 @@ class CaeCaseWriterFenics:
             print('Error: {} boundary is not supported by Fencis and FreeCAD yet'.format(self.solver_obj.PhysicalDomain))
 
     def write_thermal_settings(self):
+        """
+        Writes thermal settings to disk.
+
+        Args:
+            self: (todo): write your description
+        """
         self.case_settings['solving_temperature'] = self.solver_obj.HeatTransfering
 
     def write_initial_values(self):
+        """
+        Write initial values to initial values.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.solver_obj.PhysicalDomain == u"Fluidic":
             self.case_settings['initial_values'] = {'pressure': 0.0, 'velocity': (0,0,0)[:self.dimension]}
             if self.solver_obj.HeatTransfering:
@@ -381,6 +419,12 @@ class CaeCaseWriterFenics:
             pass
  
     def write_body_source(self):
+        """
+        Write body body.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.solver_obj.PhysicalDomain == u"Fluidic":
             self.case_settings['body_source'] = None  # {'type': "translational", 'value':  (0, 0, -9.8)}
         else:
@@ -414,4 +458,10 @@ class CaeCaseWriterFenics:
             self.case_settings['solver_settings']['transient_settings']["transient"] = False
 
     def write_output_control(self):
+        """
+        Write the control control control control.
+
+        Args:
+            self: (todo): write your description
+        """
         pass

@@ -84,6 +84,12 @@ _debug = True
 
 #########################################################
 def _isWindowsPath(p):
+    """
+    Determine if path is a path
+
+    Args:
+        p: (str): write your description
+    """
     if p.find(':') > 0:
         return True
     else:
@@ -111,6 +117,12 @@ def getShortWindowsPath(long_name):
             output_buf_size = needed
 
 def _toWindowsPath(p):
+    """
+    Convert a windows path to a string.
+
+    Args:
+        p: (todo): write your description
+    """
     pp = p.split('/')
     if getFoamRuntime() == "BashWSL":
         # bash on windows: /mnt/c/Path -> C:\Path
@@ -130,6 +142,12 @@ def _toWindowsPath(p):
         return p
 
 def _fromWindowsPath(p):
+    """
+    Extract a path from a path.
+
+    Args:
+        p: (todo): write your description
+    """
     drive, tail = os.path.splitdrive(p)
     pp = tail.replace('\\', '/')
     if getFoamRuntime() == "BashWSL":
@@ -204,6 +222,12 @@ _LES_turbulenceModel_templates = {
 }
 
 def getTurbulentViscosityVariable(solverSettings):
+    """
+    Return the turbVariable string for the string
+
+    Args:
+        solverSettings: (todo): write your description
+    """
     # OpenFOAM versions after v3.0.0+ is always `nut`
     turbulenceModelName = solverSettings['turbulenceModel']
     if turbulenceModelName in LES_turbulence_models:
@@ -220,6 +244,12 @@ def getTurbulentViscosityVariable(solverSettings):
         return 'nut'
 
 def getTurbulenceVariables(solverSettings):
+    """
+    Return a list of turbables
+
+    Args:
+        solverSettings: (todo): write your description
+    """
     turbulenceModelName = solverSettings['turbulenceModel']
     viscosity_var = getTurbulentViscosityVariable(solverSettings)
     if turbulenceModelName in ["laminar", "invisid", 'DNS'] :  # no need to generate dict file
@@ -242,6 +272,16 @@ def getTurbulenceVariables(solverSettings):
 #########################################################################
 
 def createRawFoamFile(case, location, dictname, lines, classname = 'dictionary'):
+    """
+    Creates a new instance from a file.
+
+    Args:
+        case: (todo): write your description
+        location: (str): write your description
+        dictname: (str): write your description
+        lines: (todo): write your description
+        classname: (str): write your description
+    """
     fname = case + os.path.sep + location +os.path.sep + dictname
     if os.path.exists(fname):
         if _debug: print("Warning: overwrite createRawFoamFile if dict file exists  {}".format(fname))
@@ -250,6 +290,13 @@ def createRawFoamFile(case, location, dictname, lines, classname = 'dictionary')
         f.writelines(lines)
 
 def createCaseFromScratch(output_path, solver_name):
+    """
+    Creates output from scratch.
+
+    Args:
+        output_path: (str): write your description
+        solver_name: (str): write your description
+    """
     if os.path.isdir(output_path):
         shutil.rmtree(output_path)
     os.makedirs(output_path) # mkdir -p
@@ -316,6 +363,12 @@ def createCaseFromTemplate(output_path, source_path, backup_path=None):
         raise Exception('Error: template {} is not a tutorials case path or zipped file'.format(source_path))
 
 def cleanCase(output_path):
+    """
+    Removes the output directory.
+
+    Args:
+        output_path: (str): write your description
+    """
     # foamCleanPolyMesh
     mesh_dir = os.path.join(output_path, "constant", "polyMesh")
     if os.path.isdir(mesh_dir):
@@ -341,6 +394,16 @@ def cleanCase(output_path):
 
 ###############################################################
 def createRunScript(case_path, init_potential, run_parallel, solver_name, num_proc):
+    """
+    Creates a case.
+
+    Args:
+        case_path: (str): write your description
+        init_potential: (str): write your description
+        run_parallel: (bool): write your description
+        solver_name: (str): write your description
+        num_proc: (int): write your description
+    """
     print("Create Allrun script, assume this script will be run with pwd = case folder ")
     print(" run this script with makeRunCommand(), which will do sourcing (without login shell) and cd to case folder")
 
@@ -449,6 +512,13 @@ def makeRunCommand(cmd, case_path, source_env=True):
 
 ###################### used by CFD module, not by CfdFOAM ######################
 def runFoamCommand(cmd, case=None):
+    """
+    Run a command on - line.
+
+    Args:
+        cmd: (str): write your description
+        case: (todo): write your description
+    """
     # python subprocess,  designed for simple Foam utilty command
     # only work with `shell = True` option to source bashrc file
     proc = subprocess.Popen(makeRunCommand(cmd, case), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell = True)  #
@@ -536,16 +606,35 @@ def formatValue(v):
         raise Exception("Error: vector input {} is not string or sequence type, return zero vector string")
 
 def formatList():
+    """
+    Format a list of strings.
+
+    Args:
+    """
     pass
 
 
 ###########################topoSet, multiregion############################
 
 def getVariableBoundaryCondition(case, variable, boundary_name):
+    """
+    Returns a variable from the name.
+
+    Args:
+        case: (todo): write your description
+        variable: (str): write your description
+        boundary_name: (str): write your description
+    """
     pf = ParsedParameterFile("{}/0/{}".format(case, variable))  # only for steady case?
     return pf["boundaryField"][boundary_name]
 
 def listBoundaryNames(case):
+    """
+    Convert a list of strings in - place names.
+
+    Args:
+        case: (todo): write your description
+    """
     return BoundaryDict(case).patches()
 
 def changeBoundaryType(case, bc_name, bc_type):

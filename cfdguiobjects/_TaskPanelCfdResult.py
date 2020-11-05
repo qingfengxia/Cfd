@@ -48,6 +48,12 @@ class _TaskPanelCfdResult:
     in importVTK?
     '''
     def __init__(self):
+        """
+        Connect to the ui
+
+        Args:
+            self: (todo): write your description
+        """
         ui_path = os.path.dirname(__file__) + os.path.sep + "TaskPanelCfdResult.ui"
         self.form = FreeCADGui.PySideUic.loadUi(ui_path)
         #self.fem_prefs = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/Fem")
@@ -81,6 +87,12 @@ class _TaskPanelCfdResult:
 
 
     def restore_result_dialog(self):
+        """
+        Restore the motor.
+
+        Args:
+            self: (todo): write your description
+        """
         try:
             rt = FreeCAD.FEM_dialog["results_type"]
             if rt == "None":
@@ -119,6 +131,14 @@ class _TaskPanelCfdResult:
             pass
 
     def get_result_stats(self, type_name, analysis=None):
+        """
+        Returns the stats for a particular type.
+
+        Args:
+            self: (todo): write your description
+            type_name: (str): write your description
+            analysis: (todo): write your description
+        """
         if "Stats" in self.result_object.PropertiesList:
                 Stats = self.result_object.Stats
                 match_table = {"Ux": (Stats[0], Stats[1], Stats[2]),
@@ -136,33 +156,81 @@ class _TaskPanelCfdResult:
         return (0.0, 0.0, 0.0)
 
     def none_selected(self, state):
+        """
+        Set the selected state.
+
+        Args:
+            self: (todo): write your description
+            state: (todo): write your description
+        """
         FreeCAD.FEM_dialog["results_type"] = "None"
         self.set_result_stats("mm", 0.0, 0.0, 0.0)
         self.reset_mesh_color()
 
     def reset_mesh_color(self):
+        """
+        Reset the color of the mesh.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.MeshObject:
             self.MeshObject.ViewObject.NodeColor = {}
             self.MeshObject.ViewObject.ElementColor = {}
             self.MeshObject.ViewObject.setNodeColorByScalars()
 
     def mag_velocity_selected(self, state):
+        """
+        Triggered state.
+
+        Args:
+            self: (todo): write your description
+            state: (todo): write your description
+        """
         FreeCAD.FEM_dialog["results_type"] = "Umag"
         self.select_velocity_type("Umag")
 
     def x_velocity_selected(self, state):
+        """
+        Set the selected state.
+
+        Args:
+            self: (todo): write your description
+            state: (todo): write your description
+        """
         FreeCAD.FEM_dialog["results_type"] = "Ux"
         self.select_velocity_type("Ux")
 
     def y_velocity_selected(self, state):
+        """
+        Callback for selected state.
+
+        Args:
+            self: (todo): write your description
+            state: (todo): write your description
+        """
         FreeCAD.FEM_dialog["results_type"] = "Uy"
         self.select_velocity_type("Uy")
 
     def z_velocity_selected(self, state):
+        """
+        Set the selected state.
+
+        Args:
+            self: (todo): write your description
+            state: (todo): write your description
+        """
         FreeCAD.FEM_dialog["results_type"] = "Uz"
         self.select_velocity_type("Uz")
 
     def pressure_selected(self, state):
+        """
+        Enable or disable the selected state.
+
+        Args:
+            self: (todo): write your description
+            state: (todo): write your description
+        """
         FreeCAD.FEM_dialog["results_type"] = "Pressure"
         QApplication.setOverrideCursor(Qt.WaitCursor)
         if self.suitable_results:
@@ -172,6 +240,13 @@ class _TaskPanelCfdResult:
         QtGui.qApp.restoreOverrideCursor()
 
     def temperature_selected(self, state):
+        """
+        Set the selected state.
+
+        Args:
+            self: (todo): write your description
+            state: (todo): write your description
+        """
         FreeCAD.FEM_dialog["results_type"] = "Temperature"
         QApplication.setOverrideCursor(Qt.WaitCursor)
         if self.suitable_results:
@@ -183,6 +258,13 @@ class _TaskPanelCfdResult:
         QtGui.qApp.restoreOverrideCursor()
 
     def turbulence_energy_selected(self, state):
+        """
+        Set the selected states.
+
+        Args:
+            self: (todo): write your description
+            state: (todo): write your description
+        """
         FreeCAD.FEM_dialog["results_type"] = "TurbulenceEnergy"
         QApplication.setOverrideCursor(Qt.WaitCursor)
         if self.suitable_results:
@@ -192,6 +274,13 @@ class _TaskPanelCfdResult:
         QtGui.qApp.restoreOverrideCursor()
 
     def turbulence_dissipation_rate_selected(self, state):
+        """
+        Turbipation selected state.
+
+        Args:
+            self: (todo): write your description
+            state: (todo): write your description
+        """
         FreeCAD.FEM_dialog["results_type"] = "TurbulenceDissipationRate"
         QApplication.setOverrideCursor(Qt.WaitCursor)
         if self.suitable_results:
@@ -202,6 +291,13 @@ class _TaskPanelCfdResult:
 
     # this funct is not in use
     def turbulence_specific_dissipation_selected(self, state):
+        """
+        Set the selected state.
+
+        Args:
+            self: (todo): write your description
+            state: (todo): write your description
+        """
         FreeCAD.FEM_dialog["results_type"] = "TurbulenceSpecificDissipation"
         QApplication.setOverrideCursor(Qt.WaitCursor)
         if self.suitable_results:
@@ -211,6 +307,13 @@ class _TaskPanelCfdResult:
         QtGui.qApp.restoreOverrideCursor()
 
     def turbulence_viscosity_selected(self, state):
+        """
+        Set the selected state selected state.
+
+        Args:
+            self: (todo): write your description
+            state: (todo): write your description
+        """
         FreeCAD.FEM_dialog["results_type"] = "TurbulenceViscosity"
         QApplication.setOverrideCursor(Qt.WaitCursor)
         if self.suitable_results:
@@ -221,6 +324,13 @@ class _TaskPanelCfdResult:
 
 
     def select_velocity_type(self, vel_type):
+        """
+        Select the velocities of the frame.
+
+        Args:
+            self: (todo): write your description
+            vel_type: (str): write your description
+        """
         QApplication.setOverrideCursor(Qt.WaitCursor)
         if vel_type == "Umag":
             if self.suitable_results:
@@ -237,6 +347,16 @@ class _TaskPanelCfdResult:
         QtGui.qApp.restoreOverrideCursor()
 
     def set_result_stats(self, unit, minm, avg, maxm):
+        """
+        Set the stats.
+
+        Args:
+            self: (todo): write your description
+            unit: (str): write your description
+            minm: (todo): write your description
+            avg: (todo): write your description
+            maxm: (int): write your description
+        """
         self.form.le_min.setProperty("unit", unit)
         self.form.le_min.setText("{:.6} {}".format(minm, unit))
         self.form.le_avg.setProperty("unit", unit)
@@ -246,6 +366,12 @@ class _TaskPanelCfdResult:
 
 
     def update(self):
+        """
+        Updates the result.
+
+        Args:
+            self: (todo): write your description
+        """
         self.result_object = CfdTools.getResultObject()  # return the first one, or the currently selected result object
         self.suitable_results = False
         if self.result_object:
@@ -278,7 +404,19 @@ class _TaskPanelCfdResult:
             FreeCAD.Console.PrintError('None returned by CfdTools.getResultObject() in update()')
 
     def accept(self):
+        """
+        Accepts a new popup
+
+        Args:
+            self: (todo): write your description
+        """
         FreeCADGui.Control.closeDialog()
 
     def reject(self):
+        """
+        Rejects the dialog
+
+        Args:
+            self: (todo): write your description
+        """
         FreeCADGui.Control.closeDialog()

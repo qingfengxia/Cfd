@@ -38,6 +38,13 @@ class _CfdRunnable(object):
     #  Rises exception if analysis is not set and there is no active analysis
     #  The constructur of FemTools is for use of analysis without solver object
     def __init__(self, solver):
+        """
+        Initialize the analysis.
+
+        Args:
+            self: (todo): write your description
+            solver: (todo): write your description
+        """
         if solver and solver.isDerivedFrom("Fem::FemSolverObjectPython"):
             ## @var solver
             #  solver of the analysis. Used to store the active solver and analysis parameters
@@ -53,4 +60,10 @@ class _CfdRunnable(object):
             raise Exception('FEM: No active analysis found!')
 
     def check_prerequisites(self):
+        """
+        Returns the prerequisites.
+
+        Args:
+            self: (todo): write your description
+        """
         return ""

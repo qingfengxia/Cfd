@@ -34,23 +34,66 @@ class _ViewProviderCfdAnalysis:
     """
 
     def __init__(self, vobj):
+        """
+        Initialize the object
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+        """
         vobj.Proxy = self
 
     def getIcon(self):
+        """
+        Return the number of this is_string.
+
+        Args:
+            self: (todo): write your description
+        """
         return ":/icons/fem-cfd-analysis.svg"
 
     def attach(self, vobj):
+        """
+        Attach an object to the view
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+        """
         self.ViewObject = vobj
         self.Object = vobj.Object
         self.bubbles = None
 
     def updateData(self, obj, prop):
+        """
+        Updates the data of an object.
+
+        Args:
+            self: (todo): write your description
+            obj: (todo): write your description
+            prop: (todo): write your description
+        """
         return
 
     def onChanged(self, vobj, prop):
+        """
+        Called when a callback is received.
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+            prop: (str): write your description
+        """
         return
 
     def doubleClicked(self, vobj):
+        """
+        Returns true if this analysis should be hidden.
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+        """
         # bug: still not working, always bring up FemWorkbench
         if FreeCADGui.activeWorkbench().name() != 'CfdWorkbench':
             FreeCADGui.activateWorkbench("CfdWorkbench")
@@ -59,7 +102,20 @@ class _ViewProviderCfdAnalysis:
         return True
 
     def __getstate__(self):
+        """
+        Get the state of the state
+
+        Args:
+            self: (todo): write your description
+        """
         return None
 
     def __setstate__(self, state):
+        """
+        Set the state of the state of the given state.
+
+        Args:
+            self: (todo): write your description
+            state: (dict): write your description
+        """
         return None

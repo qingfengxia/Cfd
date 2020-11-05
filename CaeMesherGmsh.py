@@ -43,6 +43,14 @@ class CaeMesher(object):
     """ collect mesh setting, write mesher input, run the mesher process
     """
     def __init__(self, _mesh_obj, analysis=None):
+        """
+        Initialize the analysis.
+
+        Args:
+            self: (todo): write your description
+            _mesh_obj: (todo): write your description
+            analysis: (todo): write your description
+        """
         self.mesh_obj = _mesh_obj
         if analysis:
             self.analysis = analysis
@@ -55,6 +63,12 @@ class CaeMesher(object):
         self.part_obj = self.mesh_obj.Part
 
     def get_region_data(self):
+        """
+        Get region region data.
+
+        Args:
+            self: (todo): write your description
+        """
         # mesh regions
         self.ele_length_map = {}  # { 'ElementString' : element length }
         self.ele_node_map = {}  # { 'ElementString' : [element nodes] }
@@ -113,6 +127,12 @@ class CaeMesher(object):
         print('  {}'.format(self.ele_node_map))
 
     def get_boundary_layer_data(self):
+        """
+        Get the boundary boundaries.
+
+        Args:
+            self: (todo): write your description
+        """
         #Todo:  replace all Gmsh word in this functon
         # currently only one boundary layer setting object is allowed, but multiple boundary can be selected
         # Mesh.CharacteristicLengthMin, must be zero, or a value less than first inflation layer height
@@ -183,6 +203,12 @@ class CaeMesher(object):
         print('  {}'.format(self.bl_setting_list))
 
     def get_constraint_data(self):
+        """
+        Returns the data for each constraint
+
+        Args:
+            self: (todo): write your description
+        """
         # group from FemConstraint objects of analysis object
         self.constraint_objects = OrderedDict()
         if self.analysis:
@@ -198,6 +224,12 @@ class CaeMesher(object):
             print(' No anlysis is provided to get FemCconstraint group')
 
     def get_group_data(self):
+        """
+        Get all mesh data
+
+        Args:
+            self: (todo): write your description
+        """
         self.mesh_group_elements = OrderedDict()
         self.other_group_elements = OrderedDict()
         # TODO solid, face, edge seam not work together, some print or make it work together
@@ -232,6 +264,12 @@ class CaeMesher(object):
 
     # can be shared for diff mesher, why not using int as self.dimension?
     def get_dimension(self):
+        """
+        Get the dimension
+
+        Args:
+            self: (todo): write your description
+        """
         # Dimension
         # known_element_dimensions = ['From Shape', '1D', '2D', '3D']
         # if not given, GMSH uses the hightest available.
@@ -277,6 +315,14 @@ class CaeMesherGmsh(CaeMesher):
     output_format_suffix = {'Gmsh MSH': '.msh', 'I-Deas universal': '.unv', 'Automatic': '.msh', 'STL surface': '.stl', 
                                         'INRIA medit': '.mesh', 'CGNS': '.cgns', 'Salome mesh': '.med', 'Abaqus INP': '.inp', 'Ploy surface': '.ply2'}
     def __init__(self, gmsh_mesh_obj, analysis=None):
+        """
+        Initialize the mesh.
+
+        Args:
+            self: (todo): write your description
+            gmsh_mesh_obj: (todo): write your description
+            analysis: (todo): write your description
+        """
         super(CaeMesherGmsh, self).__init__(gmsh_mesh_obj, analysis)
 
         # clmax, CharacteristicLengthMax: float, 0.0 = 1e+22
@@ -346,6 +392,12 @@ class CaeMesherGmsh(CaeMesher):
             self.algorithm3D = '1'
 
     def get_tmp_file_paths(self):
+        """
+        Return a list of paths tomodified file.
+
+        Args:
+            self: (todo): write your description
+        """
 
         tmpdir = CfdTools.getTempWorkingDir()
         # geometry file
@@ -362,6 +414,14 @@ class CaeMesherGmsh(CaeMesher):
         print('  ' + self.temp_file_geo)
 
     def export_mesh(self, output_format, output_filestring=None):
+        """
+        Exports mesh as a mesh.
+
+        Args:
+            self: (todo): write your description
+            output_format: (str): write your description
+            output_filestring: (str): write your description
+        """
         # This function aims to export more mesh formats than FemMesh supported
         _default_output_format = self.mesh_obj.OutputFormat  # push back the current OutputFormat
         _default_scaling_factor = self.mesh_obj.LengthScalingFactor
@@ -405,6 +465,12 @@ class CaeMesherGmsh(CaeMesher):
         return output_filename
 
     def create_mesh(self):
+        """
+        Creates the mesh.
+
+        Args:
+            self: (todo): write your description
+        """
         print("\nWe gone start GMSH FEM mesh run!")
         print('  Part to mesh: Name --> ' + self.part_obj.Name + ',  Label --> ' + self.part_obj.Label + ', ShapeType --> ' + self.part_obj.Shape.ShapeType)
         print('  CharacteristicLengthMax: ' + str(self.clmax))
@@ -426,6 +492,12 @@ class CaeMesherGmsh(CaeMesher):
         return error
 
     def get_mesher_command(self):
+        """
+        Return the gms command
+
+        Args:
+            self: (todo): write your description
+        """
         if sys.version_info.major >=3:
             from shutil import which
             gmsh_path = which("gmsh")
@@ -468,6 +540,13 @@ class CaeMesherGmsh(CaeMesher):
 
 
     def write_boundary_layer(self, geo):
+        """
+        Write the layer ascii file.
+
+        Args:
+            self: (todo): write your description
+            geo: (todo): write your description
+        """
         # currently single body is supported
         if len(self.bl_setting_list):
             geo.write("// boundary layer setting\n")
@@ -500,6 +579,13 @@ class CaeMesherGmsh(CaeMesher):
 
 
     def write_group(self, geo):
+        """
+        Writes the mesh to the mesh.
+
+        Args:
+            self: (todo): write your description
+            geo: (todo): write your description
+        """
         boundaries = 0
         domains = 0
 
@@ -571,9 +657,22 @@ class CaeMesherGmsh(CaeMesher):
             geo.write("\n\n")
 
     def write_part_file(self):
+        """
+        Writes the part_file.
+
+        Args:
+            self: (todo): write your description
+        """
         self.part_obj.Shape.exportBrep(self.temp_file_geometry)
         
     def write_characteristic_length(self, geo):
+        """
+        Write a character length of the character
+
+        Args:
+            self: (todo): write your description
+            geo: (todo): write your description
+        """
         geo.write("// Characteristic Length\n")
         geo.write("// min, max Characteristic Length\n")
         geo.write("Mesh.CharacteristicLengthMax = " + str(self.clmax) + ";\n")
@@ -593,6 +692,12 @@ class CaeMesherGmsh(CaeMesher):
             geo.write("\n")
 
     def write_geo(self):
+        """
+        Write a geojson object to a.
+
+        Args:
+            self: (todo): write your description
+        """
         geo = open(self.temp_file_geo, "w")
 
         geo.write("// geo file for meshing with GMSH meshing software created by FreeCAD\n")
@@ -678,6 +783,12 @@ class CaeMesherGmsh(CaeMesher):
         geo.close()
 
     def run_gmsh_with_geo(self):
+        """
+        Run gmsh gmsh gmsh with gms on a gms file.
+
+        Args:
+            self: (todo): write your description
+        """
         self.error = False
         comandlist = [self.gmsh_bin, '-', self.temp_file_geo]
         # print(comandlist)
@@ -693,6 +804,12 @@ class CaeMesherGmsh(CaeMesher):
         return error
 
     def read_and_set_new_mesh(self):
+        """
+        Read mesh and update mesh
+
+        Args:
+            self: (todo): write your description
+        """
         if not self.error:
             fem_mesh = Fem.read(self.temp_file_mesh)
             self.mesh_obj.FemMesh = fem_mesh

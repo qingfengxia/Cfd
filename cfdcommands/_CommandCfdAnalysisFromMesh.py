@@ -42,6 +42,12 @@ if FreeCAD.GuiUp:
 class _CommandCfdAnalysisFromMesh(CfdCommand):
     "the Cfd_AnalysisFromMesh command definition"
     def __init__(self):
+        """
+        Initialize analysis
+
+        Args:
+            self: (todo): write your description
+        """
         super(_CommandCfdAnalysisFromMesh, self).__init__()
         icon_path = os.path.join(CfdTools.getModulePath(), "Resources", "icons", "cfd-analysis-from-mesh.svg")
         self.resources = {'Pixmap': icon_path,
@@ -51,6 +57,12 @@ class _CommandCfdAnalysisFromMesh(CfdCommand):
         self.is_active = 'with_document'
 
     def select_without_widget(self):
+        """
+        Select a select widget from a widget.
+
+        Args:
+            self: (todo): write your description
+        """
         filters = u"IDES mesh (*.unv);;Med mesh(*.med);;VTK mesh (*.vtk *.vtu)"
         #;;GMSH mesh (*.msh) not supported, converted  to unv or vtk
         mesh_file = QFileDialog.getOpenFileName(None, u"Open mesh files", u"./", filters)
@@ -69,6 +81,12 @@ class _CommandCfdAnalysisFromMesh(CfdCommand):
             FreeCADGui.doCommand("CfdTools.importGeometryAndMesh(u'{}', u'{}')".format(geo_file, mesh_file))
 
     def select_with_widget(self):
+        """
+        Selects a new widget.
+
+        Args:
+            self: (todo): write your description
+        """
         settings = {"mesh": None}
         sel = FreeCADGui.Selection.getSelection()
         # create an empty 
@@ -84,6 +102,12 @@ class _CommandCfdAnalysisFromMesh(CfdCommand):
         FreeCADGui.Selection.clearSelection()
 
     def Activated(self):
+        """
+        Create the analysis analysis.
+
+        Args:
+            self: (todo): write your description
+        """
         # Todo: a dialog could be used to replace the content of this, adding length unit scaling
         if not CfdTools.getActiveAnalysis():
             CfdTools.createAnalysis()

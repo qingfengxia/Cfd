@@ -48,6 +48,14 @@ _foamFileHeader_part2 = '''FoamFile
 
 '''
 def getFoamFileHeader(location, dictname, classname = 'dictionary'):
+    """
+    Return a partaml file header string.
+
+    Args:
+        location: (str): write your description
+        dictname: (str): write your description
+        classname: (str): write your description
+    """
         return _foamFileHeader_part1 + _foamFileHeader_part2 % (classname, location, dictname)
 
 _fvSolution_template = """
@@ -225,6 +233,12 @@ def getFvSchemesTemplate(transient=True):
 
     
 def getControlDictTemplate(app = 'simpleFoam'):
+    """
+    Returns a dictionary with the template.
+
+    Args:
+        app: (todo): write your description
+    """
     return  """
     application     {};
 
@@ -366,6 +380,13 @@ def getLESTurbulencePropertiesTemplate(LESModel = 'dynamicKEqn'):
     """ % LESModel
 
 def getChangeDictionaryDictTemplate(patch_name = 'defaultFaces', bc_type = 'wall'):
+    """
+    Returns a dictionary with the dictionary
+
+    Args:
+        patch_name: (str): write your description
+        bc_type: (str): write your description
+    """
     return """
     dictionaryReplacement
     {
@@ -380,6 +401,14 @@ def getChangeDictionaryDictTemplate(patch_name = 'defaultFaces', bc_type = 'wall
     """%(patch_name, bc_type)
 
 def getTopoSetDictTemplate(topoSetName, topoSetType, box):
+    """
+    Returns a string representation of the top left boxes.
+
+    Args:
+        topoSetName: (str): write your description
+        topoSetType: (str): write your description
+        box: (todo): write your description
+    """
     return """
     actions
     (

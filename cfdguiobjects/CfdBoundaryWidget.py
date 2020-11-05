@@ -262,6 +262,17 @@ THERMAL_CONFIG = [THERMAL_BOUNDARY_TYPES, THERMAL_BOUNDARY_NAMES, THERMAL_BOUNDA
 class CfdBoundaryWidget(QWidget):
     """ QWidget for adding fluid boundary """
     def __init__(self, object, boundarySettings, physics_model, material_objs, parent=None):
+        """
+        Stub
+
+        Args:
+            self: (todo): write your description
+            object: (todo): write your description
+            boundarySettings: (todo): write your description
+            physics_model: (todo): write your description
+            material_objs: (todo): write your description
+            parent: (todo): write your description
+        """
         super(CfdBoundaryWidget, self).__init__(parent)  # for both py2 and py3
 
         #todo: add title to the task paenl
@@ -341,16 +352,34 @@ class CfdBoundaryWidget(QWidget):
         self.setBoundarySettings(self.BoundarySettings)
 
     def _getCurrentValueUnit(self):
+        """
+        Returns the value of the current unit
+
+        Args:
+            self: (todo): write your description
+        """
         bType = BOUNDARY_TYPES[self.form.comboBoundaryType.currentIndex()]
         si = self.form.comboSubtype.currentIndex()
         return SUBTYPE_UNITS[bType][si]
 
     def boundarySettings(self):
+        """
+        Returns a bound bounding boxes.
+
+        Args:
+            self: (todo): write your description
+        """
         self.onValueChange()  # currently value change signal has no slot connected
         bc = self.BoundarySettings.copy()
         return bc
 
     def onValueChange(self):
+        """
+        This method is called the inputed value.
+
+        Args:
+            self: (todo): write your description
+        """
         if not self.vectorInputWidget.isVisible():
             self.BoundarySettings['BoundaryValue'] = _getInputField(self.inputBoundaryValue, self.BoundarySettings['Unit'])
         else:
@@ -379,6 +408,12 @@ class CfdBoundaryWidget(QWidget):
         self.updateValueUi()
 
     def updateValueUi(self):
+        """
+        Updates the value for the input label.
+
+        Args:
+            self: (todo): write your description
+        """
         # set value label and unit
         self.labelBoundaryValue.setVisible(False)
         self.inputBoundaryValue.setVisible(False)
@@ -398,6 +433,12 @@ class CfdBoundaryWidget(QWidget):
             self.inputBoundaryValue.setVisible(True)
 
     def comboBoundaryTypeChanged(self):
+        """
+        Handles the subtype label.
+
+        Args:
+            self: (todo): write your description
+        """
         index = self.form.comboBoundaryType.currentIndex()
         _bType = BOUNDARY_TYPES[index]
         self.form.comboSubtype.clear()
@@ -412,6 +453,12 @@ class CfdBoundaryWidget(QWidget):
             FreeCAD.getDocument(doc_name).recompute()
 
     def comboSubtypeChanged(self):
+        """
+        Updates the subtype label label
+
+        Args:
+            self: (todo): write your description
+        """
         index = self.form.comboBoundaryType.currentIndex()
         _bType = BOUNDARY_TYPES[index]
         subtype_index = self.form.comboSubtype.currentIndex()

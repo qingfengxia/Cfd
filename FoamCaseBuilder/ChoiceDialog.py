@@ -33,6 +33,15 @@ except:
 
 class ChoiceWidget(QWidget):
     def __init__(self, choices, help_texts= [], parent = None):
+        """
+        Initializes the widget.
+
+        Args:
+            self: (todo): write your description
+            choices: (todo): write your description
+            help_texts: (str): write your description
+            parent: (todo): write your description
+        """
         super(ChoiceWidget, self).__init__(parent)
 
         title = "select one from choices"
@@ -58,23 +67,57 @@ class ChoiceWidget(QWidget):
         self.setLayout(layout)
 
     def choice(self):
+        """
+        Gets the choice
+
+        Args:
+            self: (todo): write your description
+        """
         return self.choices[self.choiceButtonGroup.checkedId()]
 
     def setChoice(self, choice):
+        """
+        Sets the choice for the inputed choice. : param choice | <int >
+
+        Args:
+            self: (todo): write your description
+            choice: (todo): write your description
+        """
         for i, ch in enumerate(self.choices):
             if ch == choice:
                 self.choiceButtonGroup.button(i).setChecked(True)
 
     def choiceId(self):
+        """
+        Returns the label for this choice
+
+        Args:
+            self: (todo): write your description
+        """
         return self.choiceButtonGroup.checkedId()
 
     def choiceChanged(self):
+        """
+        Resetches the current choice choice
+
+        Args:
+            self: (todo): write your description
+        """
         #print(self.choiceButtonGroup.checkedId())
         self.currentChoice = self.choices[self.choiceButtonGroup.checkedId()]
 
 
 class ChoiceDialog(QDialog):
     def __init__(self, choices, help_texts= [], parent = None):
+        """
+        Reimplemented widget.
+
+        Args:
+            self: (todo): write your description
+            choices: (todo): write your description
+            help_texts: (str): write your description
+            parent: (todo): write your description
+        """
         super(ChoiceDialog, self).__init__(parent)
 
         title = "select one from choices"
@@ -109,17 +152,44 @@ class ChoiceDialog(QDialog):
         self.setLayout(layout)
 
     def choice(self):
+        """
+        Gets the choice
+
+        Args:
+            self: (todo): write your description
+        """
         return self.choices[self.choiceButtonGroup.checkedId()]
 
     def choiceId(self):
+        """
+        Returns the label for this choice
+
+        Args:
+            self: (todo): write your description
+        """
         return self.choiceButtonGroup.checkedId()
 
     def choiceChanged(self):
+        """
+        Resetches the current choice choice
+
+        Args:
+            self: (todo): write your description
+        """
         #print(self.choiceButtonGroup.checkedId())
         self.currentChoice = self.choices[self.choiceButtonGroup.checkedId()]
 
 # static method to create the dialog and return choice
 def choose(choices, within_qtloop = False, help_texts = [], parent = None):
+    """
+    Prompts the user to choose a list of choices
+
+    Args:
+        choices: (int): write your description
+        within_qtloop: (int): write your description
+        help_texts: (str): write your description
+        parent: (todo): write your description
+    """
     if not within_qtloop:
         app = QApplication(sys.argv)
         dialog = ChoiceDialog(choices, help_texts, parent)
@@ -137,6 +207,14 @@ def choose(choices, within_qtloop = False, help_texts = [], parent = None):
 class TemplateSelectorWidget(QWidget):
     """OpenFOAM case template selection"""
     def __init__(self, theChoice=None, parent=None):
+        """
+        Reset widget
+
+        Args:
+            self: (todo): write your description
+            theChoice: (todo): write your description
+            parent: (todo): write your description
+        """
         super(TemplateSelector, self).__init__(parent)
 
         self.setWindowTitle("select how Foam case is generated")
@@ -161,11 +239,22 @@ class TemplateSelectorWidget(QWidget):
         self.setLayout(layout)
 
     def selectFolder(self):
+        """
+        Reimplemented folder.
+
+        Args:
+            self: (todo): write your description
+        """
         self.folderPath = QFileDialog.getExistingDirectory()
         self.labelCasePath.setText(self.folderPath)
 
 
 def test():
+    """
+    Prints out the test.
+
+    Args:
+    """
     print(choose(['choice a', 'choic b']))
     #print(choose(['choice a', 'choic b']))
     # run into error, when call this again:  RuntimeError: A QApplication instance already exists.

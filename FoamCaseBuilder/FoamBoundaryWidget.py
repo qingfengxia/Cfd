@@ -59,6 +59,13 @@ _VARIABLE_NAMES = {'U': "Velocity", "p": "Pressure",
 
 
 def _createChoiceGroup(valueTypes, valueTypeTips):
+    """
+    Helper function toplemented button that will be used to be used for a button is clicked.
+
+    Args:
+        valueTypes: (str): write your description
+        valueTypeTips: (str): write your description
+    """
     _buttonGroupLayout = QHBoxLayout()  # does layout necessary?
     buttonGroupValueType = QButtonGroup()
     buttonGroupValueType.setExclusive(True)
@@ -76,6 +83,14 @@ def _createChoiceGroup(valueTypes, valueTypeTips):
 class FoamBoundaryWidget(QWidget):
     """variable_settings is a python dict with varible as key and OrderedDictionary as value"""
     def __init__(self, settings, parent=None):
+        """
+        Initializes all widgets
+
+        Args:
+            self: (todo): write your description
+            settings: (dict): write your description
+            parent: (todo): write your description
+        """
         super(FoamBoundaryWidget, self).__init__(parent)
 
         assert (settings)  # each variable could have empty dict
@@ -132,6 +147,13 @@ to overwrite automatically generated boundary settings"""
         self.choiceGroup.buttonClicked.connect(self.onChoiceChanged)
 
     def onChoiceChanged(self, button):
+        """
+        Sets whether or notChoice.
+
+        Args:
+            self: (todo): write your description
+            button: (todo): write your description
+        """
         # todo: TypeError: list indices must be integers or slices, not PySide2.QtWidgets.QRadioButton
         if (button.text() == u"Disable"):  #u"Disable", u"Append", u"Replace"
             self.tabWidget.setEnabled(False)
@@ -139,6 +161,12 @@ to overwrite automatically generated boundary settings"""
             self.tabWidget.setEnabled(True)
 
     def boundarySettings(self):
+        """
+        Returns a dictionary of bound variables of the bcs file.
+
+        Args:
+            self: (todo): write your description
+        """
         # TODO:
         _bcs = {}
         for variable in self.tabs:
@@ -146,6 +174,12 @@ to overwrite automatically generated boundary settings"""
         return _bcs
 
     def updateBoundaryName(self):
+        """
+        Updates the name of the current with the list.
+
+        Args:
+            self: (todo): write your description
+        """
         # get the list of boundary name for the case
         from .utility import listBoundaryNames
         names = listBoundaryNames(self.templateCasePath)
@@ -156,6 +190,12 @@ to overwrite automatically generated boundary settings"""
         self.boundaryListLayout.setVisible(True)
 
     def onComboBoundaryNameChanged(self):
+        """
+        Update the user when a variable
+
+        Args:
+            self: (todo): write your description
+        """
         # to fill the variable tabs with the existing boundary condition
         name = self.comboBoundaryName.currentText()
         from .utility import getVariableBoundaryCondition
@@ -168,6 +208,14 @@ to overwrite automatically generated boundary settings"""
 class FoamDictWidget(QWidget):
     "QWidget to view and edit simple Foam Dictionary"
     def __init__(self, variable_setting, parent=None):
+        """
+        Initializes the widget.
+
+        Args:
+            self: (todo): write your description
+            variable_setting: (todo): write your description
+            parent: (todo): write your description
+        """
         super(FoamDictWidget, self).__init__(parent)
 
         self.buttonLayout = QHBoxLayout()
@@ -223,6 +271,12 @@ class FoamDictWidget(QWidget):
         self.setLayout(self.myLayout)
 
     def dict(self):
+        """
+        Return a dictionary of the key / values.
+
+        Args:
+            self: (todo): write your description
+        """
         _settings = OrderedDict()
         for i in range(self.tableWidget.rowCount()):
             k = self.tableWidget.item(i, 0).text()
@@ -233,15 +287,35 @@ class FoamDictWidget(QWidget):
         return _settings
 
     def setDict(self, settings):
+        """
+        Updates the settings as a dictionary.
+
+        Args:
+            self: (todo): write your description
+            settings: (dict): write your description
+        """
         #
         self.settings = settings
         self.updateDictView(self.settings)
 
     def restoreDict(self):
+        """
+        Restores the settings.
+
+        Args:
+            self: (todo): write your description
+        """
         self.settings = self.previous_settings
         self.updateDictView(self.settings)
 
     def updateDictView(self, variable_settings):
+        """
+        Updates a dictionary of a table
+
+        Args:
+            self: (todo): write your description
+            variable_settings: (dict): write your description
+        """
         i = 0
         self.clearDict()  # will clear contents, but leave row text empty
         N = self.tableWidget.rowCount()
@@ -257,6 +331,12 @@ class FoamDictWidget(QWidget):
 
     #@pyqtSlot()  # PySide use another name "QtCore.Slot()"
     def insertRow(self):
+        """
+        Inserts a new row into the model.
+
+        Args:
+            self: (todo): write your description
+        """
         nRows = self.tableWidget.rowCount()
         self.tableWidget.insertRow(nRows)  # inset one row at the end
         kitem = QTableWidgetItem("")  # also set flags and state, type
@@ -265,6 +345,13 @@ class FoamDictWidget(QWidget):
         self.tableWidget.setItem(nRows, 1, vitem)
 
     def removeRow(self, rowID = None): # : Optional[int]  typing is not supported by python2
+        """
+        Removes the row at the given row.
+
+        Args:
+            self: (todo): write your description
+            rowID: (todo): write your description
+        """
         if rowID == None:
             for ind in self.tableWidget.selectedIndexes():
                 self.tableWidget.removeRow(ind.row())
@@ -274,19 +361,43 @@ class FoamDictWidget(QWidget):
                 self.tableWidget.removeRow(rowID)
 
     def clearDict(self):
+        """
+        Clears the table.
+
+        Args:
+            self: (todo): write your description
+        """
         self.tableWidget.clearContents()  # keep the header, clear all items
         if self._previewing:
             self.showPreview()
 
     def customizeDict(self):
+        """
+        Customize the dictionary of keys
+
+        Args:
+            self: (todo): write your description
+        """
         #
         pass
 
     def loadDefault(self):
+        """
+        Loads the default configuration.
+
+        Args:
+            self: (todo): write your description
+        """
         # generated by FoamBaseBuilder.BasicBuilder          #TODO: load the generated from FoamCaseBuilder
         pass
 
     def showPreview(self):
+        """
+        Displays the current button.
+
+        Args:
+            self: (todo): write your description
+        """
         if self._previewing:
             self._previewing = False
             self.textPreview.setVisible(False)
@@ -299,6 +410,12 @@ class FoamDictWidget(QWidget):
             self.textPreview.setVisible(True)
 
     def printDict(self):
+        """
+        Prints the dictionary representation of the object.
+
+        Args:
+            self: (todo): write your description
+        """
         dictText = "{\n"
         for k,v in self.dict().items():
             dictText += "   {}  {};\n".format(str(k), str(v))

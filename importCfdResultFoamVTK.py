@@ -65,6 +65,14 @@ def open(filename):
 
 
 def importCfdResult(filename, analysis=None, result_name_prefix=None):
+    """
+    Import an analysis from an analysis file.
+
+    Args:
+        filename: (str): write your description
+        analysis: (todo): write your description
+        result_name_prefix: (str): write your description
+    """
     from CfdObjects import makeCfdResult
     import Fem
 

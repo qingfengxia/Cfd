@@ -44,6 +44,12 @@ if FreeCAD.GuiUp:
 
 class CfdCommand(object):
         def __init__(self):
+            """
+            Initialize all resources
+
+            Args:
+                self: (todo): write your description
+            """
             self.resources = {'Pixmap': 'fem-cfd-analysis',
                               'MenuText': QtCore.QT_TRANSLATE_NOOP("Cfd_Command", "Default Cfd Command MenuText"),
                               'Accel': "",
@@ -52,9 +58,21 @@ class CfdCommand(object):
             self.is_active = None
 
         def GetResources(self):
+            """
+            Retrieves a list.
+
+            Args:
+                self: (todo): write your description
+            """
             return self.resources
 
         def IsActive(self):  # which_activeactive_object could be a better name
+            """
+            Determine if the analysis is active.
+
+            Args:
+                self: (todo): write your description
+            """
             if not self.is_active:
                 active = False
             elif self.is_active == 'with_document':
@@ -82,6 +100,12 @@ class CfdCommand(object):
             return active
 
         def results_present(self):
+            """
+            Returns true if the analysis has analysis analysis.
+
+            Args:
+                self: (todo): write your description
+            """
             results = False
             analysis_members = FemGui.getActiveAnalysis().Group
             for o in analysis_members:
@@ -90,6 +114,12 @@ class CfdCommand(object):
             return results
 
         def result_selected(self):
+            """
+            Returns true if the analysis analysis has been selected
+
+            Args:
+                self: (todo): write your description
+            """
             result_is_in_active_analysis = False
             sel = FreeCADGui.Selection.getSelection()
             if len(sel) == 1 and sel[0].isDerivedFrom("Fem::FemResultObject"):
@@ -103,6 +133,12 @@ class CfdCommand(object):
                 return False
 
         def part_feature_selected(self):
+            """
+            Return true if the feature was selected.
+
+            Args:
+                self: (todo): write your description
+            """
             sel = FreeCADGui.Selection.getSelection()
             if len(sel) == 1 and sel[0].isDerivedFrom("Part::Feature"):
                 return True
@@ -110,6 +146,12 @@ class CfdCommand(object):
                 return False
 
         def femmesh_selected(self):
+            """
+            Determine whether a mesh is selected.
+
+            Args:
+                self: (todo): write your description
+            """
             sel = FreeCADGui.Selection.getSelection()
             if len(sel) == 1 and sel[0].isDerivedFrom("Fem::FemMeshObject"):
                 return True
@@ -117,6 +159,12 @@ class CfdCommand(object):
                 return False
 
         def gmsh_femmesh_selected(self):
+            """
+            Return true if gmsh selected gmsh mesh
+
+            Args:
+                self: (todo): write your description
+            """
             sel = FreeCADGui.Selection.getSelection()
             if len(sel) == 1 and hasattr(sel[0], "Proxy") and sel[0].Proxy.Type == "FemMeshGmsh":
                 return True
@@ -124,6 +172,12 @@ class CfdCommand(object):
                 return False
 
         def material_selected(self):
+            """
+            Return whether or not the selected material is selected.
+
+            Args:
+                self: (todo): write your description
+            """
             sel = FreeCADGui.Selection.getSelection()
             if len(sel) == 1 and sel[0].isDerivedFrom("App::MaterialObjectPython"):
                 return True
@@ -131,6 +185,12 @@ class CfdCommand(object):
                 return False
 
         def with_femmesh_andor_res_selected(self):
+            """
+            Return true if a mesh has selected by a mesh
+
+            Args:
+                self: (todo): write your description
+            """
             sel = FreeCADGui.Selection.getSelection()
             if len(sel) == 1 and sel[0].isDerivedFrom("Fem::FemMeshObject"):
                 return True
@@ -151,9 +211,21 @@ class CfdCommand(object):
                 return False
 
         def active_analysis_in_active_doc(self):
+            """
+            Return whether the analysis documentation.
+
+            Args:
+                self: (todo): write your description
+            """
             return FemGui.getActiveAnalysis().Document is FreeCAD.ActiveDocument
 
         def solver_selected(self):
+            """
+            Returns true if the selected solver.
+
+            Args:
+                self: (todo): write your description
+            """
             sel = FreeCADGui.Selection.getSelection()
             if len(sel) == 1 and sel[0].isDerivedFrom("Fem::FemSolverObjectPython"):
                 return True
@@ -161,6 +233,12 @@ class CfdCommand(object):
                 return False
 
         def analysis_has_solver(self):
+            """
+            Determine if the analysis analysis.
+
+            Args:
+                self: (todo): write your description
+            """
             solver = False
             analysis_members = FemGui.getActiveAnalysis().Group
             for o in analysis_members:
@@ -172,6 +250,12 @@ class CfdCommand(object):
                 return False
 
         def hide_meshes_show_parts_constraints(self):
+            """
+            Hide the entire population constraints todo constraints.
+
+            Args:
+                self: (todo): write your description
+            """
             if FreeCAD.GuiUp:
                 for acnstrmesh in FemGui.getActiveAnalysis().Group:
                     if "Constraint" in acnstrmesh.TypeId:

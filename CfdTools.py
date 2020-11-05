@@ -40,6 +40,12 @@ import Fem
 SOLVER_LIST = ['OpenFOAM', 'Fenics']
 
 def checkFreeCADVersion(term_print=True):
+    """
+    Checks the version of the versioned.
+
+    Args:
+        term_print: (todo): write your description
+    """
     message = ""
     FreeCAD.Console.PrintMessage("Checking CFD workbench dependencies...\n")
 
@@ -59,6 +65,12 @@ def checkFreeCADVersion(term_print=True):
 
 
 def isWorkingDirValid(wd):
+    """
+    Determine if path is a working directory.
+
+    Args:
+        wd: (str): write your description
+    """
     if not (os.path.isdir(wd) and os.access(wd, os.W_OK)):
         FreeCAD.Console.PrintError("Working dir: {}, is not existent or writable".format(wd))
         return False
@@ -67,6 +79,11 @@ def isWorkingDirValid(wd):
 
 
 def getTempWorkingDir():
+    """
+    Return the working directory of the working dir.
+
+    Args:
+    """
     #FreeCAD.Console.PrintMessage(FreeCAD.ActiveDocument.TransientDir)  # tmp folder for save transient data
     #FreeCAD.ActiveDocument.FileName  # abspath to user folder, which is not portable across computers
     #FreeCAD.Console.PrintMessage(os.path.dirname(__file__))  # this function is not usable in InitGui.py
@@ -82,6 +99,12 @@ def getTempWorkingDir():
 
 
 def setupWorkingDir(solver_object):
+    """
+    Create a working directory.
+
+    Args:
+        solver_object: (todo): write your description
+    """
     wd = solver_object.WorkingDir
     if not (os.path.exists(wd)):
         try:
@@ -126,6 +149,11 @@ def isPlanar(shape):
 ################################################
 
 def getActiveAnalysis():
+    """
+    Returns the currently active analysis
+
+    Args:
+    """
     # find the fem analysis object this fem_object belongs to, 
     # DEPRECATED: try to use `getParentAnalysisObject` as possible
     if FreeCAD.GuiUp:
@@ -151,6 +179,11 @@ if FreeCAD.GuiUp:
     import FreeCADGui
     import FemGui
     def getResultObject():
+        """
+        Returns the best match
+
+        Args:
+        """
         sel = FreeCADGui.Selection.getSelection()
         if (len(sel) == 1):
             if sel[0].isDerivedFrom("Fem::FemResultObject"):
@@ -161,12 +194,23 @@ if FreeCAD.GuiUp:
         return None
 
     def selectSolver():
+        """
+        Selects a selection for a selection.
+
+        Args:
+        """
         from FoamCaseBuilder import ChoiceDialog
         ret = ChoiceDialog.choose(SOLVER_LIST, True) # second parameter: within_qtloop
         return ret[0]
 
     ################################################
     def createAnalysis(solver_name = None):
+        """
+        Create an analysis
+
+        Args:
+            solver_name: (str): write your description
+        """
         if solver_name == None:
             solver_name = selectSolver()
         FreeCAD.ActiveDocument.openTransaction("Create CFD Analysis")
@@ -180,6 +224,12 @@ if FreeCAD.GuiUp:
         FreeCADGui.doCommand("FemGui.getActiveAnalysis().addObject(CfdObjects.makeCfdFluidMaterial('FluidMaterial'))")
 
     def createSolver(solver_name = None):
+        """
+        Creates solver
+
+        Args:
+            solver_name: (str): write your description
+        """
         if solver_name == None:
             solver_name = selectSolver()
         FreeCAD.ActiveDocument.openTransaction("Create Solver")
@@ -190,6 +240,12 @@ if FreeCAD.GuiUp:
             FreeCADGui.doCommand("FemGui.getActiveAnalysis().addObject(App.ActiveDocument.ActiveObject)")
 
     def createMesh(sel):
+        """
+        Creates the mesh
+
+        Args:
+            sel: (todo): write your description
+        """
         FreeCAD.ActiveDocument.openTransaction("Create CFD mesh by GMSH")
         # get meshing choice, or from part dimension
         mesh_obj_name = sel[0].Name + "_Mesh"
@@ -203,6 +259,13 @@ if FreeCAD.GuiUp:
 
 
 def runGmsh(mesh_obj, anaysis_obj=None):
+    """
+    Run a mesh using gmshes mesh object.
+
+    Args:
+        mesh_obj: (todo): write your description
+        anaysis_obj: (bool): write your description
+    """
     if not anaysis_obj:
         anaysis_obj = getParentAnalysisObject(mesh_obj)
     import CaeMesherGmsh  # do not import at the start of this file, to be able to run without GUI
@@ -216,6 +279,13 @@ def runGmsh(mesh_obj, anaysis_obj=None):
     return error
 
 def importGeometryAndMesh(geo_file, mesh_file):
+    """
+    Import a geometry object from a geometry file.
+
+    Args:
+        geo_file: (str): write your description
+        mesh_file: (str): write your description
+    """
     # caller guarant input parameter is valid path and type, each is a tuple of (filename, suffix)
     docname = FreeCAD.ActiveDocument.Name
     if geo_file:
@@ -261,24 +331,48 @@ def importGeometryAndMesh(geo_file, mesh_file):
 
 ##################################################
 def getMaterial(analysis_object):
+    """
+    Returns the analysis object from the given analysis
+
+    Args:
+        analysis_object: (todo): write your description
+    """
     # DEPRECATED: get the first, should be the only material for sinple phase flow
     for i in analysis_object.Group:
         if i.isDerivedFrom('App::MaterialObjectPython'):
             return i
 
 def getMaterials(analysis_object):
+    """
+    Returns a list of an analysis
+
+    Args:
+        analysis_object: (str): write your description
+    """
     # return list of all material, but which is the primary phase?
     return [i for i in analysis_object.Group
             if i.isDerivedFrom('App::MaterialObjectPython')]
 
 
 def getSolver(analysis_object):
+    """
+    Returns the analysis passed in the analysis passed in an analysis object.
+
+    Args:
+        analysis_object: (bool): write your description
+    """
     for i in analysis_object.Group:
         if i.isDerivedFrom("Fem::FemSolverObjectPython"):  # Fem::FemSolverObject is C++ type name
             return i
 
 
 def getSolverSettings(solver):
+    """
+    Return a dictionary of property names of the given solver
+
+    Args:
+        solver: (todo): write your description
+    """
     # convert properties into python dict, while key must begin with lower letter
     dict = {}
     f = lambda s: s[0].lower() + s[1:]
@@ -288,6 +382,12 @@ def getSolverSettings(solver):
 
 
 def getConstraintGroup(analysis_object):
+    """
+    Returns a list of group
+
+    Args:
+        analysis_object: (todo): write your description
+    """
     group = []
     for i in analysis_object.Group:
         if i.isDerivedFrom("Fem::Constraint"):
@@ -296,6 +396,12 @@ def getConstraintGroup(analysis_object):
 
 
 def getCfdConstraintGroup(analysis_object):
+    """
+    Returns a list of all groups.
+
+    Args:
+        analysis_object: (todo): write your description
+    """
     group = []
     for i in analysis_object.Group:
         if i.isDerivedFrom("Fem::ConstraintFluidBoundary"):
@@ -304,12 +410,24 @@ def getCfdConstraintGroup(analysis_object):
 
 
 def getMesh(analysis_object):  # FIXME, deprecate this !
+    """
+    Return the analysis object from the given analysis object
+
+    Args:
+        analysis_object: (str): write your description
+    """
     for i in analysis_object.Group:
         if i.isDerivedFrom("Fem::FemMeshObject"):
             return i
     # python will return None by default, so check None outside
 
 def getMeshObject(analysis_object):
+    """
+    Return the mesh for the given analysis
+
+    Args:
+        analysis_object: (todo): write your description
+    """
     # NOTE: replaced with CfdOF fork if cartMesh will be merged
     isPresent = False
     meshObj = []
@@ -332,6 +450,12 @@ def getMeshObject(analysis_object):
 
 
 def getPartDimension(part_obj):
+    """
+    Returns the part number of a string.
+
+    Args:
+        part_obj: (int): write your description
+    """
     shty = part_obj.Shape.ShapeType
     if shty == 'Solid' or shty == 'CompSolid':
         # print('Found: ' + shty)
@@ -356,10 +480,22 @@ def getPartDimension(part_obj):
     return dimension
 
 def isSolidMesh(fem_mesh):  # it is not a good name -> hasSolidMesh
+    """
+    Determine if a mesh is a mesh
+
+    Args:
+        fem_mesh: (todo): write your description
+    """
     if fem_mesh.VolumeCount > 0:  # solid mesh
         return True
 
 def getResult(analysis_object):
+    """
+    Returns the analysis object from the analysis passed in the analysis
+
+    Args:
+        analysis_object: (todo): write your description
+    """
     for i in analysis_object.Group:
         if(i.isDerivedFrom("Fem::FemResultObject")):
             return i
@@ -413,6 +549,11 @@ def indexOrDefault(list, findItem, defaultIndex):
 
 # This is taken from hide_parts_constraints_show_meshes which was removed from FemCommands for some reason
 def hide_parts_show_meshes():
+    """
+    Hide the original population.
+
+    Args:
+    """
     if FreeCAD.GuiUp:
         for acnstrmesh in FemGui.getActiveAnalysis().Group:
             if "Mesh" in acnstrmesh.TypeId:
@@ -426,6 +567,13 @@ def hide_parts_show_meshes():
 #################### UNV mesh writer #########################################
 
 def export_gmsh_mesh(obj, meshfileString):
+    """
+    Export a mesh ascii file as a mesh file.
+
+    Args:
+        obj: (todo): write your description
+        meshfileString: (str): write your description
+    """
     # support only 3D
     if not obj.Proxy.Type == 'FemMeshGmsh':
         FreeCAD.Console.PrintError("Object selected is not a FemMeshGmsh type\n")
@@ -444,6 +592,15 @@ def export_gmsh_mesh(obj, meshfileString):
         return error
 
 def write_unv_mesh(mesh_obj, bc_group, mesh_file_name, is_gmsh = False):
+    """
+    Writes a gms file. gms file.
+
+    Args:
+        mesh_obj: (todo): write your description
+        bc_group: (todo): write your description
+        mesh_file_name: (str): write your description
+        is_gmsh: (bool): write your description
+    """
     # if bc_group is specified as empty or None, it means UNV boundary mesh has been write by Fem.export(), no need to write twice
     __objs__ = []
     __objs__.append(mesh_obj)
@@ -474,6 +631,14 @@ def _update_unv_boundary_names(bc_group, mesh_file_name):
 
 
 def _write_unv_bc_mesh(mesh_obj, bc_group, unv_mesh_file):
+    """
+    Writes a bam file with the bam file.
+
+    Args:
+        mesh_obj: (todo): write your description
+        bc_group: (todo): write your description
+        unv_mesh_file: (str): write your description
+    """
     #FreeCAD.Console.PrintMessage('Write face_set on boundaries\n')
     f = open(unv_mesh_file, 'a')  # appending bc to the volume mesh, which contains node and element definition, ends with '-1'
     f.write("{:6d}\n".format(-1))  # start of a section
@@ -486,6 +651,15 @@ def _write_unv_bc_mesh(mesh_obj, bc_group, unv_mesh_file):
 
 
 def _write_unv_bc_faces(mesh_obj, f, bc_id, bc_object):
+    """
+    Write faces to a file.
+
+    Args:
+        mesh_obj: (todo): write your description
+        f: (todo): write your description
+        bc_id: (str): write your description
+        bc_object: (todo): write your description
+    """
     facet_list = []
     for o, e in bc_object.References:  # list of (objectOfType<Part::PartFeature>, (stringName1, stringName2, ...))
         # merge bugfix from https://github.com/jaheyns/FreeCAD/blob/master/src/Mod/Cfd/CfdTools.py

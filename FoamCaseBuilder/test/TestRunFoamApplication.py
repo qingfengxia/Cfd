@@ -46,6 +46,11 @@ if error: print(error)
 print(output)
 
 def test_bash_QProcess():
+    """
+    Perform a process.
+
+    Args:
+    """
     from PyQt4 import QtCore
     process = QtCore.QProcess()
     process.setProcessChannelMode(QtCore.QProcess.MergedChannels)
@@ -121,6 +126,12 @@ b'/opt/openfoam4\n'
 '''
 
 def test_runBashCommand(cmd):
+    """
+    Run a test command.
+
+    Args:
+        cmd: (str): write your description
+    """
     #leading and trailing space in case path quote " path " will cause error
     #cmd = ["icoFoam", '-help']
     #cmdline = """bash -i -c '{}' """.format(' '.join(cmd))

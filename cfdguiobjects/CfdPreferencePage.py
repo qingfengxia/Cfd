@@ -68,6 +68,12 @@ DOWNLOAD_CFMESH = 4
 
 class CfdPreferencePage:
     def __init__(self):
+        """
+        Initialize the plugin
+
+        Args:
+            self: (todo): write your description
+        """
         ui_path = os.path.join(os.path.dirname(__file__), "CfdPreferencePage.ui")
         self.form = FreeCADGui.PySideUic.loadUi(ui_path)
 
@@ -97,6 +103,12 @@ class CfdPreferencePage:
         self.form.pb_download_install_blueCFD.setVisible(platform.system() == 'Windows')
 
     def __del__(self):
+        """
+        Deletes the process.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.thread.isRunning():
             FreeCAD.Console.PrintMessage("Terminating a pending install task")
             self.thread.terminate()
@@ -106,9 +118,21 @@ class CfdPreferencePage:
         QApplication.restoreOverrideCursor()
 
     def saveSettings(self):
+        """
+        Èi̇·åıĸåńĺç¬¦ä¸²
+
+        Args:
+            self: (todo): write your description
+        """
         CfdFoamTools.setFoamDir(self.foam_dir)
 
     def loadSettings(self):
+        """
+        Load prefs settings from the text file.
+
+        Args:
+            self: (todo): write your description
+        """
         # Don't set the autodetected location, since the user might want to allow that to vary according
         # to WM_PROJECT_DIR setting
         prefs = CfdFoamTools.getPreferencesLocation()
@@ -116,6 +140,14 @@ class CfdPreferencePage:
         self.form.le_foam_dir.setText(self.foam_dir)
 
     def consoleMessage(self, message="", color="#000000"):
+        """
+        Display a console.
+
+        Args:
+            self: (todo): write your description
+            message: (str): write your description
+            color: (str): write your description
+        """
         message = message.replace('\n', '<br>')
         self.console_message = self.console_message + \
             '<font color="{0}">{1}</font><br>'.format(color, message.encode('utf-8', 'replace'))
@@ -123,44 +155,108 @@ class CfdPreferencePage:
         self.form.textEdit_Output.moveCursor(QtGui.QTextCursor.End)
 
     def foamDirChanged(self, text):
+        """
+        Change the text in - memory
+
+        Args:
+            self: (todo): write your description
+            text: (str): write your description
+        """
         self.foam_dir = text
 
     def chooseFoamDir(self):
+        """
+        Prompts user input file.
+
+        Args:
+            self: (todo): write your description
+        """
         d = QtGui.QFileDialog().getExistingDirectory(None, 'Choose OpenFOAM directory', self.foam_dir)
         if d and os.access(d, os.W_OK):
             self.foam_dir = d
         self.form.le_foam_dir.setText(self.foam_dir)
 
     def runDependencyChecker(self):
+        """
+        Runs the main loop.
+
+        Args:
+            self: (todo): write your description
+        """
         self.thread.task = DEPENDENCY_CHECK
         self.startThread()
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
     def downloadInstallBlueCFD(self):
+        """
+        Downloads all threads
+
+        Args:
+            self: (todo): write your description
+        """
         self.thread.task = DOWNLOAD_BLUECFD
         self.startThread()
 
     def downloadInstallGnuplotpy(self):
+        """
+        Downloads the gtk.
+
+        Args:
+            self: (todo): write your description
+        """
         self.thread.task = DOWNLOAD_GNUPLOTPY
         self.startThread()
 
     def downloadInstallCfMesh(self):
+        """
+        Downloads the cfMesh.
+
+        Args:
+            self: (todo): write your description
+        """
         self.thread.task = DOWNLOAD_CFMESH
         self.startThread()
 
     def startThread(self):
+        """
+        Starts the thread.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.thread.isRunning():
             self.consoleMessage("Process already running...", '#FF0000')
         else:
             self.thread.start()
 
     def threadStatus(self, msg):
+        """
+        Prints a status.
+
+        Args:
+            self: (todo): write your description
+            msg: (str): write your description
+        """
         self.consoleMessage(msg)
 
     def threadError(self, msg):
+        """
+        Logs a thread.
+
+        Args:
+            self: (todo): write your description
+            msg: (str): write your description
+        """
         self.consoleMessage(msg, '#FF0000')
 
     def threadFinished(self, status):
+        """
+        Restore the thread
+
+        Args:
+            self: (todo): write your description
+            status: (str): write your description
+        """
         if self.thread.task == DEPENDENCY_CHECK:
             QApplication.restoreOverrideCursor()
 
@@ -201,12 +297,27 @@ class CfdPreferencePage:
                 self.consoleMessage("Download unsuccessful")
 
     def installFinished(self, exit_code):
+        """
+        Installs the console.
+
+        Args:
+            self: (todo): write your description
+            exit_code: (str): write your description
+        """
         if exit_code:
             self.consoleMessage("Install finished with error {}".format(exit_code))
         else:
             self.consoleMessage("Install completed")
 
     def downloadProgress(self, bytes_done, bytes_total):
+        """
+        Downloads the number of a given bytes.
+
+        Args:
+            self: (todo): write your description
+            bytes_done: (str): write your description
+            bytes_total: (str): write your description
+        """
         mb_done = float(bytes_done)/(1024*1024)
         msg = "Downloaded {:.2f} MB".format(mb_done)
         if bytes_total > 0:
@@ -224,12 +335,24 @@ class CfdPreferencePageSignals(QObject):
 class CfdPreferencePageThread(QThread):
     """ Worker thread to complete tasks in preference page """
     def __init__(self):
+        """
+        Initialize the cfd page.
+
+        Args:
+            self: (todo): write your description
+        """
         super(CfdPreferencePageThread, self).__init__()
         self.signals = CfdPreferencePageSignals()
         self.user_dir = None
         self.task = None
 
     def run(self):
+        """
+        Run the task.
+
+        Args:
+            self: (todo): write your description
+        """
         try:
             if self.task == DEPENDENCY_CHECK:
                 self.dependencyCheck()
@@ -246,6 +369,12 @@ class CfdPreferencePageThread(QThread):
         self.signals.finished.emit(True)
 
     def dependencyCheck(self):
+        """
+        Checks the status of the dependency.
+
+        Args:
+            self: (todo): write your description
+        """
         self.signals.status.emit("Checking dependencies...")
         msg = CfdTools.checkFreeCADVersion()
         msg += CfdFoamTools.checkCfdDependencies()
@@ -255,6 +384,12 @@ class CfdPreferencePageThread(QThread):
             self.signals.status.emit(msg)
 
     def downloadBlueCFD(self):
+        """
+        Download the download of the current url.
+
+        Args:
+            self: (todo): write your description
+        """
         self.signals.status.emit("Downloading blueCFD-Core, please wait...")
         try:
             import urllib
@@ -269,6 +404,12 @@ class CfdPreferencePageThread(QThread):
             raise Exception("Failed to launch blueCFD-Core installer")
 
     def downloadGnuplotpy(self):
+        """
+        Downloads the gnu.
+
+        Args:
+            self: (todo): write your description
+        """
         # gnuplot is deprecated, matplotlib is used instead
         self.signals.status.emit("Downloading Gnuplot-py, please wait...")
         try:
@@ -282,6 +423,12 @@ class CfdPreferencePageThread(QThread):
             z.extractall(tempfile.gettempdir())
 
     def downloadCfMesh(self):
+        """
+        Downloads the cfMesh file.
+
+        Args:
+            self: (todo): write your description
+        """
         self.signals.status.emit("Downloading cfMesh, please wait...")
 
         self.user_dir = CfdFoamTools.runFoamCommand("echo $WM_PROJECT_USER_DIR").rstrip().split('\n')[-1]
@@ -300,4 +447,13 @@ class CfdPreferencePageThread(QThread):
             format(CfdFoamTools.translatePath(filename)))
 
     def downloadStatus(self, blocks, block_size, total_size):
+        """
+        Downloads the specified block.
+
+        Args:
+            self: (todo): write your description
+            blocks: (str): write your description
+            block_size: (int): write your description
+            total_size: (int): write your description
+        """
         self.signals.downloadProgress.emit(blocks*block_size, total_size)
