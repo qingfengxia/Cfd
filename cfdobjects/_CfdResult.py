@@ -30,6 +30,13 @@ import Fem
 
 class _CfdResult(object):
     def __init__(self, obj):
+        """
+        Initialize the object.
+
+        Args:
+            self: (todo): write your description
+            obj: (todo): write your description
+        """
         self.Type = "CfdResult"
         self.Object = obj  # keep a ref to the DocObj for nonGui usage
         obj.Proxy = self  # link between App::DocumentObject to  this object
@@ -61,11 +68,32 @@ class _CfdResult(object):
         return
 
     def onChanged(self, obj, prop):
+        """
+        Called when a callback.
+
+        Args:
+            self: (todo): write your description
+            obj: (todo): write your description
+            prop: (str): write your description
+        """
         return
 
     def __getstate__(self):
+        """
+        Returns the state of this object.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.Type
 
     def __setstate__(self, state):
+        """
+        Sets whether or not this button.
+
+        Args:
+            self: (todo): write your description
+            state: (dict): write your description
+        """
         if state:
             self.Type = state

@@ -49,6 +49,13 @@ if FreeCAD.GuiUp:
 
 class _TaskPanelCfdSolverControl:
     def __init__(self, solver_runner_obj):
+        """
+        Initialize the engine.
+
+        Args:
+            self: (todo): write your description
+            solver_runner_obj: (todo): write your description
+        """
         ui_path = os.path.dirname(__file__) + os.path.sep + "TaskPanelCfdSolverControl.ui"
         self.form = FreeCADGui.PySideUic.loadUi(ui_path)
         self.fem_prefs = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/Fem")
@@ -101,16 +108,36 @@ class _TaskPanelCfdSolverControl:
         self.update()  # update UI from FemSolverObject, like WorkingDir
 
     def femConsoleMessage(self, message="", color="#000000"):
+        """
+        Display a femConsole message.
+
+        Args:
+            self: (todo): write your description
+            message: (str): write your description
+            color: (str): write your description
+        """
         self.fem_console_message = self.fem_console_message + '<font color="#0000FF">{0:4.1f}:</font> <font color="{1}">{2}</font><br>'.\
             format(time.time() - self.Start, color, message.encode('utf-8', 'replace'))
         self.form.textEdit_Output.setText(self.fem_console_message)
         self.form.textEdit_Output.moveCursor(QtGui.QTextCursor.End)
 
     def updateText(self):
+        """
+        Updates the current state.
+
+        Args:
+            self: (todo): write your description
+        """
         if(self.SolverProcess.state() == QtCore.QProcess.ProcessState.Running):
             self.form.l_time.setText('Time: {0:4.1f}: '.format(time.time() - self.Start))
 
     def getStandardButtons(self):
+        """
+        Returns the number of buttons for this widget.
+
+        Args:
+            self: (todo): write your description
+        """
         return int(QtGui.QDialogButtonBox.Close)
 
     def update(self):
@@ -124,14 +151,32 @@ class _TaskPanelCfdSolverControl:
         return
 
     def accept(self):
+        """
+        Reset the current document.
+
+        Args:
+            self: (todo): write your description
+        """
         #FreeCADGui.Control.closeDialog() # cause some bug, use resetEdit() instead
         FreeCADGui.ActiveDocument.resetEdit()
 
     def reject(self):
+        """
+        Rejects the document.
+
+        Args:
+            self: (todo): write your description
+        """
         #FreeCADGui.Control.closeDialog()
         FreeCADGui.ActiveDocument.resetEdit()
 
     def chooseWorkingDir(self):
+        """
+        Chooses the selected working directory.
+
+        Args:
+            self: (todo): write your description
+        """
         current_wd = self.solver_object.WorkingDir
         wd = QtGui.QFileDialog.getExistingDirectory(None,
                                                     'Choose Solver working directory',
@@ -144,6 +189,12 @@ class _TaskPanelCfdSolverControl:
         self.form.le_working_dir.setText(info_obj.WorkingDir)
 
     def writeSolverInput(self):
+        """
+        Write protobuf.
+
+        Args:
+            self: (todo): write your description
+        """
         QApplication.restoreOverrideCursor()
         if self.validateSolverInput():
             # self.solver_object.SolverName == "OpenFOAM":
@@ -168,6 +219,12 @@ class _TaskPanelCfdSolverControl:
             self.femConsoleMessage("Case check failed!", "#FF0000")
 
     def validateSolverInput(self):
+        """
+        Validate l_runner.
+
+        Args:
+            self: (todo): write your description
+        """
         self.Start = time.time()
         self.femConsoleMessage("Check dependencies...")
         self.form.l_time.setText('Time: {0:4.1f}: '.format(time.time() - self.Start))
@@ -186,11 +243,23 @@ class _TaskPanelCfdSolverControl:
     """
 
     def editSolverInput(self):
+        """
+        Edit the input handler for the input method.
+
+        Args:
+            self: (todo): write your description
+        """
         self.femConsoleMessage("Edit case input file in FreeCAD is not implemented!")
         self.solver_runner.edit_case()
 
 
     def runSolverProcess(self):
+        """
+        Runs the solver.
+
+        Args:
+            self: (todo): write your description
+        """
         # Re-starting a simulation from the last time step has currently been de-actived by using an AllRun script.
         # re-setting the residuals is NOT needed for plotting
 
@@ -219,6 +288,12 @@ class _TaskPanelCfdSolverControl:
         # all the UI update will done after solver process finished signal
 
     def killSolverProcess(self):
+        """
+        Terminate the socket.
+
+        Args:
+            self: (todo): write your description
+        """
         self.femConsoleMessage("Solver manually stopped")
         self.solver_run_process.terminate()
         #NOTE: reactivating solver button
@@ -227,9 +302,22 @@ class _TaskPanelCfdSolverControl:
         #FreeCAD.Console.PrintMessage("Killing OF solver instance")
 
     def solverProcessStarted(self):
+        """
+        Å¤ħçĳĩä»»åĭ¡çļ»åĭ¡
+
+        Args:
+            self: (todo): write your description
+        """
         self.femConsoleMessage("External solver process has started!", "#00AA00")
 
     def solverProcessStateChanged(self, newState):
+        """
+        Called when a new state has changed.
+
+        Args:
+            self: (todo): write your description
+            newState: (todo): write your description
+        """
         if (newState == QtCore.QProcess.ProcessState.Starting):
             self.femConsoleMessage("Starting Solver...")
         if (newState == QtCore.QProcess.ProcessState.Running):
@@ -238,9 +326,23 @@ class _TaskPanelCfdSolverControl:
             self.femConsoleMessage("Solver stopped.")
 
     def solverProcessError(self, error):
+        """
+        Sends an error message.
+
+        Args:
+            self: (todo): write your description
+            error: (todo): write your description
+        """
         self.femConsoleMessage("Solver execute error: {}".format(error), "#FF0000")
 
     def solverProcessFinished(self, exitCode):
+        """
+        Executes the solver.
+
+        Args:
+            self: (todo): write your description
+            exitCode: (str): write your description
+        """
         if not exitCode:
             self.femConsoleMessage("External solver process is done!", "#00AA00")
             self.printSolverProcessStdout()
@@ -256,6 +358,12 @@ class _TaskPanelCfdSolverControl:
         self.form.pb_terminate_solver.setEnabled(False)
 
     def plotResiduals(self):
+        """
+        Plot the outputs of the outputs
+
+        Args:
+            self: (todo): write your description
+        """
         text = str(self.solver_run_process.readAllStandardOutput())
         self.solver_runner.process_output(text)
 
@@ -263,6 +371,12 @@ class _TaskPanelCfdSolverControl:
         #FreeCAD.Console.PrintMessage(text)
 
     def printSolverProcessStdout(self):
+        """
+        Prints the output of the process.
+
+        Args:
+            self: (todo): write your description
+        """
         # this method should be deprecated, since plot will process the data
         out = self.SolverProcess.readAllStandardOutput()
         if out.isEmpty():  # since output has been extract to plot, it can be empty
@@ -276,6 +390,12 @@ class _TaskPanelCfdSolverControl:
                 self.femConsoleMessage("Error converting stdout from Solver", "#FF0000")
 
     def showResult(self):
+        """
+        Displays the message.
+
+        Args:
+            self: (todo): write your description
+        """
         self.femConsoleMessage("Loading result into FreeCAD is disabled for bugs...", "#FFFF00")
         self.femConsoleMessage("start an external paraview process to view the result", "#FFFF00")
         """
@@ -287,4 +407,10 @@ class _TaskPanelCfdSolverControl:
         """
 
     def viewResultExternally(self):
+        """
+        View the result view.
+
+        Args:
+            self: (todo): write your description
+        """
         self.solver_runner.view_result_externally()

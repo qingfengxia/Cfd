@@ -35,6 +35,12 @@ if FreeCAD.GuiUp:
 class _CommandCfdAnalysis(CfdCommand):
     "the Cfd_Analysis command definition"
     def __init__(self):
+        """
+        Initialize analysis.
+
+        Args:
+            self: (todo): write your description
+        """
         super(_CommandCfdAnalysis, self).__init__()
         self.resources = {'Pixmap': 'cfd-analysis',
                           'MenuText': QtCore.QT_TRANSLATE_NOOP("Cfd_Analysis", "Analysis container"),
@@ -43,6 +49,12 @@ class _CommandCfdAnalysis(CfdCommand):
         self.is_active = 'with_document'
 
     def Activated(self):
+        """
+        Clearsing the analysis.
+
+        Args:
+            self: (todo): write your description
+        """
         import CfdTools
         CfdTools.createAnalysis()
         sel = FreeCADGui.Selection.getSelection()

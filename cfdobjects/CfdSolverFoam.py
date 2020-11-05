@@ -34,6 +34,12 @@ if FreeCAD.GuiUp:
 from . import CfdSolver
 
 def makeCfdSolverFoam(name="OpenFOAM"):
+    """
+    Return a cfd object.
+
+    Args:
+        name: (str): write your description
+    """
     obj = FreeCAD.ActiveDocument.addObject("Fem::FemSolverObjectPython", name)
     CfdSolverFoam(obj)
     if FreeCAD.GuiUp:
@@ -44,6 +50,13 @@ def makeCfdSolverFoam(name="OpenFOAM"):
 
 class CfdSolverFoam(CfdSolver.CfdSolver):
     def __init__(self, obj):
+        """
+        Initialize cfd tables
+
+        Args:
+            self: (todo): write your description
+            obj: (todo): write your description
+        """
         super(CfdSolverFoam, self).__init__(obj)
         self.Type = "CfdSolverFoam"
         obj.SolverName = "OpenFOAM"

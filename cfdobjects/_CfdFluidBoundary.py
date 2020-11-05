@@ -42,12 +42,26 @@ import Part
 class PartFeature:
     "Part containing CfdFoamBoundary faces"
     def __init__(self, obj):
+        """
+        Initialize an object.
+
+        Args:
+            self: (todo): write your description
+            obj: (todo): write your description
+        """
         obj.Proxy = self
 
 
 class _CfdFluidBoundary(PartFeature):
     "The CfdFoamBoundary object"
     def __init__(self, obj):
+        """
+        Initialize the properties object
+
+        Args:
+            self: (todo): write your description
+            obj: (todo): write your description
+        """
         PartFeature.__init__(self, obj)
 
         obj.Proxy = self
@@ -96,6 +110,13 @@ class _CfdFluidBoundary(PartFeature):
         return
 
     def updateBoundaryColors(self, obj):
+        """
+        Updates the color widgets.
+
+        Args:
+            self: (todo): write your description
+            obj: (todo): write your description
+        """
         if FreeCAD.GuiUp:
             vobj = obj.ViewObject
             vobj.Transparency = 20
@@ -114,7 +135,20 @@ class _CfdFluidBoundary(PartFeature):
                 vobj.ShapeColor = (1.0, 1.0, 1.0)  # White
 
     def __getstate__(self):
+        """
+        Get the state of the state
+
+        Args:
+            self: (todo): write your description
+        """
         return None
 
     def __setstate__(self, state):
+        """
+        Set the state of the state of the given state.
+
+        Args:
+            self: (todo): write your description
+            state: (dict): write your description
+        """
         return None

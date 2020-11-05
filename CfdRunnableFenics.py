@@ -38,14 +38,33 @@ from CfdConsoleProcess import CfdConsoleProcess
 #  Concrete Class for CfdRunnable for FenicsSolver
 class CfdRunnableFenics(_CfdRunnable):
     def __init__(self, solver=None):
+        """
+        Initialize the case.
+
+        Args:
+            self: (todo): write your description
+            solver: (todo): write your description
+        """
         super(CfdRunnableFenics, self).__init__(solver)
         self.writer = CaeCaseWriterFenics.CaeCaseWriterFenics(self.analysis)
         self.case_file = self.writer.case_file_name
 
     def check_prerequisites(self):
+        """
+        Returns the prerequisites.
+
+        Args:
+            self: (todo): write your description
+        """
         return ""
 
     def write_case(self):
+        """
+        Writes the case to disk todo.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.writer.write_case()
 
     def edit_case(self):
@@ -62,6 +81,12 @@ class CfdRunnableFenics(_CfdRunnable):
             subprocess.Popen(['explorer', path]) # check_call() will block the python code
 
     def get_solver_cmd(self):
+        """
+        Return the path to the solver command.
+
+        Args:
+            self: (todo): write your description
+        """
         #os.path.dirname(os.path.abspath(a_module.__file__)) to get module install path
         # python3 -m FenicsSolver/main.py case_file
         # see example in /usr/lib/python3.6/unittest/__init__.py
@@ -82,18 +107,43 @@ class CfdRunnableFenics(_CfdRunnable):
         return cmd
 
     def solve(self):
+        """
+        Solve the given cfd process.
+
+        Args:
+            self: (todo): write your description
+        """
         # start external process, currently not in use  TODO:  move code from TaskPanel to here
         worker = CfdConsoleProcess()
         worker.start(self.get_solver_cmd())
 
     def view_result_externally(self):
+        """
+        View the result view.
+
+        Args:
+            self: (todo): write your description
+        """
         pass
         # Todo: load result in paraview
 
     def view_result(self):
+        """
+        View the result.
+
+        Args:
+            self: (todo): write your description
+        """
         # show result by Fenics plot(), indepdent of FreeCAD GUI
         pass
 
     def process_output(self, text):
+        """
+        Process the output.
+
+        Args:
+            self: (todo): write your description
+            text: (str): write your description
+        """
         # will not plot progress, just log to stdout
         print(text)

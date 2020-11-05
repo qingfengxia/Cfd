@@ -29,12 +29,29 @@ length_unit_tips = ["meter", "deci meter", "centimeter", "millimeter (1e-3 m)", 
 
 
 def _select_file(parent, title, starting_dir = u"./", filters=None):
+    """
+    A simple method
+
+    Args:
+        parent: (todo): write your description
+        title: (str): write your description
+        starting_dir: (str): write your description
+        filters: (dict): write your description
+    """
     if not filters:
         filters = u"*.*"
     _files = QFileDialog.getOpenFileName(parent, title, starting_dir, filters)  # error, why?
     return _files[0]
 
 def _createChoiceGroup(valueTypes, valueTypeTips, selected_index):
+    """
+    Helper function to create a button with the value.
+
+    Args:
+        valueTypes: (str): write your description
+        valueTypeTips: (str): write your description
+        selected_index: (todo): write your description
+    """
     _buttonGroupLayout = QHBoxLayout()
     buttonGroupValueType = QButtonGroup()
     buttonGroupValueType.setExclusive(True)
@@ -58,6 +75,14 @@ def indexOrDefault(list, findItem, defaultIndex):
 class FileSelectionWidget(QWidget):
     """ QWidget for selet type and values """
     def __init__(self, settings, parent=None):
+        """
+        Initialize all widgets
+
+        Args:
+            self: (todo): write your description
+            settings: (dict): write your description
+            parent: (todo): write your description
+        """
         super(FileSelectionWidget, self).__init__(parent)  # for both py2 and py3
 
         self.settings = settings
@@ -87,6 +112,12 @@ class FileSelectionWidget(QWidget):
         self.setLayout(_layout)
 
     def selectFile(self):
+        """
+        Select file
+
+        Args:
+            self: (todo): write your description
+        """
         f = _select_file(self, u"Select geometry files", starting_dir = "./", filters=self.settings["filters"])
         self.form.labelSelectedFile.setText(f)
 
@@ -94,6 +125,14 @@ class FileSelectionWidget(QWidget):
 class MeshImportWidget(QWidget):
     """ QWidget for selet type and values """
     def __init__(self, settings={}, parent=None):
+        """
+        Initializes all widgets.
+
+        Args:
+            self: (todo): write your description
+            settings: (dict): write your description
+            parent: (todo): write your description
+        """
         super(MeshImportWidget, self).__init__(parent)  # for both py2 and py3
 
         if settings:

@@ -63,13 +63,33 @@ class _ViewProviderCfdFluidBoundary:
     "A View Provider for the CfdFoamBoundary object (advanced boundary condition for OpenFOAM in Python)"
 
     def __init__(self, vobj):
+        """
+        Initialize the object
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+        """
         vobj.Proxy = self
 
     def getIcon(self):
+        """
+        Return the icon icon
+
+        Args:
+            self: (todo): write your description
+        """
         icon_path = os.path.join(CfdTools.getModulePath(), "Resources", "icons", "cfd-foam-boundary.svg")
         return icon_path
 
     def attach(self, vobj):
+        """
+        Attach this method to this widget
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+        """
         self.ViewObject = vobj
         self.Object = vobj.Object
         #CfdFluidBoundary
@@ -78,22 +98,66 @@ class _ViewProviderCfdFluidBoundary:
         #self.ViewObject.Transparency = 95
 
     def getDisplayModes(self, obj):
+        """
+        Returns a list of all nodes of the given an object.
+
+        Args:
+            self: (todo): write your description
+            obj: (todo): write your description
+        """
         modes = []
         return modes
 
     def getDefaultDisplayMode(self):
+        """
+        Returns the default display name
+
+        Args:
+            self: (todo): write your description
+        """
         return "Shaded"
 
     def setDisplayMode(self,mode):
+        """
+        Sets the mode for the given mode.
+
+        Args:
+            self: (todo): write your description
+            mode: (str): write your description
+        """
         return mode
 
     def updateData(self, obj, prop):
+        """
+        Updates the data of an object.
+
+        Args:
+            self: (todo): write your description
+            obj: (todo): write your description
+            prop: (todo): write your description
+        """
         return
 
     def onChanged(self, vobj, prop):
+        """
+        Called when a callback is received.
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+            prop: (str): write your description
+        """
         return
 
     def setEdit(self, vobj, mode):
+        """
+        Sets the analysis for this analysis
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+            mode: (str): write your description
+        """
         analysis_object = CfdTools.getParentAnalysisObject(self.Object)
         if analysis_object is None:
             FreeCAD.Console.PrintError("Boundary must have a parent analysis object")
@@ -109,11 +173,26 @@ class _ViewProviderCfdFluidBoundary:
         return True
 
     def unsetEdit(self, vobj, mode):
+        """
+        Returns true if the given mode.
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+            mode: (str): write your description
+        """
         FreeCADGui.Control.closeDialog()
         return True
 
     # overwrite the doubleClicked to make sure no other this kind of taskd (and thus no selection observer) is still active
     def doubleClicked(self, vobj):
+        """
+        Return true if the double double double double double double double quotes.
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+        """
         guidoc = FreeCADGui.getDocument(vobj.Object.Document)
         # check if another VP is in edit mode, https://forum.freecadweb.org/viewtopic.php?t=13077#p104702
         if not guidoc.getInEdit():
@@ -126,9 +205,22 @@ class _ViewProviderCfdFluidBoundary:
         return True
 
     def __getstate__(self):
+        """
+        Get the state of the state
+
+        Args:
+            self: (todo): write your description
+        """
         return None
 
     def __setstate__(self, state):
+        """
+        Set the state of the state of the given state.
+
+        Args:
+            self: (todo): write your description
+            state: (dict): write your description
+        """
         return None
 
 
@@ -136,6 +228,13 @@ class _TaskPanelCfdFluidBoundary:
     '''The editmode TaskPanel for CfdFluidBoundary objects'''
 
     def __init__(self, obj):
+        """
+        Initialize the analysis
+
+        Args:
+            self: (todo): write your description
+            obj: (todo): write your description
+        """
 
         self.obj = obj
         analysis_obj = CfdTools.getParentAnalysisObject(obj)
@@ -175,6 +274,12 @@ class _TaskPanelCfdFluidBoundary:
         
     # ********* leave task panel *********
     def accept(self):
+        """
+        Accepts the current settings
+
+        Args:
+            self: (todo): write your description
+        """
         if self.selectionWidget.has_equal_references_shape_types():
             self.obj.BoundarySettings = self.boundaryWidget.boundarySettings()
             self.obj.FoamBoundarySettings = self.foamWidget.boundarySettings()
@@ -183,11 +288,23 @@ class _TaskPanelCfdFluidBoundary:
             return True
 
     def reject(self):
+        """
+        Reverse the backends.
+
+        Args:
+            self: (todo): write your description
+        """
         #
         self.recompute_and_set_back_all()
         return True
 
     def recompute_and_set_back_all(self):
+        """
+        Recompute all back - set back back to the document
+
+        Args:
+            self: (todo): write your description
+        """
         doc = FreeCADGui.getDocument(self.obj.Document)
         doc.Document.recompute()
         self.selectionWidget.setback_listobj_visibility()  # BoundarySelector has no such method
@@ -197,8 +314,20 @@ class _TaskPanelCfdFluidBoundary:
 
     # ********* check or validation? *********
     def clear_setup(self):
+        """
+        Clears the setup.
+
+        Args:
+            self: (todo): write your description
+        """
         pass
 
     def check_setup(self):
+        """
+        Check if the check is_setup
+
+        Args:
+            self: (todo): write your description
+        """
         pass
 

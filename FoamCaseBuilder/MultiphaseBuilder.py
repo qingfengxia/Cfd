@@ -33,6 +33,12 @@ Lagrangian: kinematicCloudProperties  kinematicCloudPositions
 """
 
 def _listPhases(case):
+    """
+    Returns a list of all the list of the strings.
+
+    Args:
+        case: (todo): write your description
+    """
     pass
 
 _Eular_multiphase_models = set(['singlePhase', 'twoLiquidMixing', 'twoPhaseEuler', 'multiphaseImmiscible'])
@@ -40,9 +46,20 @@ _Lagrangian_multiphase_models = set(['DPM', 'spray']) # there is a continuous ph
 supported_multiphase_models = _Eular_multiphase_models + _Langarange_multiphase_models
 
 def getDefaultMultiphaseSolverSettings():
+    """
+    Èi̇·åıĸå®ļsolver
+
+    Args:
+    """
     pass
 
 def _getMultiphaseSolver(settings):
+    """
+    Get multiphase settings from settings.
+
+    Args:
+        settings: (todo): write your description
+    """
     if multiphaseModel in settigns and settings['multiphaseModel'] != "":
         if settings['multiphaseModel'] in _Eular_multiphase_models:
             if settings['compressible']:
@@ -93,15 +110,40 @@ class MultiphaseBuilder(ThermalBuilder):
         self._solverCreatedVariables = self.getSolverCreatedVariables()
     
     def build(self):
+        """
+        Build a build.
+
+        Args:
+            self: (todo): write your description
+        """
         pass
 
     def getSolverName(self):
+        """
+        Returns the name of the solver.
+
+        Args:
+            self: (todo): write your description
+        """
         return _getMultiphaseSolver(self._solverSettings)
     
     def getFoamTemplate(self):
+        """
+        Return the given template
+
+        Args:
+            self: (todo): write your description
+        """
         raise
         
     def setupFluidProperties(self, value=None):
+        """
+        Sets the modperties
+
+        Args:
+            self: (todo): write your description
+            value: (todo): write your description
+        """
         if value and isinstance(value, dict):
             self.fluidProperties = value
         if self._solverSettings['compressible']:
@@ -110,12 +152,30 @@ class MultiphaseBuilder(ThermalBuilder):
             self.setupTransportProperties()
         
     def setInternalFields(self):
+        """
+        Sets the field names of this field hashed.
+
+        Args:
+            self: (todo): write your description
+        """
         pass
     
     def getPhases(self):
+        """
+        Returns a list of the most likely to be used in this class.
+
+        Args:
+            self: (todo): write your description
+        """
         pass
 
     def getSolverCreatedVariables(self):
+        """
+        Returns a list of dictionaries.
+
+        Args:
+            self: (todo): write your description
+        """
         pass
          
     

@@ -61,6 +61,12 @@ def _detectDefaultFoamDir():
 
 
 def _isValidFoamFolder(foam_dir):
+    """
+    Returns true if the given path is a valid
+
+    Args:
+        foam_dir: (str): write your description
+    """
     if foam_dir and os.path.exists(os.path.join(foam_dir, "etc", "bashrc")):
         return True
     else:
@@ -97,6 +103,12 @@ def _detectFoamDir():
 
 
 def _detectOpenFOAMorgVersion(foam_ver):
+    """
+    Try to detectFO version.
+
+    Args:
+        foam_ver: (str): write your description
+    """
     # OpenFOAM.org  OpenFOAM Foundation , version pattern X.Y
     # version string 4.x should be parsed as 4.0, return as a tuple of int
     if len(foam_ver.split('.')) >= 2:
@@ -110,6 +122,12 @@ def _detectOpenFOAMorgVersion(foam_ver):
 
 
 def _detectOpenFOAMcomVersion(foam_ver):
+    """
+    Detect the version number
+
+    Args:
+        foam_ver: (todo): write your description
+    """
     # OpenFOAM.com (variant name: OpenFOAM+) the commercial version of OpenFOAM, 
     # version pattern is vYYMM  maybe have a ending `+` like `v1612+`
     # return as a integer like 1612
@@ -121,6 +139,12 @@ def _detectOpenFOAMcomVersion(foam_ver):
 
 
 def _detectFoamVersion(bashrc = '~/.bashrc'):
+    """
+    Detect bash version of bash bash bash version.
+
+    Args:
+        bashrc: (str): write your description
+    """
     # todo: detect OpenFOAM variant or runtime first
     # `foamVersion` which available since openfoam7? gives result like `OpenFOAM-8`
     if platform.system() == 'Windows':
@@ -149,6 +173,12 @@ def _detectFoamVersion(bashrc = '~/.bashrc'):
 
 # public API getter and setter for FOAM_SETTINGS
 def setFoamDir(dir):
+    """
+    Set the bash bash bash bash bash bash bash
+
+    Args:
+        dir: (str): write your description
+    """
     if os.path.exists(dir) and os.path.isabs(dir):
         bashrc = dir + os.path.sep + "etc/bashrc"
         if os.path.exists(bashrc):
@@ -201,6 +231,11 @@ def _detectFoamVarient():
 
 
 def _detectFoamRuntime():
+    """
+    Determine os.
+
+    Args:
+    """
     # For Linux and other POSIX platforms: 'Posix'; or one from ['Posix', 'Cygwin', 'BashWSL'] on Windows
     if platform.system() == 'Windows':
         return "BashWSL"  # 'Cygwin', 'Docker'  is not supported
@@ -216,6 +251,11 @@ def getFoamVariant():
         return _FOAM_SETTINGS['FOAM_VARIANT']
 
 def isFoamExt():
+    """
+    Return true if the user is_FO is a valid
+
+    Args:
+    """
     return _FOAM_SETTINGS['FOAM_VARIANT'] == "foam-extend"
 
 def getFoamRuntime():

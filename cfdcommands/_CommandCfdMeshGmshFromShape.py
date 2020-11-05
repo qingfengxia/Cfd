@@ -37,6 +37,12 @@ if FreeCAD.GuiUp:
 class _CommandCfdMeshGmshFromShape(CfdCommand):
     # the Cfd_MeshGmshFromShape command definition
     def __init__(self):
+        """
+        Initialize t_active.
+
+        Args:
+            self: (todo): write your description
+        """
         super(_CommandCfdMeshGmshFromShape, self).__init__()
         #icon_path = os.path.join(CfdTools.get_module_path(),"Gui","Resources","icons","mesh_g.png")
         self.resources = {'Pixmap': 'fem-femmesh-gmsh-from-shape',
@@ -45,6 +51,12 @@ class _CommandCfdMeshGmshFromShape(CfdCommand):
         self.is_active = 'with_part_feature'
 
     def Activated(self):
+        """
+        Clears the image
+
+        Args:
+            self: (todo): write your description
+        """
         sel = FreeCADGui.Selection.getSelection()
         if (len(sel) == 1):
             if(sel[0].isDerivedFrom("Part::Feature")):

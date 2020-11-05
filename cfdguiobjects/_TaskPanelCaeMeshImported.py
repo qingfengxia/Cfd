@@ -6,6 +6,13 @@ from .MeshImportWidget import MeshImportWidget
 
 class _TaskPanelCaeMeshImported:
     def __init__(self, obj):
+        """
+        Initialize the widget
+
+        Args:
+            self: (todo): write your description
+            obj: (todo): write your description
+        """
         # type check?
         self.mesh_obj = obj
         settings = obj.ImportSettings
@@ -20,12 +27,24 @@ class _TaskPanelCaeMeshImported:
         self.form = self.widget  # must be in a list? no !  does not show up, why?
 
     def getStandardButtons(self):
+        """
+        Gets the number of buttons.
+
+        Args:
+            self: (todo): write your description
+        """
         return int(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Apply | QtGui.QDialogButtonBox.Cancel)
         # show a OK, a apply and a Cancel button
         # def reject() is called on Cancel button
         # def clicked(self, button) is needed, to access the apply button
 
     def import_mesh(self):
+        """
+        Import a mesh.
+
+        Args:
+            self: (todo): write your description
+        """
         s = self.widget.importSettings()
         geo_file = None
         if "geometry" in s:
@@ -37,17 +56,36 @@ class _TaskPanelCaeMeshImported:
         self.mesh_obj.ImportSettings = s
 
     def accept(self):
+        """
+        Accepts a mesh.
+
+        Args:
+            self: (todo): write your description
+        """
         self.import_mesh()
         FreeCADGui.ActiveDocument.resetEdit()
         FreeCAD.ActiveDocument.recompute()
         return True
 
     def reject(self):
+        """
+        Reset the document.
+
+        Args:
+            self: (todo): write your description
+        """
         FreeCADGui.ActiveDocument.resetEdit()
         FreeCAD.ActiveDocument.recompute()
         return True
 
     def clicked(self, button):
+        """
+        Displays the user clicks the button.
+
+        Args:
+            self: (todo): write your description
+            button: (todo): write your description
+        """
         if button == QtGui.QDialogButtonBox.Apply:
             #could reload mesh if necessary
             pass

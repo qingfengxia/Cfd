@@ -46,6 +46,11 @@ def setupRadiationProperties(case, radiationModel):
     pass
 
 def getDefaultHeatTransferSolverSettings():
+    """
+    Returns the default values
+
+    Args:
+    """
     return {
             'parallel': False,
             'compressible': False,
@@ -95,6 +100,12 @@ class ThermalBuilder(BasicBuilder):
                         )
 
     def build(self):
+        """
+        Builds the case.
+
+        Args:
+            self: (todo): write your description
+        """
         super(ThermalBuilder, self).build()
         #set extra BC, internal field, radiationProperties, gravity, multiregion
         #compressible flow wall function is deal inside BasicBuilder
@@ -118,6 +129,13 @@ class ThermalBuilder(BasicBuilder):
 
     #####################################################################################        
     def setupFluidProperties(self, value=None):
+        """
+        Sets the modperties
+
+        Args:
+            self: (todo): write your description
+            value: (todo): write your description
+        """
         if value and isinstance(value, dict):
             self.fluidProperties = value
         if self._solverSettings['compressible']:
@@ -126,6 +144,12 @@ class ThermalBuilder(BasicBuilder):
             self.setupTransportProperties()
 
     def setupTransportProperties(self):
+        """
+        Creates transport settings
+
+        Args:
+            self: (todo): write your description
+        """
         # incompressible
         case = self._casePath
         solver_settings = self._solverSettings
@@ -146,6 +170,12 @@ class ThermalBuilder(BasicBuilder):
         #todo: viscosity or other properties should be settable
 
     def setupThermophysicalProperties(self):
+        """
+        Creates airids.
+
+        Args:
+            self: (todo): write your description
+        """
         # compressible flow
         case = self._casePath
         solver_settings = self._solverSettings
@@ -228,6 +258,13 @@ class ThermalBuilder(BasicBuilder):
             self.initThermalTurbulenceBoundaryAsWall(bc_names)
 
     def initThermalTurbulenceBoundaryAsWall(self, bc_names):
+        """
+        Initialize turbary file
+
+        Args:
+            self: (todo): write your description
+            bc_names: (str): write your description
+        """
         # todo: check if this wall function is only for kEpsilon turbulence model?
         # id yplus < 1, set to zero without wall function
         f = ParsedParameterFile(self._casePath + "/0/alphat")
@@ -330,6 +367,12 @@ class ThermalBuilder(BasicBuilder):
             self._setupThermalTurbulenceDiffusivity()
 
     def _setupThermalTurbulenceDiffusivity(self):
+        """
+        Sets the turbususivity
+
+        Args:
+            self: (todo): write your description
+        """
         # Prt default value is set in initThermalTurbulenceBoundaryAsWall()
         f = ParsedParameterFile(self._casePath + "/0/alphat")
         for bcDict in self._boundarySettings:
@@ -344,6 +387,12 @@ class ThermalBuilder(BasicBuilder):
         f.writeFile()
 
     def setupBoundaryConditions(self):
+        """
+        Sets uparyitions.
+
+        Args:
+            self: (todo): write your description
+        """
         super(ThermalBuilder, self).setupBoundaryConditions()
         self.setupThermalBoundary()
     

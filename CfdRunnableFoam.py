@@ -38,6 +38,13 @@ using_freecad_plot = False  # temp disabled plot by FreeCAD.Plot module, bug not
 #  implemented write_case() and solver_case(), not yet for load_result()
 class CfdRunnableFoam(_CfdRunnable):
     def __init__(self, solver=None):
+        """
+        Initialize the analysis.
+
+        Args:
+            self: (todo): write your description
+            solver: (todo): write your description
+        """
         super(CfdRunnableFoam, self).__init__(solver)
         self.writer = CfdCaseWriterFoam.CfdCaseWriterFoam(self.analysis)
 
@@ -49,28 +56,70 @@ class CfdRunnableFoam(_CfdRunnable):
             pass  # consider use the PyFoam's residual watcher
 
     def check_prerequisites(self):
+        """
+        Returns the prerequisites.
+
+        Args:
+            self: (todo): write your description
+        """
         return ""
 
     def write_case(self):
+        """
+        Writes the case to disk todo.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.writer.write_case()
 
     def edit_case(self):
+        """
+        Edit case.
+
+        Args:
+            self: (todo): write your description
+        """
         case_path = self.solver.WorkingDir + os.path.sep + self.solver.InputCaseName
         FreeCAD.Console.PrintMessage("Please edit the case input files externally at: {}".format(case_path))
         self.writer.builder.editCase()
 
     def get_solver_cmd(self):  # deprecate this by a bash script file to start foam solver
+        """
+        Return the solver command.
+
+        Args:
+            self: (todo): write your description
+        """
         cmd = self.writer.builder.getSolverCommand()
         FreeCAD.Console.PrintMessage("Solver run command: " + cmd + "\n")
         return cmd
 
     def solve(self):
+        """
+        Solve a singleton.
+
+        Args:
+            self: (array): write your description
+        """
         pass  # start external process, TODO:  move code from TaskPanel to here
 
     def view_result_externally(self):
+        """
+        View the result of the view.
+
+        Args:
+            self: (todo): write your description
+        """
         self.writer.builder.viewResult()  # paraview
 
     def view_result(self):
+        """
+        View the result
+
+        Args:
+            self: (todo): write your description
+        """
         #  foamToVTK will write result into VTK data files
         result = self.writer.builder.exportResult()
         #result = "/home/qingfeng/Documents/TestCase/VTK/TestCase_345.vtk"  # test passed
@@ -78,6 +127,13 @@ class CfdRunnableFoam(_CfdRunnable):
         importCfdResult(result, self.analysis)
 
     def process_output(self, text):
+        """
+        Refresh the output.
+
+        Args:
+            self: (todo): write your description
+            text: (str): write your description
+        """
         if using_freecad_plot:
             self.ploter.process_text(text)
             self.ploter.refresh()

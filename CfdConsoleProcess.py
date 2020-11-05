@@ -34,6 +34,15 @@ class CfdConsoleProcess:
     errors to the FreeCAD console and allowing clean termination in Linux
     and Windows """
     def __init__(self, finishedHook=None, stdoutHook=None, stderrHook=None):
+        """
+        Initialize the process.
+
+        Args:
+            self: (todo): write your description
+            finishedHook: (todo): write your description
+            stdoutHook: (str): write your description
+            stderrHook: (todo): write your description
+        """
         self.process = QtCore.QProcess()
         self.finishedHook = finishedHook
         self.stdoutHook = stdoutHook
@@ -43,6 +52,12 @@ class CfdConsoleProcess:
         self.process.readyReadStandardError.connect(self.readStderr)
 
     def __del__(self):
+        """
+        Terminate the current instance.
+
+        Args:
+            self: (todo): write your description
+        """
         self.terminate()
 
     def start(self, cmd, env_vars=None, working_dir=None):
@@ -63,6 +78,12 @@ class CfdConsoleProcess:
         self.process.start(cmd[0], cmd[1:])
 
     def terminate(self):
+        """
+        Terminate the process.
+
+        Args:
+            self: (todo): write your description
+        """
         if platform.system() == "Windows":
             # terminate() doesn't operate and kill() doesnt allow cleanup and leaves mpi processes running
             # Instead, instruct wrapper program to kill child process and itself cleanly with ctrl-break signal
@@ -73,10 +94,23 @@ class CfdConsoleProcess:
         self.process.waitForFinished()
 
     def finished(self, exit_code):
+        """
+        Called when exit code is finished.
+
+        Args:
+            self: (todo): write your description
+            exit_code: (str): write your description
+        """
         if self.finishedHook:
             self.finishedHook(exit_code)
 
     def readStdout(self):
+        """
+        Reads text read from the process.
+
+        Args:
+            self: (todo): write your description
+        """
         # Ensure only complete lines are passed on
         text = ""
         while self.process.canReadLine():
@@ -86,6 +120,12 @@ class CfdConsoleProcess:
             self.stdoutHook(text)
 
     def readStderr(self):
+        """
+        Reads the process
+
+        Args:
+            self: (todo): write your description
+        """
         # Ensure only complete lines are passed on
         # Print any error output to console
         self.process.setReadChannel(QtCore.QProcess.StandardError)
@@ -98,13 +138,37 @@ class CfdConsoleProcess:
         self.process.setReadChannel(QtCore.QProcess.StandardOutput)
 
     def state(self):
+        """
+        Return the state of the process.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.process.state()
 
     def waitForStarted(self):
+        """
+        Wait for the process to complete.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.process.waitForStarted()
 
     def waitForFinished(self):
+        """
+        Waits for the process to complete.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.process.waitForFinished(-1)
 
     def exitCode(self):
+        """
+        Return the exit code.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.process.exitCode()

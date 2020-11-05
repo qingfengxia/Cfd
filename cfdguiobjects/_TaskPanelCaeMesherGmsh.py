@@ -46,6 +46,13 @@ from PySide.QtGui import QApplication
 class _TaskPanelCaeMesherGmsh:
     '''The TaskPanel for editing References property of FemMeshGmsh objects and creation of new FEM mesh'''
     def __init__(self, obj):
+        """
+        Initialize gms
+
+        Args:
+            self: (todo): write your description
+            obj: (todo): write your description
+        """
         self.mesh_obj = obj
         self.form = FreeCADGui.PySideUic.loadUi(os.path.dirname(__file__) + os.path.sep + "TaskPanelCaeMesherGmsh.ui")
 
@@ -66,33 +73,70 @@ class _TaskPanelCaeMesherGmsh:
         self.update()
 
     def getStandardButtons(self):
+        """
+        Gets the number of buttons.
+
+        Args:
+            self: (todo): write your description
+        """
         return int(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Apply | QtGui.QDialogButtonBox.Cancel)
         # show a OK, a apply and a Cancel button
         # def reject() is called on Cancel button
         # def clicked(self, button) is needed, to access the apply button
 
     def accept(self):
+        """
+        Resetches the parameters.
+
+        Args:
+            self: (todo): write your description
+        """
         self.set_mesh_params()
         FreeCADGui.ActiveDocument.resetEdit()
         FreeCAD.ActiveDocument.recompute()
         return True
 
     def reject(self):
+        """
+        Reset the document.
+
+        Args:
+            self: (todo): write your description
+        """
         FreeCADGui.ActiveDocument.resetEdit()
         FreeCAD.ActiveDocument.recompute()
         return True
 
     def clicked(self, button):
+        """
+        Function to run method is clicked.
+
+        Args:
+            self: (todo): write your description
+            button: (todo): write your description
+        """
         if button == QtGui.QDialogButtonBox.Apply:
             self.set_mesh_params()
             self.run_gmsh()
 
     def get_mesh_params(self):
+        """
+        Get the mesh parameters. mesh.
+
+        Args:
+            self: (todo): write your description
+        """
         self.clmax = self.mesh_obj.CharacteristicLengthMax
         self.clmin = self.mesh_obj.CharacteristicLengthMin
         self.dimension = self.mesh_obj.ElementDimension
 
     def set_mesh_params(self):
+        """
+        Set mesh parameters.
+
+        Args:
+            self: (todo): write your description
+        """
         self.mesh_obj.CharacteristicLengthMax = self.clmax
         self.mesh_obj.CharacteristicLengthMin = self.clmin
         self.mesh_obj.ElementDimension = self.dimension
@@ -105,30 +149,71 @@ class _TaskPanelCaeMesherGmsh:
         self.form.cb_dimension.setCurrentIndex(index_dimension)
 
     def console_log(self, message="", color="#000000"):
+        """
+        Log a message to the console.
+
+        Args:
+            self: (todo): write your description
+            message: (str): write your description
+            color: (str): write your description
+        """
         self.console_message_gmsh = self.console_message_gmsh + '<font color="#0000FF">{0:4.1f}:</font> <font color="{1}">{2}</font><br>'.\
             format(time.time() - self.Start, color, str(message).encode('utf-8', 'replace'))
         self.form.te_output.setText(self.console_message_gmsh)
         self.form.te_output.moveCursor(QtGui.QTextCursor.End)
 
     def update_timer_text(self):
+        """
+        Updates the timer.
+
+        Args:
+            self: (todo): write your description
+        """
         # print('timer1')
         if self.gmsh_runs:
             #print('Time: {0:4.1f}: '.format(time.time() - self.Start)) # debug output to console
             self.form.l_time.setText('Time: {0:4.1f}: '.format(time.time() - self.Start))
 
     def max_changed(self, base_quantity_value):
+        """
+        Changes the maximum value.
+
+        Args:
+            self: (todo): write your description
+            base_quantity_value: (bool): write your description
+        """
         self.clmax = base_quantity_value
 
     def min_changed(self, base_quantity_value):
+        """
+        Changes the minimum value.
+
+        Args:
+            self: (todo): write your description
+            base_quantity_value: (str): write your description
+        """
         self.clmin = base_quantity_value
 
     def choose_dimension(self, index):
+        """
+        Chooses the current index
+
+        Args:
+            self: (todo): write your description
+            index: (int): write your description
+        """
         if index < 0:
             return
         self.form.cb_dimension.setCurrentIndex(index)
         self.dimension = str(self.form.cb_dimension.itemText(index))  # form returns unicode
 
     def run_gmsh(self):
+        """
+        Run the gms.
+
+        Args:
+            self: (todo): write your description
+        """
         QApplication.setOverrideCursor(Qt.WaitCursor)
         part = self.mesh_obj.Part
         if self.mesh_obj.MeshRegionList:
@@ -158,6 +243,12 @@ class _TaskPanelCaeMesherGmsh:
         QApplication.restoreOverrideCursor()
 
     def get_active_analysis(self):
+        """
+        Returns the analysis analysis for this analysis
+
+        Args:
+            self: (todo): write your description
+        """
         self.analysis = FemGui.getActiveAnalysis()
         if self.analysis:
             for m in FemGui.getActiveAnalysis().Group:

@@ -30,6 +30,12 @@ __url__ = "http://www.freecadweb.org"
 class CfdWorkbench(Workbench):
     "CFD workbench object"
     def __init__(self):
+        """
+        Initialize cfd page
+
+        Args:
+            self: (todo): write your description
+        """
         import CfdTools
         self.__class__.Icon = CfdTools.getModulePath() + "/Resources/icons/CfdWorkbench.svg"
         self.__class__.MenuText = "CFD"
@@ -42,6 +48,12 @@ class CfdWorkbench(Workbench):
         FreeCADGui.addPreferencePage(CfdPreferencePage.CfdPreferencePage, "CFD")
 
     def Initialize(self):
+        """
+        Initializes the cfdcommands.
+
+        Args:
+            self: (todo): write your description
+        """
         from PySide import QtCore  # must import in this function, not at the beginning of this file for translation support
         import Fem
         import FemGui
@@ -111,6 +123,12 @@ class CfdWorkbench(Workbench):
         # enable QtCore translation here, todo
 
     def GetClassName(self):
+        """
+        Returns the name of the class
+
+        Args:
+            self: (todo): write your description
+        """
         return "Gui::PythonWorkbench"
 
 FreeCADGui.addWorkbench(CfdWorkbench())

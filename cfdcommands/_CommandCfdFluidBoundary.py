@@ -43,11 +43,23 @@ if FreeCAD.GuiUp:
 class _CommandCfdFluidBoundary(CfdCommand):
     """ The Fem_CfdFluidBoundary command definition """
     def __init__(self):
+        """
+        Initialize the interface.
+
+        Args:
+            self: (todo): write your description
+        """
         super(_CommandCfdFluidBoundary, self).__init__()
         self.resources = self.GetResources()
         self.is_active = 'with_analysis'
 
     def Activated(self):
+        """
+        Called when the currently running.
+
+        Args:
+            self: (todo): write your description
+        """
         FreeCAD.ActiveDocument.openTransaction("Create CfdFluidBoundary")
         FreeCADGui.addModule("FemGui")
         FreeCADGui.addModule("CfdObjects")
@@ -55,6 +67,12 @@ class _CommandCfdFluidBoundary(CfdCommand):
         FreeCADGui.ActiveDocument.setEdit(FreeCAD.ActiveDocument.ActiveObject.Name)
 
     def GetResources(self):
+        """
+        Return a dictionary with the icon.
+
+        Args:
+            self: (todo): write your description
+        """
         icon_path = os.path.join(CfdTools.getModulePath(), "Resources", "icons", "cfd-foam-boundary.svg")
         return {
             'Pixmap': icon_path,

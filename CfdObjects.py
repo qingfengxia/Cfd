@@ -37,6 +37,12 @@ def makeCfdAnalysis(name):
     return obj
 
 def makeCfdSolver(solver_name ='OpenFOAM'):
+    """
+    Return cfd cfd cfd object. cfd cfd.
+
+    Args:
+        solver_name: (str): write your description
+    """
     if solver_name == 'OpenFOAM':
         obj = CfdSolverFoam.makeCfdSolverFoam()
     elif solver_name == 'Fenics':
@@ -89,6 +95,12 @@ def makeCfdFluidBoundary(name="CfdFluidBoundary"):
     return obj
 
 def makeCfdResult(result_obj_name = "CfdResult"):
+    """
+    Creates a cfd object.
+
+    Args:
+        result_obj_name: (str): write your description
+    """
     doc = FreeCAD.ActiveDocument
     obj= doc.addObject('Fem::FemResultObjectPython', result_obj_name)
     #from _CfdResult import _CfdResult

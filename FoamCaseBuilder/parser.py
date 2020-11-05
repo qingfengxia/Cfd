@@ -162,9 +162,22 @@ class ResidualParser(object):
 
     @staticmethod
     def __get_time(line):
+        """
+        Parse time of a line.
+
+        Args:
+            line: (str): write your description
+        """
         return int(line.split('Time =')[-1])
 
     def __parse_residuals(self, f):
+        """
+        Parse residuals
+
+        Args:
+            self: (todo): write your description
+            f: (todo): write your description
+        """
         for line in f:
             if not line.startswith('Time ='):
                 try:

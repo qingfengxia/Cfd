@@ -68,17 +68,33 @@ from FoamCaseBuilder.utility import getFoamDir as detectFoamDir
 
 #################### CfdPreferencePage ##################
 def getPreferencesLocation():
+    """
+    Return the location of the current user.
+
+    Args:
+    """
     # Set parameter location
     return "User parameter:BaseApp/Preferences/Mod/Cfd/OpenFOAM"
 
 #NOTE: overwrite FoamCaseBuilder.utility
 def setFoamDir(installation_path):
+    """
+    Sets the path of the install directory.
+
+    Args:
+        installation_path: (str): write your description
+    """
     prefs = getPreferencesLocation()
     # Set OpenFOAM install path in parameters
     FreeCAD.ParamGet(prefs).SetString("InstallationPath", installation_path)
 
 #NOTE: overwrite FoamCaseBuilder.utility
 def getFoamDir():
+    """
+    Return the foamamamamlamamamam - compatible version.
+
+    Args:
+    """
     prefs = getPreferencesLocation()
     # Get OpenFOAM install path from parameters
     installation_path = FreeCAD.ParamGet(prefs).GetString("InstallationPath", "")
@@ -126,10 +142,24 @@ def getRunEnvironment():
 # but it is based on QProcess, so need eventloop
 class CfdFoamProcess:
     def __init__(self):
+        """
+        Initialize the process.
+
+        Args:
+            self: (todo): write your description
+        """
         self.process = CfdConsoleProcess.CfdConsoleProcess(stdoutHook=self.readOutput, stderrHook=self.readOutput)
         self.output = ""
 
     def run(self, cmdline, case=None):
+        """
+        Run a command.
+
+        Args:
+            self: (todo): write your description
+            cmdline: (str): write your description
+            case: (todo): write your description
+        """
         print("Running ", cmdline)
         self.process.start(makeRunCommand(cmdline, case), env_vars=getRunEnvironment())
         if not self.process.waitForFinished():
@@ -138,6 +168,13 @@ class CfdFoamProcess:
         return self.process.exitCode()
 
     def readOutput(self, output):
+        """
+        Read output from output.
+
+        Args:
+            self: (todo): write your description
+            output: (todo): write your description
+        """
         self.output += output
 
 

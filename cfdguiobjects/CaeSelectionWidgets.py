@@ -47,6 +47,12 @@ from femtools import geomtools
 class _Selector(QtGui.QWidget):
 
     def __init__(self):
+        """
+        Init the main window
+
+        Args:
+            self: (todo): write your description
+        """
         super(_Selector, self).__init__()
         self._references = []
         self._register = dict()
@@ -74,22 +80,54 @@ class _Selector(QtGui.QWidget):
         self.setLayout(mainLayout)
 
     def references(self):
+        """
+        Return a list of entry instances.
+
+        Args:
+            self: (todo): write your description
+        """
         return [entry for entry in self._references if entry[1]]
 
     def setReferences(self, references):
+        """
+        Sets the references of this reference.
+
+        Args:
+            self: (todo): write your description
+            references: (str): write your description
+        """
         self._references = []
         self._updateReferences(references)
 
     def setHelpText(self, text):
+        """
+        Set help text
+
+        Args:
+            self: (todo): write your description
+            text: (str): write your description
+        """
         self._helpTextLbl.setText(text)
 
     @QtCore.Slot()
     def _add(self):
+        """
+        Add the selection
+
+        Args:
+            self: (todo): write your description
+        """
         selection = self.getSelection()
         self._updateReferences(selection)
 
     @QtCore.Slot()
     def _del(self):
+        """
+        Removes the currently selected sub - selection.
+
+        Args:
+            self: (todo): write your description
+        """
         selected = self._view.selectedIndexes()
         for index in selected:
             identifier = self._model.data(index)
@@ -101,6 +139,13 @@ class _Selector(QtGui.QWidget):
             self._model.removeRow(index.row())
 
     def _updateReferences(self, selection):
+        """
+        Updates the entry with the given a list.
+
+        Args:
+            self: (todo): write your description
+            selection: (str): write your description
+        """
         for obj, subList in selection:
             index = self._getIndex(obj)
             for sub in subList:
@@ -111,12 +156,27 @@ class _Selector(QtGui.QWidget):
                     self._references[index] = newEntry
 
     def _addToWidget(self, obj, sub):
+        """
+        Add an item to the model.
+
+        Args:
+            self: (todo): write your description
+            obj: (todo): write your description
+            sub: (todo): write your description
+        """
         identifier = "%s::%s" % (obj.Name, sub)
         item = QtGui.QStandardItem(identifier)
         self._model.appendRow(item)
         self._register[identifier] = (obj, sub)
 
     def _getIndex(self, obj):
+        """
+        Return the index of the entry.
+
+        Args:
+            self: (todo): write your description
+            obj: (todo): write your description
+        """
         for i, entry in enumerate(self._references):
             if entry[0] == obj:
                 return i
@@ -124,12 +184,24 @@ class _Selector(QtGui.QWidget):
         return len(self._references) - 1
 
     def getSelection(self):
+        """
+        Return the selected position.
+
+        Args:
+            self: (todo): write your description
+        """
         raise NotImplementedError()
 
 
 class BoundarySelector(_Selector):
 
     def __init__(self):
+        """
+        Initialize window state.
+
+        Args:
+            self: (todo): write your description
+        """
         super(BoundarySelector, self).__init__()
         self.setWindowTitle(self.tr("Select Faces/Edges/Vertexes"))
         self.setHelpText(self.tr(
@@ -138,6 +210,12 @@ class BoundarySelector(_Selector):
         ))
 
     def getSelection(self):
+        """
+        Return a selection.
+
+        Args:
+            self: (todo): write your description
+        """
         selection = []
         for selObj in Gui.Selection.getSelectionEx():
             if selObj.HasSubObjects:
@@ -149,6 +227,12 @@ class BoundarySelector(_Selector):
 class SolidSelector(_Selector):
 
     def __init__(self):
+        """
+        Initialize window state.
+
+        Args:
+            self: (todo): write your description
+        """
         super(SolidSelector, self).__init__()
         self.setWindowTitle(self.tr("Select Solids"))
         self.setHelpText(self.tr(
@@ -157,6 +241,12 @@ class SolidSelector(_Selector):
         ))
 
     def getSelection(self):
+        """
+        Return the selection of the selection
+
+        Args:
+            self: (todo): write your description
+        """
         selection = []
         for selObj in Gui.Selection.getSelectionEx():
             solids = set()
@@ -174,6 +264,14 @@ class SolidSelector(_Selector):
         return selection
 
     def _getObjects(self, obj, names):
+        """
+        Get all objects.
+
+        Args:
+            self: (todo): write your description
+            obj: (todo): write your description
+            names: (str): write your description
+        """
         objects = []
         if not hasattr(obj, "Shape"):
             FreeCAD.Console.PrintMessage(
@@ -193,6 +291,14 @@ class SolidSelector(_Selector):
         return objects
 
     def _getSolidOfSub(self, obj, sub):
+        """
+        Returns the subset of the given object
+
+        Args:
+            self: (todo): write your description
+            obj: (todo): write your description
+            sub: (todo): write your description
+        """
         foundSolids = set()
         if sub.ShapeType == "Solid":
             for solidId, solid in enumerate(obj.Shape.Solids):
@@ -219,6 +325,14 @@ class SolidSelector(_Selector):
         return None
 
     def _findSub(self, sub, subList):
+        """
+        Return true if sub [ sub [ sub [ sub [ sub ].
+
+        Args:
+            self: (todo): write your description
+            sub: (todo): write your description
+            subList: (list): write your description
+        """
         for i, s in enumerate(subList):
             if s.isSame(sub):
                 return True
@@ -228,12 +342,27 @@ class SolidSelector(_Selector):
 class SmallListView(QtGui.QListView):
 
     def sizeHint(self):
+        """
+        Returns the size of this item.
+
+        Args:
+            self: (todo): write your description
+        """
         return QtCore.QSize(50, 50)
 
 
 class GeometryElementsSelection(QtGui.QWidget):
 
     def __init__(self, ref, eltypes=[], multigeom=True):
+        """
+        Initialize the widget
+
+        Args:
+            self: (todo): write your description
+            ref: (str): write your description
+            eltypes: (todo): write your description
+            multigeom: (bool): write your description
+        """
         super(GeometryElementsSelection, self).__init__()
         # init ui stuff
         FreeCADGui.Selection.clearSelection()
@@ -252,6 +381,13 @@ class GeometryElementsSelection(QtGui.QWidget):
         self.rebuild_list_References()
 
     def initElemTypes(self, eltypes):
+        """
+        Initialize the element
+
+        Args:
+            self: (todo): write your description
+            eltypes: (todo): write your description
+        """
         self.sel_elem_types = eltypes
         # FreeCAD.Console.PrintMessage(
         #     "Selection of: {} is allowed.\n".format(self.sel_elem_types)
@@ -270,6 +406,12 @@ class GeometryElementsSelection(QtGui.QWidget):
         )
 
     def initUI(self):
+        """
+        Create widgets
+
+        Args:
+            self: (todo): write your description
+        """
         # auch ArchPanel ist coded ohne ui-file
         # title
         self.setWindowTitle(self.tr("Geometry reference selector for a ") + self.sel_elem_text)
@@ -330,20 +472,46 @@ class GeometryElementsSelection(QtGui.QWidget):
         )
 
     def get_references(self):
+        """
+        Return a list.
+
+        Args:
+            self: (todo): write your description
+        """
         for ref in self.tuplereferences:
             for elem in ref[1]:
                 self.references.append((ref[0], elem))
 
     def get_item_text(self, ref):
+        """
+        Return the text of a ref
+
+        Args:
+            self: (todo): write your description
+            ref: (str): write your description
+        """
         return ref[0].Name + ":" + ref[1]
 
     def get_allitems_text(self):
+        """
+        Return a list of all references.
+
+        Args:
+            self: (todo): write your description
+        """
         items = []
         for ref in self.references:
             items.append(self.get_item_text(ref))
         return sorted(items)
 
     def rebuild_list_References(self, current_row=0):
+        """
+        Rebuilds the list of items
+
+        Args:
+            self: (todo): write your description
+            current_row: (todo): write your description
+        """
         self.list_References.clear()
         for listItemName in self.get_allitems_text():
             self.list_References.addItem(listItemName)
@@ -353,6 +521,12 @@ class GeometryElementsSelection(QtGui.QWidget):
             self.list_References.setCurrentItem(self.list_References.item(current_row))
 
     def select_clicked_reference_shape(self):
+        """
+        Select the selected choice.
+
+        Args:
+            self: (todo): write your description
+        """
         self.setback_listobj_visibility()
         if self.sel_server:
             FreeCADGui.Selection.removeObserver(self.sel_server)
@@ -403,6 +577,13 @@ class GeometryElementsSelection(QtGui.QWidget):
         self.obj_notvisible = []
 
     def references_list_right_clicked(self, QPos):
+        """
+        Shows the context menu.
+
+        Args:
+            self: (todo): write your description
+            QPos: (int): write your description
+        """
         self.contextMenu = QtGui.QMenu()
         menu_item_remove_selected = self.contextMenu.addAction("Remove selected geometry")
         menu_item_remove_all = self.contextMenu.addAction("Clear list")
@@ -424,6 +605,12 @@ class GeometryElementsSelection(QtGui.QWidget):
         self.contextMenu.show()
 
     def remove_selected_reference(self):
+        """
+        Removes the selected reference
+
+        Args:
+            self: (todo): write your description
+        """
         if not self.references:
             return
         currentItemName = str(self.list_References.currentItem().text())
@@ -434,15 +621,35 @@ class GeometryElementsSelection(QtGui.QWidget):
         self.rebuild_list_References(currentRow)
 
     def remove_all_references(self):
+        """
+        Removes all references.
+
+        Args:
+            self: (todo): write your description
+        """
         self.references = []
         self.rebuild_list_References()
 
     def choose_selection_mode_standard(self, state):
+        """
+        Chooses selection mode
+
+        Args:
+            self: (todo): write your description
+            state: (todo): write your description
+        """
         self.selection_mode_solid = not state
         if self.sel_server and not self.selection_mode_solid:
             FreeCAD.Console.PrintMessage(self.selection_mode_std_print_message + "\n")
 
     def choose_selection_mode_solid(self, state):
+        """
+        Chooses selection mode mode
+
+        Args:
+            self: (todo): write your description
+            state: (todo): write your description
+        """
         self.selection_mode_solid = state
         if self.sel_server and self.selection_mode_solid:
             FreeCAD.Console.PrintMessage(self.selection_mode_solid_print_message + "\n")
@@ -465,6 +672,13 @@ class GeometryElementsSelection(QtGui.QWidget):
             self.sel_server = FemSelectionObserver(self.selectionParser, print_message)
 
     def selectionParser(self, selection):
+        """
+        Create selection.
+
+        Args:
+            self: (todo): write your description
+            selection: (str): write your description
+        """
         FreeCAD.Console.PrintMessage("Selection: {}  {}  {}\n".format(
             selection[0].Shape.ShapeType,
             selection[0].Name,
@@ -558,6 +772,13 @@ class GeometryElementsSelection(QtGui.QWidget):
                 QtGui.QMessageBox.critical(None, "Wrong shape type", message)
 
     def has_equal_references_shape_types(self, ref_shty=""):
+        """
+        Determine if reference types of the reference types of the reference types.
+
+        Args:
+            self: (todo): write your description
+            ref_shty: (todo): write your description
+        """
         for ref in self.references:
             # the method getElement(element) does not return Solid elements
             r = geomtools.get_element(ref[0], ref[1])
@@ -583,11 +804,29 @@ class GeometryElementsSelection(QtGui.QWidget):
 class FemSelectionObserver:
     """selection observer especially for the needs of geometry reference selection of FEM"""
     def __init__(self, parseSelectionFunction, print_message=""):
+        """
+        Initialize a new message
+
+        Args:
+            self: (todo): write your description
+            parseSelectionFunction: (todo): write your description
+            print_message: (str): write your description
+        """
         self.parseSelectionFunction = parseSelectionFunction
         FreeCADGui.Selection.addObserver(self)
         FreeCAD.Console.PrintMessage(print_message + "!\n")
 
     def addSelection(self, docName, objName, sub, pos):
+        """
+        Add a passage
+
+        Args:
+            self: (todo): write your description
+            docName: (str): write your description
+            objName: (str): write your description
+            sub: (todo): write your description
+            pos: (todo): write your description
+        """
         selected_object = FreeCAD.getDocument(docName).getObject(objName)  # get the obj objName
         self.added_obj = (selected_object, sub)
         # on double click on a vertex of a solid sub is None and obj is the solid

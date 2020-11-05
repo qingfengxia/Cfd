@@ -34,6 +34,12 @@ if FreeCAD.GuiUp:
 class _CommandCfdSolverFenics(CfdCommand):
     "Command to create OpenFOAM solver for CFD anlysis"
     def __init__(self):
+        """
+        Initialize the fqtfd
+
+        Args:
+            self: (todo): write your description
+        """
         super(_CommandCfdSolverFenics, self).__init__()
         self.resources = {'Pixmap': 'cfd-solver-fenics',  # FIXME: change icon to Fenics, or using Dialog to select solver
                           'MenuText': QtCore.QT_TRANSLATE_NOOP("Cfd_SolverFenics", "Create a Fenics CFD solver"),
@@ -42,6 +48,12 @@ class _CommandCfdSolverFenics(CfdCommand):
         self.is_active = 'with_analysis'
 
     def Activated(self):
+        """
+        Èi̇·åıĸåįķ
+
+        Args:
+            self: (todo): write your description
+        """
         import CfdTools
         CfdTools.createSolver("Fenics")
 

@@ -35,6 +35,12 @@ if FreeCAD.GuiUp:
 class _CommandCfdSolver(CfdCommand):
     "Command to create OpenFOAM solver for CFD anlysis"
     def __init__(self):
+        """
+        Initialize the toc
+
+        Args:
+            self: (todo): write your description
+        """
         super(_CommandCfdSolver, self).__init__()
         self.resources = {'Pixmap': 'cfd-solver-standard',
                           'MenuText': QtCore.QT_TRANSLATE_NOOP("Cfd_Solver", "Create CFD solver"),
@@ -43,6 +49,12 @@ class _CommandCfdSolver(CfdCommand):
         self.is_active = 'with_analysis'
 
     def Activated(self):
+        """
+        Create a cfd object.
+
+        Args:
+            self: (todo): write your description
+        """
         import CfdTools
         CfdTools.createSolver()
 

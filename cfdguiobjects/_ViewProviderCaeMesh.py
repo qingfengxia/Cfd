@@ -35,6 +35,13 @@ from cfdguiobjects._TaskPanelCaeMesherGmsh import _TaskPanelCaeMesherGmsh
 from cfdguiobjects._TaskPanelCaeMeshImported import _TaskPanelCaeMeshImported
 
 def _contains(analysis, obj):
+    """
+    Returns true if the passed in object contains the passed in analysis.
+
+    Args:
+        analysis: (todo): write your description
+        obj: (todo): write your description
+    """
     #since version 0.18? analysis is a DocumentGroupObject, has no Member attribute but Group
     try:
         group = analysis.Member
@@ -48,22 +55,66 @@ def _contains(analysis, obj):
 class _ViewProviderCaeMesh:
     "A View Provider for all CaeMesher object"
     def __init__(self, vobj):
+        """
+        Initialize the object
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+        """
         vobj.Proxy = self
 
     def getIcon(self):
+        """
+        Return the number of this is_string.
+
+        Args:
+            self: (todo): write your description
+        """
         return ":/icons/fem-femmesh-from-shape.svg"
 
     def attach(self, vobj):
+        """
+        Attach the given object
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+        """
         self.ViewObject = vobj
         self.Object = vobj.Object
 
     def updateData(self, obj, prop):
+        """
+        Updates the data of an object.
+
+        Args:
+            self: (todo): write your description
+            obj: (todo): write your description
+            prop: (todo): write your description
+        """
         return
 
     def onChanged(self, vobj, prop):
+        """
+        Called when a callback is received.
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+            prop: (str): write your description
+        """
         return
 
     def setEdit(self, vobj, mode):
+        """
+        Sets the mode for this chart.
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+            mode: (str): write your description
+        """
         self.ViewObject.show()  # show the mesh on edit if it is hided
 
         if vobj.Object.Proxy.Type == "FemMeshGmsh":  # must be of this type to hole meshgroup, boundarylayer
@@ -78,11 +129,27 @@ class _ViewProviderCaeMesh:
         return True
 
     def unsetEdit(self, vobj, mode):
+        """
+        Unset the given mode.
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+            mode: (str): write your description
+        """
         FreeCADGui.Control.closeDialog()
         self.ViewObject.hide()  # hide the mesh after edit is finished
         return
 
     def process_dialog(self, gui_doc, vobj):
+        """
+        Process a gui
+
+        Args:
+            self: (todo): write your description
+            gui_doc: (todo): write your description
+            vobj: (todo): write your description
+        """
         if vobj.Object.Proxy.Type != "FemMeshGmsh": 
             return
         if FemGui.getActiveAnalysis() is not None:
@@ -124,6 +191,13 @@ class _ViewProviderCaeMesh:
                 gui_doc.setEdit(vobj.Object.Name)
 
     def doubleClicked(self, vobj):
+        """
+        This method to make sure the analysis is performed.
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+        """
         FreeCADGui.activateWorkbench('CfdWorkbench')
         # Group meshing is only active on active analysis, we should make sure the analysis the mesh belongs too is active
         gui_doc = FreeCADGui.getDocument(vobj.Object.Document)
@@ -146,18 +220,45 @@ class _ViewProviderCaeMesh:
         return True
 
     def __getstate__(self):
+        """
+        Get the state of the state
+
+        Args:
+            self: (todo): write your description
+        """
         return None
 
     def __setstate__(self, state):
+        """
+        Set the state of the state of the given state.
+
+        Args:
+            self: (todo): write your description
+            state: (dict): write your description
+        """
         return None
 
     def claimChildren(self):
+        """
+        Returns a list of all children.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.ViewObject.Object.Proxy.Type == "FemMeshGmsh": 
             return (self.Object.MeshRegionList + self.Object.MeshGroupList + self.Object.MeshBoundaryLayerList)
         else:
             return []
 
     def onDelete(self, feature, subelements):
+        """
+        Called when a feature is deleted.
+
+        Args:
+            self: (todo): write your description
+            feature: (todo): write your description
+            subelements: (str): write your description
+        """
         try:
             for obj in self.claimChildren():
                 obj.ViewObject.show()

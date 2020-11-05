@@ -81,11 +81,23 @@ result_filename = cfd_analysis_dir + os.path.sep + case_name + "_result.vtk"
 
 
 def fcc_print(message):
+    """
+    Print a message to stderr.
+
+    Args:
+        message: (str): write your description
+    """
     FreeCAD.Console.PrintMessage('{} \n'.format(message))
 
 class CfdTest(unittest.TestCase):
     "unit test for Cfd objects"
     def setUp(self):
+        """
+        Sets the active document.
+
+        Args:
+            self: (todo): write your description
+        """
         try:
             FreeCAD.setActiveDocument("CfdTest")
         except:
@@ -97,10 +109,23 @@ class CfdTest(unittest.TestCase):
         self.active_doc.recompute()
 
     def create_new_analysis(self):
+        """
+        Create analysis analysis.
+
+        Args:
+            self: (todo): write your description
+        """
         self.analysis = CfdObjects.makeCfdAnalysis('CfdAnalysis')
         self.active_doc.recompute()
 
     def create_new_solver(self, solverName='OpenFOAM'):
+        """
+        Creates a new solver object.
+
+        Args:
+            self: (todo): write your description
+            solverName: (str): write your description
+        """
         self.solver_name = solverName
         self.solver_object = CfdObjects.makeCfdSolver(solverName)
         self.solver_object.WorkingDir = cfd_analysis_dir
@@ -108,6 +133,12 @@ class CfdTest(unittest.TestCase):
         self.active_doc.recompute()
 
     def create_new_material(self):
+        """
+        Create a material object.
+
+        Args:
+            self: (todo): write your description
+        """
         self.new_material_object = CfdObjects.makeCfdFluidMaterial('FluidMaterial')
         self.new_material_object.Category = 'Fluid'
         mat = self.new_material_object.Material
@@ -117,17 +148,36 @@ class CfdTest(unittest.TestCase):
         self.new_material_object.Material = mat
 
     def create_new_mesh(self):
+        """
+        Create a new mesh object.
+
+        Args:
+            self: (todo): write your description
+        """
         self.mesh_object = CfdObjects.makeCfdMeshGmsh()
         error = CfdTools.runGmsh(self.mesh_object)  # todo:  rename to runMesher()
         return error
 
     def import_mesh(self, mesh_file):
+        """
+        Import a mesh from a mesh file.
+
+        Args:
+            self: (todo): write your description
+            mesh_file: (str): write your description
+        """
         # import from saved mesh file
         self.imported_mesh_object = CfdObjects.makeCfdMeshImported()
         self.imported_mesh_object.FemMesh = Fem.read(mesh_file)
         self.active_doc.recompute()
 
     def create_wall_constraint(self):
+        """
+        Creates the wall
+
+        Args:
+            self: (todo): write your description
+        """
         self.wall_constraint = self.active_doc.addObject("Fem::ConstraintFluidBoundary", "wall")
         self.wall_constraint.References = [(self.geometry_object, "Face1")]
         self.wall_constraint.BoundaryType = 'wall'
@@ -135,6 +185,12 @@ class CfdTest(unittest.TestCase):
         self.wall_constraint.BoundaryValue = 0
 
     def create_velocity_inlet_constraint(self):
+        """
+        Create velocity constraint
+
+        Args:
+            self: (todo): write your description
+        """
         self.velocity_inlet_constraint = self.active_doc.addObject("Fem::ConstraintFluidBoundary", "velocity_inlet")
         self.velocity_inlet_constraint.References = [(self.geometry_object, "Face6")]
         self.velocity_inlet_constraint.BoundaryType = 'inlet'
@@ -144,6 +200,12 @@ class CfdTest(unittest.TestCase):
         #self.velocity_inlet_constraint.Reversed = False
 
     def create_pressure_outlet_constraint(self):
+        """
+        Creates a particle constraint
+
+        Args:
+            self: (todo): write your description
+        """
         self.pressure_outlet_constraint = self.active_doc.addObject("Fem::ConstraintFluidBoundary", "pressure_outlet")
         self.pressure_outlet_constraint.References = [(self.geometry_object, "Face2")]
         self.pressure_outlet_constraint.BoundaryType = 'outlet'
@@ -152,6 +214,12 @@ class CfdTest(unittest.TestCase):
         #self.pressure_outlet_constraint.Reversed = True
 
     def create_cfd_runnable(self):
+        """
+        Creates a runnable runnable object.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.solver_name == "OpenFOAM":
             self.runnable_object = CfdRunnableFoam.CfdRunnableFoam(self.solver_object)
         elif self.solver_name == "Fenics":
@@ -161,17 +229,43 @@ class CfdTest(unittest.TestCase):
              print("Error: solver {} is not suported, check spelling, OpenFOAM/Fenics". format(self.solver_name))
 
     def run_cfd_simulation(self):
+        """
+        Runs the simulation simulation.
+
+        Args:
+            self: (todo): write your description
+        """
         pass  # it takes too long to finish, skip it in unit test
 
     def load_cfd_result(self):
+        """
+        Load the cfd result from an object
+
+        Args:
+            self: (todo): write your description
+        """
         # even cfd is not running, vtk data (initialization data) can still be loaded
         import importCfdResultVTKFoam
         importCfdResultVTKFoam.importCfdResult(result_filename, analysis=self.analysis)
 
     def save_file(self, fc_file_name):
+        """
+        Saves the document to a file.
+
+        Args:
+            self: (todo): write your description
+            fc_file_name: (str): write your description
+        """
         self.active_doc.saveAs(fc_file_name)
 
     def test_new_analysis(self, solverName='OpenFOAM'):
+        """
+        This function will create an analysis *
+
+        Args:
+            self: (todo): write your description
+            solverName: (str): write your description
+        """
         # static
         fcc_print('--------------- Start of Cfd tests ---------------')
         fcc_print('Checking Cfd new analysis...')
@@ -236,6 +330,12 @@ class CfdTest(unittest.TestCase):
         fcc_print('--------------- End of Cfd tests incompressible flow analysis case writing ---------------')
 
     def tearDown(self):
+        """
+        Æł¥è¯¢æ¡
+
+        Args:
+            self: (todo): write your description
+        """
         FreeCAD.closeDocument("CfdTest")
 
 # to run in FreeCAD editor

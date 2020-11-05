@@ -39,6 +39,13 @@ class _ViewProviderCfdSolverFoam:
     derived solver should implement  a specific TaskPanel and set up solver and override setEdit()"""
 
     def __init__(self, vobj):
+        """
+        Initialize the object
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+        """
         vobj.Proxy = self
 
     def getIcon(self):
@@ -47,16 +54,46 @@ class _ViewProviderCfdSolverFoam:
         return icon_path
 
     def attach(self, vobj):
+        """
+        Attach the given object
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+        """
         self.ViewObject = vobj
         self.Object = vobj.Object
 
     def updateData(self, obj, prop):
+        """
+        Updates the data of an object.
+
+        Args:
+            self: (todo): write your description
+            obj: (todo): write your description
+            prop: (todo): write your description
+        """
         return
 
     def onChanged(self, vobj, prop):
+        """
+        Called when a callback is received.
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+            prop: (str): write your description
+        """
         return
         
     def doubleClicked(self, vobj):
+        """
+        Returns true if the analysis has been performed.
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+        """
         if FreeCADGui.activeWorkbench().name() != 'CfdWorkbench':
             FreeCADGui.activateWorkbench("CfdWorkbench")
         doc = FreeCADGui.getDocument(vobj.Object.Document)
@@ -80,6 +117,14 @@ class _ViewProviderCfdSolverFoam:
         return True
         
     def setEdit(self, vobj, mode):
+        """
+        Sets whether orcfd for this widget.
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+            mode: (str): write your description
+        """
         if FemGui.getActiveAnalysis():
             CfdTools.setupWorkingDir(self.Object)  # WorkingDir must existent and writable
             foamRunnable = CfdRunnableFoam(self.Object)
@@ -90,11 +135,32 @@ class _ViewProviderCfdSolverFoam:
         return True
 
     def unsetEdit(self, vobj, mode):
+        """
+        Returns a popup for the inputed mode.
+
+        Args:
+            self: (todo): write your description
+            vobj: (todo): write your description
+            mode: (str): write your description
+        """
         FreeCADGui.Control.closeDialog()
         return
 
     def __getstate__(self):
+        """
+        Get the state of the state
+
+        Args:
+            self: (todo): write your description
+        """
         return None
 
     def __setstate__(self, state):
+        """
+        Set the state of the state of the given state.
+
+        Args:
+            self: (todo): write your description
+            state: (dict): write your description
+        """
         return None
