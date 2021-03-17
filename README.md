@@ -8,7 +8,7 @@
 
 LGPL licensed, the same as FreeCAD
 
-by Qingfeng Xia, 2015~2020 <http://www.iesensor.com/HTML5pptCV>
+by Qingfeng Xia, 2015~2021 <http://www.iesensor.com/HTML5pptCV>
 
 The team from CSIR South Africa,  has significant contribution to this repo in 2016:
 + Oliver Oxtoby <http://www.linkedin.com/in/oliver-oxtoby-05616835>
@@ -41,7 +41,7 @@ This module aims to accelerate CFD case build up. Limited by the long solving ti
 
 4. Topology optimisation  (meshing and boundary setup remain valid during geometry topology change)
 
-![FreeCAD CFDworkbench screenshot](https://github.com/qingfengxia/qingfengxia.github.io/blob/master/images/FreeCAD_CFDworkbench_screenshot.png)
+![FreeCAD CFD workbench screenshot](https://github.com/qingfengxia/qingfengxia.github.io/blob/master/images/FreeCAD_CFDworkbench_screenshot.png)
 
 
 ### Features comparison with CfdOF forked
@@ -65,7 +65,7 @@ added features:
 
 - boundary layer supported via gmsh, other mesh file format support (merged into Fem workbench of FreeCAD official)
 
-- FoamBoundaryWidget class to provide raw dict to override "CFdFluidBoundary" setting. It is an advanced boundary setting for OpenFOAM, specify key-value pair for some special boundary
+- `FoamBoundaryWidget` class to provide raw dict to override "CFdFluidBoundary" setting. It is an advanced boundary setting for OpenFOAM, specify key-value pair for some special boundary
 
 
 ### Limitation:
@@ -80,6 +80,9 @@ added features:
 Ubuntu 18.04 as a baseline , but should works for other linux distribution.
 Ubuntu 20.04 is also tested working
 ```
+
+Note: FreeCAD 0.19 from stable PPA, conflicting with Ubuntu's official gmsh (v4.4). This can be solved by download latest single file executable from [gmsh official website](https://gmsh.info/bin/Linux/gmsh-4.8.0-Linux64.tgz) and put somewhere on PATH such as `~/.local/bin/`.
+
 
 #### MacOS and other POSIX compatible Unix-like OS
 
@@ -164,6 +167,8 @@ see more details of Prerequisites installation in *Readme.md* in *FoamCaseBuilde
 
 - paraFoam (paraview for OpenFOAM), usually installed with OpenFoam.
 
+  without install the paraview bundled with OpenFoam, try `paraFoam -builtin` 
+
 - gmsh, as it is requested by FemWorkbench, it is also used in CfdWorkbench for meshing, check the install and path setup by `which gmsh`
 
   **Optional packages**
@@ -203,7 +208,7 @@ Note: paraview on WSL (version 1 as in 2018) just does not work for me, although
 
 
 
-### Install Cfd workbemch
+### Install Cfd workbench
 
 #### 1. use FreeCAD 0.18+ AddonManager (recommended)
 
@@ -222,11 +227,11 @@ All the following test may be implemented in CI.
 
 ### unit test
 
-As Cfd is not an official module, its unit test case will not be run in Test workbench, manually test: run 
+As Cfd is not an official module, its unit test case will not be run in Test workbench, manually test: 
 
-`python3 -m unittest TestCFD` 
+`freecadcmd TestCFD.py` This unitest must be run in Cfd module folder, where TestCfd.py is located.
 
-In Cfd module folder (otherwise, python module in Cfd is not importable for python). If FreeCAD is not installed to `/usr/local/FreeCAD/`, you need to update the FreeCAD module path statement, `sys.path.append('/usr/lib/freecad-daily/lib')`
+Otherwise, python module in Cfd is not importable for python. 
 
 ### Test CFD GUI
 

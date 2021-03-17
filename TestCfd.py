@@ -42,16 +42,21 @@ Todo: make it working in FreeCAD TestWorkbench
 import os.path
 import sys
 
-# not necessary for run in FreeCAD, only needed if run out of FreeCAD CMD/GUI
+# not necessary for run in FreeCAD Test Workbench, only needed if run out of FreeCAD CMD/GUI
 # if this script is NOT run in Cfd mod folder, add Cfd module path to python's sys.path
-
-# if(os.path.exists('/usr/lib/freecad-daily/lib')):
-#     sys.path.append('/usr/lib/freecad-daily/lib')
-# elif (os.path.exists('/usr/lib/freecad/lib')):
-#     sys.path.append('/usr/lib/freecad/lib')
-# else:
-#     print("can not find default FreeCAD install path")
-#     sys.exit()
+if __name__ == "__main__":
+    print("This is not working as an standalone python script, since PySide2 renamed as PySide in FreeCAD")
+    print("Instead: run `freecadcmd TestCFD.py` in Cfd module folder, where TestCfd.py is located.")
+    sys.exit()
+    if(os.path.exists('/usr/lib/freecad-daily/lib')):
+        sys.path.append('/usr/lib/freecad-daily/lib')
+        sys.path.append('/usr/share/freecad-daily/Mod/Fem')
+    elif (os.path.exists('/usr/lib/freecad/lib')):
+        sys.path.append('/usr/lib/freecad/lib')
+        sys.path.append('/usr/share/freecad/Mod/Fem')
+    else:
+        print("can not find default FreeCAD install path, currently it works for Linux only")
+        sys.exit()
 
 import tempfile
 import unittest
@@ -239,15 +244,18 @@ class CfdTest(unittest.TestCase):
         FreeCAD.closeDocument("CfdTest")
 
 # to run in FreeCAD editor
-t = CfdTest()
-t.setUp()
-t.test_new_analysis("Fenics")
-t.tearDown()
 
 t = CfdTest()
 t.setUp()
 t.test_new_analysis()
 t.tearDown()
-# run without FreeCAD mode, not feasible for the time being
-#if __name__ == '__main__':
-#    unittest.main()
+
+# t = CfdTest()
+# t.setUp()
+# t.test_new_analysis("Fenics")
+# t.tearDown()
+
+# run independent from FreeCAD Test Workbench
+if __name__ == '__main__':
+   unittest.main()
+

@@ -1,5 +1,5 @@
 stage_OF/*
-
+.vscode/*
 *.pyc
 FoamCaseBuilder/*.pyc
 FoamCaseBuilder/__pycache__

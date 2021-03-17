@@ -25,7 +25,8 @@ __author__ = "Bernd Hahnebach, Qingfeng Xia"
 __url__ = "http://www.freecadweb.org"
 
 import FreeCAD
-from ObjectsFem import makeMaterialFluid
+from ObjectsFem import makeMaterialFluid  # FreeCAD stable version 0.18, 0.019 is working
+
 from cfdobjects import _CfdResult, CfdSolverFenics, CfdSolverFoam, _CaeMeshGmsh, _CaeMeshImported, _CfdFluidBoundary
 
 def makeCfdAnalysis(name):
