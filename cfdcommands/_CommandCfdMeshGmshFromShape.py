@@ -39,7 +39,7 @@ class _CommandCfdMeshGmshFromShape(CfdCommand):
     def __init__(self):
         super(_CommandCfdMeshGmshFromShape, self).__init__()
         #icon_path = os.path.join(CfdTools.get_module_path(),"Gui","Resources","icons","mesh_g.png")
-        self.resources = {'Pixmap': 'fem-femmesh-gmsh-from-shape',
+        self.resources = {'Pixmap': 'cfd-mesh-gmsh-from-shape.svg',
                           'MenuText': QtCore.QT_TRANSLATE_NOOP("Cfd_MeshGmshFromShape", "CFD mesh from shape by GMSH"),
                           'ToolTip': QtCore.QT_TRANSLATE_NOOP("Cfd_MeshGmshFromShape", "Create a CFD mesh from a shape by GMSH mesher")}
         self.is_active = 'with_part_feature'
