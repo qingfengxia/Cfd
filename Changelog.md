@@ -65,7 +65,7 @@ branch: foambuilder_pre2
 
 ## Phase V (2017): welcome the team from South Africa  and toward official workbench
 
-### Contribution from team fromSouth Africa
+### Contribution from team from South Africa
 
 - run and view progress in gnuplot in solver control task panel
   currently, CfdResult load button will freeze GUI, since result is not existent,
@@ -139,3 +139,30 @@ Todo:
 - wiki, documentation
 - tutorial and example file update
 
+
+
+## Phase VIII 2022
+
+split out contribution from South Africa team, to make it back to single contributor
+
+
+
+- run and view progress in gnuplot in solver control task panel             
+
+  >  removed in 2009 to use only PLOT workbench of FreeCAD
+
+- Set up and run solver via run script 'Allrun'
+
+  > todo
+
+- initialize internal field by potentialFoam
+
+  > check and remove
+
+- code style update
+
+  > not significant
+
+- cmake file for adding Cfd into official
+
+  > removed

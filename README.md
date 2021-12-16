@@ -6,7 +6,7 @@
 
 ![Schematic of automated engineering design pipeline](https://forum.freecadweb.org/download/file.php?id=73587)
 
-LGPL licensed, the same as FreeCAD
+License changed to GPL instead of LGPL
 
 by Qingfeng Xia, 2015~2021 <http://www.iesensor.com/HTML5pptCV>
 
@@ -17,7 +17,7 @@ The team from CSIR South Africa,  has significant contribution to this repo in 2
 
 CSIR team has forked this repo into <https://github.com/jaheyns/CfdOF> in 2017, focusing on usability for new users and OpenFOAM. Meanwhile, this repo still targets at preparing real-world case files from FreeCAD geometry for advanced users, which also means user needs to tweak the OpenFOAM case files in production environment.  Features from CSIR fork has not been picked up from CfdOF repo even agreed; CfdOF has a different GPL license.
 
-changelog and roadmap at [Roadmap.md](./Roadmap.md)
+Since 2009, contribution from CSIR has be removed gradually due to new design of work flow, see [Changelog](Changelog.md) and  [Roadmap.md](./Roadmap.md)
 
 Please file bugs and feature request in <https://github.com/qingfengxia/Cfd/issues>, in the issue report, you can link to FreeCAD forum discussion thread. 
 
@@ -306,5 +306,4 @@ There is a ebook "Module developer's guide on FreeCAD source code", there are tw
 
 This is an outdated version for early preview:  
 <https://www.iesensor.com/download/FreeCAD_Mod_Dev_Guide__20161224.pdf>
-
 
